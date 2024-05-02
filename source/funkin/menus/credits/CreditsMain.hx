@@ -26,7 +26,7 @@ class CreditsMain extends TreeMenu {
 				try {
 					access = new Access(Xml.parse(Paths.assetsTree.getSpecificAsset(xmlPath, "TEXT", source)));
 				} catch(e) {
-					Logs.trace('[CreditsMain] Error while parsing credits.xml: ${Std.string(e)}', ERROR);
+					Logs.trace('Error while parsing credits.xml: ${Std.string(e)}', ERROR);
 				}
 
 				if (access != null)

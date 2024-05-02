@@ -3,7 +3,7 @@ package funkin.backend.chart;
 import funkin.backend.chart.ChartData.ChartEvent;
 import funkin.backend.system.Conductor;
 
-class FNFLegacyParser {
+class LegacyBaseGameParser {
 	public static function parse(data:Dynamic, result:ChartData) {
 		// base fnf chart parsing
 		var data:SwagSong = data;

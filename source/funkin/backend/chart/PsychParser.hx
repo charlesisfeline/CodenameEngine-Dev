@@ -1,8 +1,8 @@
 package funkin.backend.chart;
 
 import funkin.backend.chart.ChartData.ChartEvent;
-import funkin.backend.chart.FNFLegacyParser.SwagSection;
-import funkin.backend.chart.FNFLegacyParser.SwagSong;
+import funkin.backend.chart.LegacyBaseGameParser.SwagSection;
+import funkin.backend.chart.LegacyBaseGameParser.SwagSong;
 import funkin.backend.system.Conductor;
 
 class PsychParser {
@@ -14,11 +14,11 @@ class PsychParser {
 	];
 
 	public static function parse(data:Dynamic, result:ChartData)
-		FNFLegacyParser.parse(data, result);
+		LegacyBaseGameParser.parse(data, result);
 
 	public static function encode(chart:ChartData):Dynamic {
-		var base:SwagSong = FNFLegacyParser.__convertToSwagSong(chart);
-		base.notes = FNFLegacyParser.__convertToSwagSections(chart);
+		var base:SwagSong = LegacyBaseGameParser.__convertToSwagSong(chart);
+		base.notes = LegacyBaseGameParser.__convertToSwagSections(chart);
 		base.stage = chart.stage;
 
 		for (section in base.notes)

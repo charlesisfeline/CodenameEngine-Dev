@@ -1318,7 +1318,7 @@ class Charter extends UIState {
 	}
 
 	function _file_saveas_fnflegacy(_) {
-		openSubState(new SaveSubstate(Json.stringify(FNFLegacyParser.encode(PlayState.SONG), null, Options.editorPrettyPrint ? "\t" : null), {
+		openSubState(new SaveSubstate(Json.stringify(LegacyBaseGameParser.encode(PlayState.SONG), null, Options.editorPrettyPrint ? "\t" : null), {
 			defaultSaveFile: '${__song.toLowerCase().replace(" ", "-")}${__diff.toLowerCase() == "normal" ? "" : '-${__diff.toLowerCase()}'}.json',
 		}));
 	}

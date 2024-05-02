@@ -141,7 +141,7 @@ class Chart {
 				base = data;
 			} else {
 				// base game chart
-				FNFLegacyParser.parse(data, base);
+				LegacyBaseGameParser.parse(data, base);
 			}
 			#end
 		}
