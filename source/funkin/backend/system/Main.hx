@@ -167,9 +167,9 @@ class Main extends Sprite
 	}
 
 	public static function refreshAssets() {
-		FlxSoundTray.volumeChangeSFX = Paths.sound('menu/volume');
-		FlxSoundTray.volumeUpChangeSFX = null;
-		FlxSoundTray.volumeDownChangeSFX = null;
+		FlxSoundTray.volumeChangeSFX = Paths.sound('menu/VolMAX');
+		FlxSoundTray.volumeUpChangeSFX = Paths.sound('menu/Volup');
+		FlxSoundTray.volumeDownChangeSFX = Paths.sound('menu/Voldown');
 
 		if (FlxG.game.soundTray != null)
 			FlxG.game.soundTray.text.setTextFormat(new TextFormat(Paths.font("vcr.ttf")));
