@@ -1,5 +1,5 @@
 <!DOCTYPE codename-engine-week-character>
 <char x="20" y="-10" sprite="menus/storymenu/characters/pico">
 	<anim name="idle"       anim="Pico Idle Dance"  fps="24"    loop="false" />
-	<anim name="confirm"    anim="Pico Confirm"     fps="24"    loop="false" x="100" type="none" />
+	<anim name="confirm"    anim="Pico Confirm"     fps="24"    loop="false" type="none" />
 </char>
