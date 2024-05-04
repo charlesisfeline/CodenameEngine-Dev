@@ -6,8 +6,13 @@ import funkin.backend.scripting.Script;
 import flixel.system.ui.FlxSoundTray;
 import openfl.text.TextFormat;
 
-class FunkinSoundTray extends FlxSoundTray {
-	public static var script:Script;
+class FunkinSoundTray extends FlxSoundTray
+{
+	public var script:Script;
+
+	// Neeo wanted them since it would reduce lags for some people if activated  - Nex
+	public var callsUpdate:Bool = true;
+	public var callsPostUpdate:Bool = true;
 
 	public function new()
 	{
@@ -69,9 +74,9 @@ class FunkinSoundTray extends FlxSoundTray {
 
 	public override function update(elapsed:Float)
 	{
-		script.call("update", [elapsed]);
+		if (callsUpdate) script.call("update", [elapsed]);
 		super.update(elapsed);
-		script.call("postUpdate", [elapsed]);
+		if (callsPostUpdate) script.call("postUpdate", [elapsed]);
 	}
 
 	public override function saveSoundPreferences()
