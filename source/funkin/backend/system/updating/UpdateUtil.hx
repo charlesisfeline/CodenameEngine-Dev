@@ -9,9 +9,6 @@ import sys.FileSystem;
 using funkin.backend.system.github.GitHub;
 
 class UpdateUtil {
-	public static final repoOwner:String = "YoshiCrafter29";
-	public static final repoName:String = "CodenameTestRepo";
-
 	public static function init() {
 		// deletes old bak file if it exists
 		#if sys
@@ -27,7 +24,7 @@ class UpdateUtil {
 
 		var error = false;
 
-		var newUpdates = __doReleaseFiltering(GitHub.getReleases(repoOwner, repoName, function(e) {
+		var newUpdates = __doReleaseFiltering(GitHub.getReleases(Constants.REPO_OWNER, Constants.REPO_NAME, function(e) {
 			error = true;
 		}), curTag);
 

@@ -42,7 +42,7 @@ class WindowUtils {
 	}
 
 	public static inline function resetTitle() {
-		winTitle = Lib.application.meta["name"];
+		winTitle = Constants.WINDOW_TITLE;
 		resetAffixes();
 	}
 

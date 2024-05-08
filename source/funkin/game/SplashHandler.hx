@@ -42,8 +42,7 @@ class SplashHandler extends FlxTypedGroup<FunkinSprite> {
 		__grp = getSplashGroup(name);
 		add(__grp.showOnStrum(strum));
 
-		// max 8 rendered splashes
-		while(members.length > 8)
+		while(members.length > Constants.MAX_SPLASHES) // Remove the oldest splash
 			remove(members[0], true);
 	}
 }

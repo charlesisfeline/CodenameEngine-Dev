@@ -43,7 +43,7 @@ class HealthIcon extends FlxSprite
 		];
 	}
 
-	public function new(char:String = 'bf', isPlayer:Bool = false)
+	public function new(char:String, isPlayer:Bool = false)
 	{
 		super();
 		health = 0.5;
@@ -57,7 +57,7 @@ class HealthIcon extends FlxSprite
 		if(curCharacter != char || this.width != width || this.height != height) {
 			curCharacter = char;
 			var path = Paths.image('icons/$char');
-			if (!Assets.exists(path)) path = Paths.image('icons/face');
+			if (!Assets.exists(path)) path = Paths.image('icons/' + Constants.DEFAULT_HEALTH_ICON);
 
 			loadGraphic(path, true, width, height);
 

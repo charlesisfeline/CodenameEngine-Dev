@@ -45,7 +45,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 
 	public var icon:String = null;
 	public var iconColor:Null<FlxColor> = null;
-	public var gameOverCharacter:String = "bf-dead";
+	public var gameOverCharacter:String = Constants.DEFAULT_GAMEOVER_CHARACTER;
 
 	public var cameraOffset:FlxPoint = new FlxPoint(0, 0);
 	public var globalOffset:FlxPoint = new FlxPoint(0, 0);
@@ -78,8 +78,9 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 			playAnim(event.animName, event.force, event.context, event.reversed, event.frame);
 	}
 
-	public function new(x:Float, y:Float, ?character:String = "bf", isPlayer:Bool = false, switchAnims:Bool = true)
+	public function new(x:Float, y:Float, ?character:String, isPlayer:Bool = false, switchAnims:Bool = true)
 	{
+		if(character == null) character = Constants.DEFAULT_CHARACTER;
 		super(x, y);
 
 		animOffsets = new Map<String, FlxPoint>();
@@ -98,7 +99,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 					var xmlPath = Paths.xml('characters/$curCharacter');
 					if (!Assets.exists(xmlPath))
 					{
-						curCharacter = "bf";
+						curCharacter = Constants.DEFAULT_CHARACTER;
 						continue;
 					}
 
@@ -110,7 +111,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 						xml = new Access(charXML);
 					} catch (e) {
 						Logs.trace('Error while loading character ${curCharacter}: ${e}', ERROR);
-						curCharacter = "bf";
+						curCharacter = Constants.DEFAULT_CHARACTER;
 						continue;
 					}
 					// Loads the script
@@ -171,7 +172,9 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 			switchOffset('singLEFT', 'singRIGHT');
 			switchOffset('singLEFTmiss', 'singRIGHTmiss');
 		}
-		frameOffset.set(getAnimOffset(getAnimName()).x, getAnimOffset(getAnimName()).y);
+		var offset = getAnimOffset(getAnimName());
+		frameOffset.set(offset.x, offset.y);
+		offset.put();
 		if (isPlayer)
 			flipX = !flipX;
 		__baseFlipped = flipX;
@@ -187,7 +190,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		if (stunned)
 		{
 			__stunnedTime += elapsed;
-			if (__stunnedTime > 5 / 60)
+			if (__stunnedTime > Constants.STUNNED_TIME)
 				stunned = false;
 		}
 
@@ -407,10 +410,9 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		var hasInterval:Bool = xml.x.exists("interval");
 		if (hasInterval) beatInterval = Std.parseInt(xml.x.get("interval"));
 
-		var tempList = ["isPlayer", "isGF", "x", "y", "gameOverChar", "camx", "camy", "holdTime", "flipX", "icon", "color", "scale", "antialiasing", "sprite", "interval"];
 		var atts = xml.x.attributes();
 		for (i in atts)
-			if (!tempList.contains(i))
+			if (!Constants.DEFAULT_CHARACTER_FIELDS.contains(i))
 				extra[i] = xml.x.get(i);
 
 		loadSprite(Paths.image('characters/$sprite'));
@@ -504,7 +506,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	// Statics
 
 	public static function getIconFromCharName(?curCharacter:String) {
-		if(curCharacter == null) return "face";
+		if(curCharacter == null) return Constants.DEFAULT_HEALTH_ICON;
 		var icon = curCharacter;
 		while(true) {
 			switch (curCharacter) {
@@ -513,7 +515,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 					// load xml
 					var xmlPath = Paths.xml('characters/$curCharacter');
 					if (!Assets.exists(xmlPath)) {
-						curCharacter = "bf";
+						curCharacter = Constants.DEFAULT_CHARACTER;
 						continue;
 					}
 
@@ -525,7 +527,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 						xml = new Access(charXML);
 					} catch(e) {
 						Logs.trace('Error while loading character ${curCharacter}: ${e}', ERROR);
-						curCharacter = "bf";
+						curCharacter = Constants.DEFAULT_CHARACTER;
 						continue;
 					}
 

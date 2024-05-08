@@ -24,7 +24,7 @@ class FreeplayState extends MusicBeatState
 	/**
 	 * Currently selected difficulty
 	 */
-	public var curDifficulty:Int = 1;
+	public var curDifficulty:Int = 1; // TODO: make this use the constant default difficulty
 	/**
 	 * Currently selected coop/opponent mode
 	 */

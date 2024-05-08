@@ -86,7 +86,7 @@ class Note extends FlxSprite
 		return PlayState.instance.getNoteType(noteTypeID);
 	}
 
-	public static var swagWidth:Float = 160 * 0.7;
+	public static var swagWidth:Float = 160 * 0.7; // TODO: remove this
 
 	private static var __customNoteTypeExists:Map<String, Bool> = [];
 
@@ -98,8 +98,6 @@ class Note extends FlxSprite
 			return __customNoteTypeExists[path];
 		return __customNoteTypeExists[path] = Assets.exists(path);
 	}
-
-	static var DEFAULT_FIELDS:Array<String> = ["time", "id", "type", "sLen"];
 
 	public function new(strumLine:StrumLine, noteData:ChartNote, sustain:Bool = false, sustainLength:Float = 0, sustainOffset:Float = 0, ?prev:Note)
 	{
@@ -118,7 +116,7 @@ class Note extends FlxSprite
 		this.sustainLength = sustainLength;
 		this.strumLine = strumLine;
 		for(field in Reflect.fields(noteData)) {
-			if(!DEFAULT_FIELDS.contains(field)) {
+			if(!Constants.DEFAULT_NOTE_FIELDS.contains(field)) {
 				this.extra.set(field, Reflect.field(noteData, field));
 			}
 		}
@@ -132,7 +130,7 @@ class Note extends FlxSprite
 
 		var customType = Paths.image('game/notes/${this.noteType}');
 		var event = EventManager.get(NoteCreationEvent).recycle(this, strumID, this.noteType, noteTypeID, PlayState.instance.strumLines.members.indexOf(strumLine), mustPress,
-			(this.noteType != null && customTypePathExists(customType)) ? 'game/notes/${this.noteType}' : 'game/notes/default', @:privateAccess strumLine.strumScale * 0.7, animSuffix);
+			(this.noteType != null && customTypePathExists(customType)) ? 'game/notes/${this.noteType}' : 'game/notes/default', @:privateAccess strumLine.strumScale * Constants.DEFAULT_NOTE_SCALE, animSuffix);
 
 		if (PlayState.instance != null)
 			event = PlayState.instance.scripts.event("onNoteCreation", event);

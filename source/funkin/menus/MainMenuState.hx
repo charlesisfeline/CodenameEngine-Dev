@@ -7,7 +7,6 @@ import funkin.backend.FunkinText;
 import funkin.backend.scripting.events.*;
 import funkin.menus.credits.CreditsMain;
 import funkin.options.OptionsMenu;
-import lime.app.Application;
 
 using StringTools;
 
@@ -70,7 +69,7 @@ class MainMenuState extends MusicBeatState
 
 		FlxG.camera.follow(camFollow, null, 0.06);
 
-		var versionShit:FunkinText = new FunkinText(5, FlxG.height - 2, 0, 'Codename Engine v${Application.current.meta.get('version')}\nCommit ${funkin.backend.system.macros.GitCommitMacro.commitNumber} (${funkin.backend.system.macros.GitCommitMacro.commitHash})\n[TAB] Open Mods menu\n');
+		var versionShit:FunkinText = new FunkinText(5, FlxG.height - 2, 0, '${Constants.VERSION_MESSAGE}\n${Constants.COMMIT_MESSAGE}\n[TAB] Open Mods menu\n');
 		versionShit.y -= versionShit.height;
 		versionShit.scrollFactor.set();
 		add(versionShit);

@@ -44,7 +44,7 @@ class LegacyBaseGameParser {
 
 		var camFocusedBF:Bool = false;
 		var altAnims:Bool = false;
-		var beatsPerMeasure:Float = data.beatsPerMeasure.getDefault(4);
+		var beatsPerMeasure:Float = data.beatsPerMeasure.getDefault(Constants.DEFAULT_BEATS_PER_MEASURE);
 		var curBPM:Float = data.bpm;
 		var curTime:Float = 0;
 		var curCrochet:Float = ((60 / curBPM) * 1000);
@@ -131,10 +131,10 @@ class LegacyBaseGameParser {
 					if ((swagSection.mustHitSection && strumLine.type == OPPONENT) ||
 						(!swagSection.mustHitSection && strumLine.type == PLAYER))
 						sectionNote[1] += 4;
-					swagSection.sectionNotes.push(note); 
+					swagSection.sectionNotes.push(note);
 				}
 			}
-		
+
 		return {song: base};
 	}
 

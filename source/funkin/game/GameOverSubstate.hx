@@ -36,8 +36,12 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	public var lossSFX:FlxSound;
 
-	public function new(x:Float, y:Float, character:String = "bf-dead", player:Bool = true, gameOverSong:String = "gameOver", lossSFX:String = "gameOverSFX", retrySFX:String = "gameOverEnd")
+	public function new(x:Float, y:Float, character:String = null, player:Bool = true, gameOverSong:String = null, lossSFX:String = null, retrySFX:String = null)
 	{
+		if(character == null) character = Constnats.DEFAULT_GAMEOVER_CHARACTER;
+		if(gameOverSong == null) gameOverSong = Constnats.DEFAULT_GAMEOVER_SONG;
+		if(lossSFX == null) lossSFX = Constnats.DEFAULT_GAMEOVER_LOSS_SFX;
+		if(retrySFX == null) retrySFX = Constnats.DEFAULT_GAMEOVER_RETRY_SFX;
 		super();
 		this.x = x;
 		this.y = y;
@@ -127,7 +131,7 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		if (!isEnding && ((!lossSFX.playing) || (character.getAnimName() == "firstDeath" && character.isAnimFinished())) && (FlxG.sound.music == null || !FlxG.sound.music.playing))
 		{
-			CoolUtil.playMusic(Paths.music(gameOverSong), false, 1, true, 100);
+			CoolUtil.playMusic(Paths.music(gameOverSong), false, 1, true, Constants.DEFAULT_BPM);
 			beatHit(0);
 		}
 	}

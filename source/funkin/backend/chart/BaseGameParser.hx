@@ -14,14 +14,27 @@ class BaseGameParser {
 
 		var firstTimeChng:SwagTimeChange = data.timeChanges[0];
 		result.bpm = firstTimeChng.bpm;
-		result.beatsPerMeasure = firstTimeChng.b != null ? firstTimeChng.b : 4;
+		result.beatsPerMeasure = firstTimeChng.b != null ? firstTimeChng.b : Constants.DEFAULT_BEATS_PER_MEASURE;
 
 		result.difficulties = data.playData.difficulties;
+		Reflect.deleteField(data.playData, "difficulties");
+
+		result.customValues = {};
+		for (field in Reflect.fields(data.playData))
+			Reflect.setProperty(result.customValues, field, Reflect.getProperty(data.playData, field));
 	}
 
-	public static function encodeMeta(meta:ChartMetaData):SwagMetadata {
-		// TO DO
-		return null;
+	public static function encodeMeta(meta:ChartMetaData, ?chart:ChartData):SwagMetadata {
+		var result:SwagMetadata = {
+			songName: meta.name,
+			timeFormat: MILLISECONDS,
+			artist: meta.artist,
+			//timeChanges: hmm
+			looped: false,
+			generatedBy: Constants.VERSION_COMPLETE_MESSAGE
+		};
+
+		return result;
 	}
 
 	public static function encodeChart(chart:ChartData):NewSwagSong {
@@ -30,10 +43,17 @@ class BaseGameParser {
 	}
 }
 
+enum abstract SongTimeFormat(String) from String to String
+{
+	var TICKS = 'ticks';
+	var FLOAT = 'float';
+	var MILLISECONDS = 'ms';
+}
+
 // METADATA STRUCTURES
 typedef SwagMetadata =
 {
-	var timeFormat:String;
+	var timeFormat:SongTimeFormat;
 	var artist:String;
 	var songName:String;
 	var playData:SwagPlayData;

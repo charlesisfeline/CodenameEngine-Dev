@@ -61,7 +61,7 @@ class PlayState extends MusicBeatState
 	/**
 	 * The selected difficulty name
 	 */
-	public static var difficulty:String = "normal";
+	public static var difficulty:String = Constants.DEFAULT_DIFFICULTY;
 	/**
 	 * Whenever the week is coming from the mods folder or not.
 	 */
@@ -73,11 +73,11 @@ class PlayState extends MusicBeatState
 	/**
 	 * Whenever the song has been started with opponent mode on.
 	 */
-	public static var opponentMode:Bool = false;
+	public static var opponentMode:Bool = Constants.DEFAULT_OPPONENT_MODE;
 	/**
 	 * Whenever the song has been started with co-op mode on.
 	 */
-	public static var coopMode:Bool = false;
+	public static var coopMode:Bool = Constants.DEFAULT_COOP_MODE;
 
 	/**
 	 * Script Pack of all the scripts being ran.
@@ -96,15 +96,15 @@ class PlayState extends MusicBeatState
 	/**
 	 * Game Over Song. (assets/music/gameOver.ogg)
 	 */
-	public var gameOverSong:String = "gameOver";
+	public var gameOverSong:String = Constants.DEFAULT_GAMEOVER_SONG;
 	/**
 	 * Game Over Song. (assets/sounds/gameOverSFX.ogg)
 	 */
-	public var lossSFX:String = "gameOverSFX";
+	public var lossSFX:String = Constants.DEFAULT_GAMEOVER_LOSS_SFX;
 	/**
 	 * Game Over End SFX, used when retrying. (assets/sounds/gameOverEnd.ogg)
 	 */
-	public var retrySFX:String = "gameOverEnd";
+	public var retrySFX:String = Constants.DEFAULT_GAMEOVER_RETRY_SFX;
 
 	/**
 	 * Current Stage.
@@ -204,15 +204,15 @@ class PlayState extends MusicBeatState
 	/**
 	 * Whenever the vocals should be muted when a note is missed.
 	 */
-	public var muteVocalsOnMiss:Bool = true;
+	public var muteVocalsOnMiss:Bool = Constants.DEFAULT_MUTE_VOCALS_ON_MISS;
 	/**
 	 * Whenever the player can press 7, 8 or 9 to access the debug menus.
 	 */
-	public var canAccessDebugMenus:Bool = true;
+	public var canAccessDebugMenus:Bool = Constants.DEFAULT_CAN_ACCESS_DEBUG_MENUS;
 	/**
 	 * Wether or not to show the secret gitaroo pause.
 	 */
-	public var allowGitaroo:Bool = true;
+	public var allowGitaroo:Bool = Constants.DEFAULT_GITAROO;
 
 	/**
 	 * Whenever cam zooming is enabled, enables on a note hit if not cancelled.
@@ -222,15 +222,15 @@ class PlayState extends MusicBeatState
 	 * Interval of cam zooming (beats).
 	 * For example: if set to 4, the camera will zoom every 4 beats.
 	 */
-	public var camZoomingInterval:Int = 4;
+	public var camZoomingInterval:Int = Constants.DEFAULT_CAM_ZOOM_INTERVAL;
 	/**
 	 * How strong the cam zooms should be (defaults to 1)
 	 */
-	public var camZoomingStrength:Float = 1;
+	public var camZoomingStrength:Float = Constants.DEFAULT_CAM_ZOOM_STRENGTH;
 	/**
 	 * Maximum amount of zoom for the camera.
 	 */
-	public var maxCamZoom:Float = 1.35;
+	public var maxCamZoom:Float = Constants.MAX_CAMERA_ZOOM;
 	/**
 	 * Current song name (lowercase)
 	 */
@@ -248,12 +248,12 @@ class PlayState extends MusicBeatState
 	/**
 	 * Current health. Goes from 0 to maxHealth (defaults to 2)
 	 */
-	public var health:Float = 1;
+	public var health:Float = Constants.DEFAULT_HEALTH;
 
 	/**
 	 * Maximum health the player can have. Defaults to 2.
 	 */
-	@:isVar public var maxHealth(get, set):Float = 2;
+	@:isVar public var maxHealth(get, set):Float = Constants.DEFAULT_MAX_HEALTH;
 	/**
 	 * Current combo.
 	 */
@@ -353,17 +353,19 @@ class PlayState extends MusicBeatState
 	/**
 	 * Camera zoom at which the game lerps to.
 	 */
-	public var defaultCamZoom:Float = 1.05;
+	public var defaultCamZoom:Float = Constants.DEFAULT_CAM_ZOOM;
+
+	public var cameraZoomLerp:Float = Constants.DEFAULT_CAM_ZOOM_LERP;
 
 	/**
 	 * Camera zoom at which the hud lerps to.
 	 */
-	public var defaultHudZoom:Float = 1.0;
+	public var defaultHudZoom:Float = Constants.DEFAULT_HUD_ZOOM;
 
 	/**
 	 * Zoom for the pixel assets.
 	 */
-	public static var daPixelZoom:Float = 6;
+	public static var daPixelZoom:Float = Constants.PIXEL_ART_SCALE;
 
 	/**
 	 * Whenever the game is currently in a cutscene or not.
@@ -556,7 +558,7 @@ class PlayState extends MusicBeatState
 		// CHARACTER INITIALIZATION
 		#if REGION
 		comboGroup = new RotatingSpriteGroup(FlxG.width * 0.55, (FlxG.height * 0.5) - 60);
-		comboGroup.maxSize = 25;
+		comboGroup.maxSize = Constants.DEFAULT_COMBO_GROUP_MAX_SIZE;
 		#end
 
 		// CAMERA FOLLOW, SCRIPTS & STAGE INITIALIZATION
@@ -564,7 +566,7 @@ class PlayState extends MusicBeatState
 		camFollow = new FlxObject(0, 0, 2, 2);
 		add(camFollow);
 
-		if (SONG.stage == null || SONG.stage.trim() == "") SONG.stage = "stage";
+		if (SONG.stage == null || SONG.stage.trim() == "") SONG.stage = Constants.DEFAULT_STAGE;
 		add(stage = new Stage(SONG.stage));
 
 		if (!chartingMode || Options.charterEnablePlaytestScripts) {
@@ -672,7 +674,7 @@ class PlayState extends MusicBeatState
 
 		// HUD INITIALIZATION & CAMERA INITIALIZATION
 		#if REGION
-		var event = EventManager.get(AmountEvent).recycle(4);
+		var event = EventManager.get(AmountEvent).recycle(Constants.DEFAULT_STRUM_AMOUNT);
 		if (!scripts.event("onPreGenerateStrums", event).cancelled) {
 			generateStrums(event.amount);
 			scripts.event("onPostGenerateStrums", event);
@@ -681,7 +683,7 @@ class PlayState extends MusicBeatState
 		for(str in strumLines)
 			str.generate(str.data, (chartingMode && Charter.startHere) ? Charter.startTime : null);
 
-		FlxG.camera.follow(camFollow, LOCKON, 0.04);
+		FlxG.camera.follow(camFollow, LOCKON, Constants.DEFAULT_CAMERA_FOLLOW_SPEED);
 		FlxG.camera.zoom = defaultCamZoom;
 		// camHUD.zoom = defaultHudZoom;
 
@@ -712,8 +714,8 @@ class PlayState extends MusicBeatState
 
 		health = maxHealth / 2;
 
-		iconP1 = new HealthIcon(boyfriend != null ? boyfriend.getIcon() : "face", true);
-		iconP2 = new HealthIcon(dad != null ? dad.getIcon() : "face", false);
+		iconP1 = new HealthIcon(boyfriend != null ? boyfriend.getIcon() : Constants.DEFAULT_HEALTH_ICON, true);
+		iconP2 = new HealthIcon(dad != null ? dad.getIcon() : Constants.DEFAULT_HEALTH_ICON, false);
 		for(icon in [iconP1, iconP2]) {
 			icon.y = healthBar.y - (icon.height / 2);
 			add(icon);
@@ -750,7 +752,7 @@ class PlayState extends MusicBeatState
 				FlxG.sound.load(Paths.sound(s));
 
 		if (chartingMode) {
-			WindowUtils.prefix = Charter.undos.unsaved ? "* " : "";
+			WindowUtils.prefix = Charter.undos.unsaved ? Constants.UNDO_PREFIX : "";
 			WindowUtils.suffix = " (Chart Playtesting)";
 
 			SaveWarning.showWarning = Charter.undos.unsaved;
@@ -1119,7 +1121,7 @@ class PlayState extends MusicBeatState
 		paused = true;
 
 		// 1 / 1000 chance for Gitaroo Man easter egg
-		if (allowGitaroo && FlxG.random.bool(0.1))
+		if (allowGitaroo && FlxG.random.bool(Constants.GITAROO_CHANCE))
 		{
 			// gitaroo man easter egg
 			FlxG.switchState(new GitarooPause());
@@ -1176,12 +1178,10 @@ class PlayState extends MusicBeatState
 	}
 
 	function updateIconPositions() {
-		var iconOffset:Int = 26;
-
 		var center:Float = healthBar.x + healthBar.width * FlxMath.remapToRange(healthBar.percent, 0, 100, 1, 0);
 
-		iconP1.x = center - iconOffset;
-		iconP2.x = center - (iconP2.width - iconOffset);
+		iconP1.x = center - Constants.ICON_OFFSET;
+		iconP2.x = center - (iconP2.width - Constants.ICON_OFFSET);
 
 		health = FlxMath.bound(health, 0, maxHealth);
 
@@ -1232,8 +1232,9 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		iconP1.scale.set(lerp(iconP1.scale.x, 1, 0.33), lerp(iconP1.scale.y, 1, 0.33));
-		iconP2.scale.set(lerp(iconP2.scale.x, 1, 0.33), lerp(iconP2.scale.y, 1, 0.33));
+		var iconLerp = Constants.ICON_LERP;
+		iconP1.scale.set(lerp(iconP1.scale.x, 1, iconLerp), lerp(iconP1.scale.y, 1, iconLerp));
+		iconP2.scale.set(lerp(iconP2.scale.x, 1, iconLerp), lerp(iconP2.scale.y, 1, iconLerp));
 
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();
@@ -1252,7 +1253,7 @@ class PlayState extends MusicBeatState
 			var instTime = FlxG.sound.music.time;
 			var isOffsync = vocals.time != instTime || [for(strumLine in strumLines.members) strumLine.vocals.time != instTime].contains(true);
 			__vocalOffsetViolation = Math.max(0, __vocalOffsetViolation + (isOffsync ? elapsed : -elapsed / 2));
-			if (__vocalOffsetViolation > 25) {
+			if (__vocalOffsetViolation > Constants.VOCAL_OFFSET_VIOLATION_THRESHOLD) {
 				resyncVocals();
 				__vocalOffsetViolation = 0;
 			}
@@ -1286,8 +1287,8 @@ class PlayState extends MusicBeatState
 
 		if (camZooming)
 		{
-			FlxG.camera.zoom = lerp(FlxG.camera.zoom, defaultCamZoom, 0.05);
-			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom, 0.05);
+			FlxG.camera.zoom = lerp(FlxG.camera.zoom, defaultCamZoom, cameraZoomLerp);
+			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom, cameraZoomLerp);
 		}
 
 		// RESET = Quick Game Over Screen
@@ -1389,7 +1390,7 @@ class PlayState extends MusicBeatState
 			charToUse == null ? 0 : charToUse.x,
 			charToUse == null ? 0 : charToUse.y,
 			charToUse,
-			deathCharID.getDefault(charToUse != null ? charToUse.gameOverCharacter : "bf-dead"),
+			deathCharID.getDefault(charToUse != null ? charToUse.gameOverCharacter : Constants.DEFAULT_GAMEOVER_CHARACTER),
 			charToUse != null ? charToUse.isPlayer : true,
 			gameOverSong.getDefault(this.gameOverSong),
 			lossSFX.getDefault(this.lossSFX),
@@ -1600,6 +1601,7 @@ class PlayState extends MusicBeatState
 		 * CALCULATES RATING
 		 */
 		var noteDiff = Math.abs(Conductor.songPosition - note.strumTime);
+		// TODO: remake this entire system into a class based system
 		var daRating:String = "sick";
 		var score:Int = 300;
 		var accuracy:Float = 1;
@@ -1783,12 +1785,13 @@ class PlayState extends MusicBeatState
 		if (camZoomingInterval < 1) camZoomingInterval = 1;
 		if (Options.camZoomOnBeat && camZooming && FlxG.camera.zoom < maxCamZoom && curBeat % camZoomingInterval == 0)
 		{
-			FlxG.camera.zoom += 0.015 * camZoomingStrength;
-			camHUD.zoom += 0.03 * camZoomingStrength;
+			FlxG.camera.zoom += Constants.CAM_BOP_STRENGTH * camZoomingStrength;
+			camHUD.zoom += Constants.HUD_BOP_STRENGTH * camZoomingStrength;
 		}
 
-		iconP1.scale.set(1.2, 1.2);
-		iconP2.scale.set(1.2, 1.2);
+		var iconScale = Constants.BOP_ICON_SCALE;
+		iconP1.scale.set(iconScale, iconScale);
+		iconP2.scale.set(iconScale, iconScale);
 
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();
@@ -1865,7 +1868,8 @@ class PlayState extends MusicBeatState
 	 * @param weekData Week Data
 	 * @param difficulty Week Difficulty
 	 */
-	public static function loadWeek(weekData:WeekData, difficulty:String = "normal") {
+	public static function loadWeek(weekData:WeekData, difficulty:String = null) {
+		if(difficulty == null) difficulty = Constants.DEFAULT_DIFFICULTY;
 		storyWeek = weekData;
 		storyPlaylist = [for(e in weekData.songs) e.name];
 		isStoryMode = true;
@@ -1885,7 +1889,9 @@ class PlayState extends MusicBeatState
 	 * @param opponentMode Whenever opponent mode is on
 	 * @param coopMode Whenever co-op mode is on.
 	 */
-	public static function loadSong(_name:String, _difficulty:String = "normal", _opponentMode:Bool = false, _coopMode:Bool = false) {
+	public static function loadSong(_name:String, _difficulty:String = null, _opponentMode:Bool = false, _coopMode:Bool = false) {
+		if(_difficulty == null) _difficulty = Constants.DEFAULT_DIFFICULTY;
+		// TODO: make opponentMode and coopMode use constants
 		isStoryMode = false;
 		opponentMode = _opponentMode;
 		chartingMode = false;

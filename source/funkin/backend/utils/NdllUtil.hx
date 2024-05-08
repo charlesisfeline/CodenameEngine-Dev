@@ -21,6 +21,7 @@ class NdllUtil {
 		#if macos     public static final os:String = "mac";       #end
 		#if android   public static final os:String = "android";   #end
 		#if ios       public static final os:String = "ios";       #end
+		// TODO: add unknown
 	#end
 
 	/**
