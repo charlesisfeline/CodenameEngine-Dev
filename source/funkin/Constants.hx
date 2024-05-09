@@ -11,10 +11,10 @@ class Constants {
 	@:lazy public static var WINDOW_TITLE:String = Application.current.meta.get('name');
 	@:lazy public static var BUILD_FILENAME:String = Application.current.meta.get('file');
 	@:lazy public static var VERSION:String = Application.current.meta.get('version');
+	@:lazy public static var VERSION_MESSAGE:String = 'Codename Engine v$VERSION';
 	public static var COMMIT_NUMBER = GitCommitMacro.commitNumber;
 	public static var COMMIT_HASH = GitCommitMacro.commitHash;
 	public static var COMMIT_MESSAGE = 'Commit $COMMIT_NUMBER ($COMMIT_HASH)';
-	@:lazy public static var VERSION_MESSAGE:String = 'Codename Engine v$VERSION';
 
 	public static var REPO_NAME = "CodenameEngine";
 	public static var REPO_OWNER = "FNF-CNE-Devs";
@@ -38,6 +38,9 @@ class Constants {
 	public static var DISCORD_LOGO_TEXT = "Codename Engine";
 
 	public static var DEFAULT_CHARACTER = "bf";
+	public static var DEFAULT_GIRLFRIEND = "gf";
+	public static var DEFAULT_OPPONENT = "dad";
+
 	public static var DEFAULT_DIFFICULTY = "normal";
 	public static var DEFAULT_STAGE = "stage";
 	public static var DEFAULT_SCROLL_SPEED = 2.0;
@@ -47,6 +50,13 @@ class Constants {
 	public static var DEFAULT_BPM = 100.0;
 	public static var DEFAULT_BEATS_PER_MEASURE = 4;
 	public static var DEFAULT_STEPS_PER_BEAT = 4;
+
+	public static var BASEGAME_SONG_METADATA_VERSION = "2.2.2";
+	public static var BASEGAME_SONG_CHART_DATA_VERSION = "2.0.0";
+	public static var BASEGAME_DEFAULT_NOTE_STYLE = 'funkin';
+	public static var BASEGAME_DEFAULT_ALBUM_ID = 'volume1';
+	public static var BASEGAME_DEFAULT_PREVIEW_START = 0;
+	public static var BASEGAME_DEFAULT_PREVIEW_END = 15000;
 
 	public static var DEFAULT_COOP_ALLOWED = false;
 	public static var DEFAULT_OPPONENT_MODE_ALLOWED = false;

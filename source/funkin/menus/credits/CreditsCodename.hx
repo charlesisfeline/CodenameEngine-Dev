@@ -56,7 +56,7 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 		var text:String = parent.treeParent.pathDesc.text;
 		parent.treeParent.pathDesc.text = "";
 		parent.treeParent.pathDesc.applyMarkup(text, [
-			new FlxTextFormatMarkerPair(new FlxTextFormat(mainDevCol), '*'),
+			new FlxTextFormatMarkerPair(new FlxTextFormat(Constants.MAIN_DEVS_COLOR), '*'),
 			new FlxTextFormatMarkerPair(new FlxTextFormat(FlxColor.interpolate(Constants.MIN_CONTRIBUTIONS_COLOR, Constants.MAIN_DEVS_COLOR, Options.contributors[curSelected].contributions / totalContributions)), '~')
 		]);
 	}

@@ -39,7 +39,7 @@ class CharterStrumlineScreen extends UISubstateWindow {
 
 		if (creatingStrumLine)
 			strumLine = {
-				characters: ["dad"],
+				characters: [Constants.DEFAULT_OPPONENT],
 				type: OPPONENT,
 				notes: [],
 				position: "dad",

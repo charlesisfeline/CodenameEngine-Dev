@@ -26,8 +26,8 @@ class Paths
 	public static inline function getPath(file:String, ?library:String)
 		return library != null ? '$library:assets/$library/$file' : 'assets/$file';
 
-	public static inline function video(key:String, ?ext:String = Constants.VIDEO_EXT)
-		return getPath('videos/$key.$ext');
+	public static inline function video(key:String, ?ext:String)
+		return getPath('videos/$key.${ext == null ? Constants.VIDEO_EXT : ext}');
 
 	public static inline function ndll(key:String)
 		return getPath('ndlls/$key.ndll');
@@ -68,26 +68,31 @@ class Paths
 	inline static public function music(key:String, ?library:String)
 		return getPath('music/$key.${Constants.SOUND_EXT}', library);
 
-	inline static public function voices(song:String, difficulty:String = Constants.DEFAULT_DIFFICULTY, ?prefix:String = "")
+	inline static public function voices(song:String, ?difficulty:String, ?prefix:String = "")
 	{
-		var diff = getPath('songs/${song.toLowerCase()}/song/Voices$prefix-${difficulty.toLowerCase()}.${Constants.SOUND_EXT}', null);
+		difficulty = (difficulty == null ? Constants.DEFAULT_DIFFICULTY : difficulty).toLowerCase();
+		var diff = getPath('songs/${song.toLowerCase()}/song/Voices$prefix-$difficulty.${Constants.SOUND_EXT}', null);
 		return OpenFlAssets.exists(diff) ? diff : getPath('songs/${song.toLowerCase()}/song/Voices$prefix.${Constants.SOUND_EXT}', null);
 	}
 
-	inline static public function inst(song:String, difficulty:String = Constants.DEFAULT_DIFFICULTY, ?prefix:String = "")
+	inline static public function inst(song:String, ?difficulty:String, ?prefix:String = "")
 	{
-		var diff = getPath('songs/${song.toLowerCase()}/song/Inst$prefix-${difficulty.toLowerCase()}.${Constants.SOUND_EXT}', null);
+		difficulty = (difficulty == null ? Constants.DEFAULT_DIFFICULTY : difficulty).toLowerCase();
+		var diff = getPath('songs/${song.toLowerCase()}/song/Inst$prefix-$difficulty.${Constants.SOUND_EXT}', null);
 		return OpenFlAssets.exists(diff) ? diff : getPath('songs/${song.toLowerCase()}/song/Inst$prefix.${Constants.SOUND_EXT}', null);
 	}
 
-	static public function image(key:String, ?library:String, checkForAtlas:Bool = false, ?ext:String = Constants.IMAGE_EXT)
+	static public function image(key:String, ?library:String, checkForAtlas:Bool = false, ?ext:String)
 	{
+		if(ext == null) ext = Constants.IMAGE_EXT;
+
 		if (checkForAtlas) {
 			var atlasPath = getPath('images/$key/spritemap.$ext', library);
 			var multiplePath = getPath('images/$key/1.$ext', library);
 			if (atlasPath != null && OpenFlAssets.exists(atlasPath)) return atlasPath.substr(0, atlasPath.length - 14);
 			if (multiplePath != null && OpenFlAssets.exists(multiplePath)) return multiplePath.substr(0, multiplePath.length - 6);
 		}
+
 		return getPath('images/$key.$ext', library);
 	}
 
@@ -106,8 +111,8 @@ class Paths
 		return scriptPath;
 	}
 
-	static public function chart(song:String, ?difficulty:String = Constants.DEFAULT_DIFFICULTY):String {
-		difficulty = difficulty.toLowerCase();
+	static public function chart(song:String, ?difficulty:String):String {
+		difficulty = (difficulty == null ? Constants.DEFAULT_DIFFICULTY : difficulty).toLowerCase();
 		song = song.toLowerCase();
 
 		return getPath('songs/$song/charts/$difficulty.json', null);

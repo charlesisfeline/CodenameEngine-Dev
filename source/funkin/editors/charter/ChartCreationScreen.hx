@@ -73,7 +73,7 @@ class ChartCreationScreen extends UISubstateWindow {
 
 		strumLineList.addButton.callback = function() {
 			strumLineList.add(new StrumLineButton(strumLineList.buttons.length, {
-				characters: ["dad"],
+				characters: [Constants.DEFAULT_OPPONENT],
 				type: 0,
 				notes: null,
 				position: "DAD",
@@ -84,7 +84,7 @@ class ChartCreationScreen extends UISubstateWindow {
 
 		// DEFAULTS
 		strumLineList.add(new StrumLineButton(0, {
-			characters: ["dad"],
+			characters: [Constants.DEFAULT_OPPONENT],
 			type: 0,
 			notes: null,
 			position: "DAD",
@@ -93,7 +93,7 @@ class ChartCreationScreen extends UISubstateWindow {
 			scrollSpeed: 1,
 		}, strumLineList));
 		strumLineList.add(new StrumLineButton(1, {
-			characters: ["bf"],
+			characters: [Constants.DEFAULT_CHARACTER],
 			type: 1,
 			notes: null,
 			position: "BOYFRIEND",
@@ -102,7 +102,7 @@ class ChartCreationScreen extends UISubstateWindow {
 			scrollSpeed: 1,
 		}, strumLineList));
 		strumLineList.add(new StrumLineButton(2, {
-			characters: ["gf"],
+			characters: [Constants.DEFAULT_GIRLFRIEND],
 			type: 2,
 			notes: null,
 			position: "GIRLFRIEND",

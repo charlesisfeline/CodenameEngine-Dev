@@ -36,20 +36,16 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	public var lossSFX:FlxSound;
 
-	public function new(x:Float, y:Float, character:String = null, player:Bool = true, gameOverSong:String = null, lossSFX:String = null, retrySFX:String = null)
+	public function new(x:Float, y:Float, ?character:String, player:Bool = true, ?gameOverSong:String, ?lossSFX:String, ?retrySFX:String)
 	{
-		if(character == null) character = Constnats.DEFAULT_GAMEOVER_CHARACTER;
-		if(gameOverSong == null) gameOverSong = Constnats.DEFAULT_GAMEOVER_SONG;
-		if(lossSFX == null) lossSFX = Constnats.DEFAULT_GAMEOVER_LOSS_SFX;
-		if(retrySFX == null) retrySFX = Constnats.DEFAULT_GAMEOVER_RETRY_SFX;
 		super();
 		this.x = x;
 		this.y = y;
-		this.characterName = character;
 		this.player = player;
-		this.gameOverSong = gameOverSong;
-		this.lossSFXName = lossSFX;
-		this.retrySFX = retrySFX;
+		this.characterName = (character == null ? Constants.DEFAULT_GAMEOVER_CHARACTER : character);
+		this.gameOverSong = (gameOverSong == null ? Constants.DEFAULT_GAMEOVER_SONG : gameOverSong);
+		this.lossSFXName = (lossSFX == null ? Constants.DEFAULT_GAMEOVER_LOSS_SFX : lossSFX);
+		this.retrySFX = (retrySFX == null ? Constants.DEFAULT_GAMEOVER_RETRY_SFX : retrySFX);
 	}
 
 	public override function create()

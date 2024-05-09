@@ -110,8 +110,8 @@ class CharterSelection extends EditorTreeMenu {
 
 		// Save Files
 		CoolUtil.safeSaveFile('$songFolder/meta.json', Json.stringify(creation.meta, "\t"));
-		if (creation.instBytes != null) sys.io.File.saveBytes('$songFolder/song/Inst.${Paths.SOUND_EXT}', creation.instBytes);
-		if (creation.voicesBytes != null) sys.io.File.saveBytes('$songFolder/song/Voices.${Paths.SOUND_EXT}', creation.voicesBytes);
+		if (creation.instBytes != null) sys.io.File.saveBytes('$songFolder/song/Inst.${Constants.SOUND_EXT}', creation.instBytes);
+		if (creation.voicesBytes != null) sys.io.File.saveBytes('$songFolder/song/Voices.${Constants.SOUND_EXT}', creation.voicesBytes);
 		#end
 
 		var option = new EditorIconOption(creation.meta.name, "Press ACCEPT to choose a difficulty to edit.", creation.meta.icon, function() {

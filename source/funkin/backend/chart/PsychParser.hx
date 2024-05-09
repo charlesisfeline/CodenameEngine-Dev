@@ -26,7 +26,7 @@ class PsychParser {
 
 		for (strumLine in chart.strumLines)
 			if (strumLine.type == ADDITIONAL && base.gfVersion == null)
-				base.gfVersion = strumLine.characters.getDefault(["gf"])[0];
+				base.gfVersion = strumLine.characters.getDefault([Constants.DEFAULT_GIRLFRIEND])[0];
 
 		for (strumLine in chart.strumLines)
 			for (note in strumLine.notes) {

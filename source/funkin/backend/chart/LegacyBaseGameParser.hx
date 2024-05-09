@@ -29,7 +29,7 @@ class LegacyBaseGameParser {
 			position: "boyfriend",
 			notes: []
 		});
-		var gfName = data.gf != null ? data.gf : (data.gfVersion != null ? data.gfVersion : "gf");
+		var gfName = data.gf != null ? data.gf : (data.gfVersion != null ? data.gfVersion : Constants.DEFAULT_GIRLFRIEND);
 		if (!p2isGF && gfName != "none") {
 			result.strumLines.push({
 				characters: [gfName],
@@ -154,9 +154,9 @@ class LegacyBaseGameParser {
 		for (strumLine in chart.strumLines)
 			switch (strumLine.type) {
 				case OPPONENT:
-					if (base.player2 == null) base.player2 = strumLine.characters.getDefault(["dad"])[0];
+					if (base.player2 == null) base.player2 = strumLine.characters.getDefault([Constants.DEFAULT_OPPONENT])[0];
 				case PLAYER:
-					if (base.player1 == null) base.player1 = strumLine.characters.getDefault(["bf"])[0];
+					if (base.player1 == null) base.player1 = strumLine.characters.getDefault([Constants.DEFAULT_CHARACTER])[0];
 				case ADDITIONAL: // do nothing
 			}
 

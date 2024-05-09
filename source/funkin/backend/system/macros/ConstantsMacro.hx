@@ -15,7 +15,7 @@ class ConstantsMacro {
 		for(field in fields) {
 			switch(field.kind) {
 				case FVar(t, e):
-					resetFields.push(macro $i{field.name} = $v{e});
+					resetFields.push(macro $i{field.name} = ${e});
 
 					var hasLazy = false;
 					for(meta in field.meta) {
