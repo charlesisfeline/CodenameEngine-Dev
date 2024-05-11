@@ -1323,10 +1323,15 @@ class PlayState extends MusicBeatState
 	public var scrollSpeedTween:FlxTween = null;
 
 	public function executeEvent(event:ChartEvent) @:privateAccess {
-		if (event == null) return;
-		if (event.params == null) return;
+		if (event == null || event.params == null) return;
 
-		if (scripts.event("onEvent", EventManager.get(EventGameEvent).recycle(event)).cancelled) return;
+		var e = EventManager.get(EventGameEvent).recycle(event);
+		scripts.event("onEvent", e);
+		strumLines.forEachAlive(function (strLine:StrumLine) {
+			if (strLine.characters != null) for (character in strLine.characters)
+				if (character != null) character.script.call("onEvent", [e]);
+		});
+		if (e.cancelled) return;
 
 		switch(event.name) {
 			case "HScript Call":
@@ -1630,6 +1635,7 @@ class PlayState extends MusicBeatState
 			event = scripts.event("onPlayerHit", EventManager.get(NoteHitEvent).recycle(false, !note.isSustainNote, !note.isSustainNote, note, strumLine.characters, true, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, score, note.isSustainNote ? null : accuracy, 0.023, daRating, Options.splashesEnabled && !note.isSustainNote && daRating == "sick"));
 		else
 			event = scripts.event("onDadHit", EventManager.get(NoteHitEvent).recycle(false, false, false, note, strumLine.characters, false, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, 0, null, 0, daRating, false));
+		if(note.isSustainNote) event.animSuffix += "-hold";
 		strumLine.onHit.dispatch(event);
 		scripts.event("onNoteHit", event);
 

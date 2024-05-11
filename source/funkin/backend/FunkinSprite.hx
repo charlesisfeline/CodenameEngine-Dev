@@ -350,6 +350,14 @@ class FunkinSprite extends FlxSkewedSprite implements IBeatReceiver implements I
 	public inline function isAnimFinished() {
 		return animateAtlas != null ? (animateAtlas.anim.finished) : (animation.curAnim != null ? animation.curAnim.finished : true);
 	}
+
+	var globalCurFrame(get, set):Int;
+	public inline function get_globalCurFrame() {
+		return animateAtlas != null ? (animateAtlas.anim.curFrame) : (animation.curAnim != null ? animation.curAnim.curFrame : 0);
+	}
+	public inline function set_globalCurFrame(val:Int) {
+		return animateAtlas != null ? (animateAtlas.anim.curFrame = val) : (animation.curAnim != null ? animation.curAnim.curFrame = val : val);
+	}
 	#end
 
 	// Getter / Setters

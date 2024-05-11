@@ -12,6 +12,7 @@ import funkin.backend.scripting.events.DirectionAnimEvent;
 import funkin.backend.scripting.events.PlayAnimContext;
 import funkin.backend.scripting.events.PlayAnimEvent;
 import funkin.backend.scripting.events.PointEvent;
+import funkin.backend.scripting.events.DrawEvent;
 import funkin.backend.system.Conductor;
 import funkin.backend.system.interfaces.IBeatReceiver;
 import funkin.backend.system.interfaces.IOffsetCompatible;
@@ -284,52 +285,59 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	var __oldColorTransform = new ColorTransform();
 
 	public override function draw() {
-		if (!__drawingShadowFrame && shadowFrame != null) {
-			__drawingShadowFrame = true;
+		var e = EventManager.get(DrawEvent).recycle();
+		script.call("draw", [e]);
 
-			var oldFrame = _frame;
-			var oldPos = FlxPoint.get(frameOffset.x, frameOffset.y);
+		if (!e.cancelled) {
+			if (!__drawingShadowFrame && shadowFrame != null) {
+				__drawingShadowFrame = true;
 
-			__oldColorTransform.copyColorTransform(colorTransform);
+				var oldFrame = _frame;
+				var oldPos = FlxPoint.get(frameOffset.x, frameOffset.y);
 
-			colorTransform.alphaMultiplier = 1;
-			colorTransform.alphaOffset = 0;
-			colorTransform.blueMultiplier = 0;
-			colorTransform.blueOffset = 25;
-			colorTransform.greenMultiplier = 0;
-			colorTransform.greenOffset = 25;
-			colorTransform.redMultiplier = 0;
-			colorTransform.redOffset = 25;
+				__oldColorTransform.copyColorTransform(colorTransform);
 
-			_frame = shadowFrame.frame;
-			var o = getAnimOffset(shadowFrame.anim);
-			frameOffset.set(o.x, o.y);
-			super.draw();
+				colorTransform.alphaMultiplier = 1;
+				colorTransform.alphaOffset = 0;
+				colorTransform.blueMultiplier = 0;
+				colorTransform.blueOffset = 25;
+				colorTransform.greenMultiplier = 0;
+				colorTransform.greenOffset = 25;
+				colorTransform.redMultiplier = 0;
+				colorTransform.redOffset = 25;
 
-			_frame = oldFrame;
-			frameOffset.set(oldPos.x, oldPos.y);
+				_frame = shadowFrame.frame;
+				var o = getAnimOffset(shadowFrame.anim);
+				frameOffset.set(o.x, o.y);
+				super.draw();
 
-			colorTransform.copyColorTransform(__oldColorTransform);
+				_frame = oldFrame;
+				frameOffset.set(oldPos.x, oldPos.y);
 
-			oldPos.put();
+				colorTransform.copyColorTransform(__oldColorTransform);
 
-			__drawingShadowFrame = false;
+				oldPos.put();
+
+				__drawingShadowFrame = false;
+			}
+
+			if (isFlippedOffsets())
+			{
+				__reverseDrawProcedure = true;
+
+				flipX = !flipX;
+				scale.x *= -1;
+				super.draw();
+				flipX = !flipX;
+				scale.x *= -1;
+
+				__reverseDrawProcedure = false;
+			}
+			else
+				super.draw();
 		}
 
-		if (isFlippedOffsets())
-		{
-			__reverseDrawProcedure = true;
-
-			flipX = !flipX;
-			scale.x *= -1;
-			super.draw();
-			flipX = !flipX;
-			scale.x *= -1;
-
-			__reverseDrawProcedure = false;
-		}
-		else
-			super.draw();
+		script.call("postDraw", [e]);
 	}
 
 	public override function playAnim(AnimName:String, Force:Bool = false, Context:PlayAnimContext = NONE, Reversed:Bool = false, Frame:Int = 0):Void
