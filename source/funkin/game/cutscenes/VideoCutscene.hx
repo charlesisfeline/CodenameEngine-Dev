@@ -12,7 +12,7 @@ import haxe.xml.Access;
 import sys.io.File;
 #end
 #if VIDEO_CUTSCENES
-import hxvlc.flixel.FlxVideo;
+import hxvlc.flixel.FlxVideoSprite;
 #end
 
 /**
@@ -24,7 +24,7 @@ class VideoCutscene extends Cutscene {
 	var localPath:String;
 
 	#if VIDEO_CUTSCENES
-	var video:FlxVideo;
+	var video:FlxVideoSprite;
 	#end
 	var cutsceneCamera:FlxCamera;
 
@@ -36,6 +36,7 @@ class VideoCutscene extends Cutscene {
 	var subtitle:FunkinText;
 
 	public var subtitles:Array<CutsceneSubtitle> = [];
+	var curSubtitle:Int = 0;
 
 	public function new(path:String, callback:Void->Void) {
 		super(callback, false);
@@ -54,9 +55,10 @@ class VideoCutscene extends Cutscene {
 		#if VIDEO_CUTSCENES
 		parseSubtitles();
 
-		video = new FlxVideo();
-		video.onEndReached.add(video.dispose);
-		video.onEndReached.add(close);
+		add(video = new FlxVideoSprite());
+		video.antialiasing = true;
+		video.autoPause = false;  // Imma handle it better inside this class, mainly because of the pause menu  - Nex
+		video.bitmap.onEndReached.add(close);
 
 		//cover = new FlxSprite(0, FlxG.height * 0.85).makeSolid(FlxG.width + 50, FlxG.height + 50, 0xFF000000);
 		//cover.scrollFactor.set(0, 0);
@@ -92,12 +94,8 @@ class VideoCutscene extends Cutscene {
 				videoReady = true;
 			});
 		} else {
-			if (video.load(localPath))
-				new FlxTimer().start(0.001, function(tmr:FlxTimer) {
-					video.play();
-				});
-			else
-				close();
+			if(video.load(localPath)) new FlxTimer().start(0.001, function(_) onReady());
+			else close();
 		}
 		add(bg);
 		add(subtitle);
@@ -135,22 +133,18 @@ class VideoCutscene extends Cutscene {
 				}
 				if (subtitleText.length <= 0) continue; // empty subtitle, skipping
 				var lastSub = subtitles.last();
-				if (lastSub != null && lastSub.subtitle == "" && lastSub.time > beginTime)
+				if (lastSub != null && lastSub.subtitle == "" && lastSub.time >= beginTime)
 					subtitles.pop(); // remove last subtitle auto reset to prevent bugs
 				subtitles.push({
-					subtitle: subtitleText.join("."),
-					time: beginTime * 1000,
-					color: 0xFFFFFFFF // todo
+					subtitle: subtitleText.join(""),
+					time: beginTime * 1000
 				});
 				subtitles.push({
 					subtitle: "",
-					time: endTime * 1000,
-					color: 0xFFFFFFFF
+					time: endTime * 1000
 				});
 			}
 		}
-
-		trace(subtitles);
 	}
 
 	public static function splitTime(str:String):Float {
@@ -167,17 +161,18 @@ class VideoCutscene extends Cutscene {
 		return time;
 	}
 
+	public inline function onReady() {
+		video.play();
+		__pausable = true;
+	}
+
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
 		#if VIDEO_CUTSCENES
 		if (videoReady) {
 			videoReady = false;
 
-			if (video.load(localPath))
-				new FlxTimer().start(0.001, function(tmr:FlxTimer) {
-					video.play();
-					__pausable = true;
-				});
+			if (video.load(localPath)) new FlxTimer().start(0.001, function(_) onReady());
 			else
 			{
 				close();
@@ -191,11 +186,11 @@ class VideoCutscene extends Cutscene {
 			if (loadingBackdrop != null)
 				loadingBackdrop.visible = false;
 		}
-		@:privateAccess
-		var time:Int64 = video.time;
 
-		while (subtitles.length > 0 && subtitles[0].time < Math.round(FPHelper.i64ToDouble(time.low, time.high)))
-			setSubtitle(subtitles.shift());
+		if(curSubtitle < subtitles.length && haxe.Int64.toInt(video.bitmap.time) >= subtitles[curSubtitle].time) {
+			setSubtitle(subtitles[curSubtitle]);
+			curSubtitle++;
+		}
 
 		if (loadingBackdrop != null) {
 			loadingBackdrop.x -= elapsed * FlxG.width * 0.5;
@@ -205,26 +200,36 @@ class VideoCutscene extends Cutscene {
 		#end
 	}
 
+	@:dox(hide) override public function onFocus() {
+		if(FlxG.autoPause && !paused) video.resume();
+		super.onFocus();
+	}
+
+	@:dox(hide) override public function onFocusLost() {
+		if(FlxG.autoPause && !paused) video.pause();
+		super.onFocusLost();
+	}
+
 	public override function pauseCutscene() {
 		video.pause();
 		super.pauseCutscene();
 	}
 
-	public override function onRestartCutscene() {
-		closeSubState();
-		video.position = 0;
-		video.play();
+	public override function onResumeCutscene(event) {
+		video.resume();
+		super.onResumeCutscene(event);
 	}
 
-	public override function onSkipCutscene() {
-		video.onEndReached.dispatch();
-		super.onSkipCutscene();
+	public override function onRestartCutscene(event) {
+		closeSubState();
+		video.bitmap.position = curSubtitle = 0;
+		setSubtitle({time: -1, subtitle: ""});
+		video.resume();
 	}
 
 	public function setSubtitle(sub:CutsceneSubtitle) {
 		if (bg.visible = subtitle.visible = (sub.subtitle.length > 0)) {
 			subtitle.text = sub.subtitle;
-			subtitle.color = sub.color;
 			subtitle.screenCenter(X);
 			bg.scale.set(subtitle.width + 8, subtitle.height + 8);
 			bg.updateHitbox();
@@ -241,5 +246,4 @@ class VideoCutscene extends Cutscene {
 typedef CutsceneSubtitle = {
 	var time:Float; // time in ms
 	var subtitle:String; // subtitle text
-	var color:FlxColor;
 }

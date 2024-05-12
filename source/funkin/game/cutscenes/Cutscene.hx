@@ -1,5 +1,6 @@
 package funkin.game.cutscenes;
 
+import funkin.backend.scripting.events.NameEvent;
 import funkin.menus.PauseSubState;
 
 /**
@@ -10,6 +11,7 @@ class Cutscene extends MusicBeatSubstate {
 	var __pausable:Bool;
 	var game:PlayState = PlayState.instance;
 
+	public var paused:Bool = false;
 	public var pauseItems:Array<String>;
 	public var skippable(default, set):Bool;
 
@@ -38,19 +40,30 @@ class Cutscene extends MusicBeatSubstate {
 		_before = [game.persistentUpdate, game.persistentDraw];
 		game.persistentUpdate = persistentUpdate = false;
 		game.persistentDraw = persistentDraw = true;
+		paused = true;
+
 		openSubState(new PauseSubState(pauseItems, selectPauseOption));
 	}
 
-	public function onSkipCutscene() close();
-	public function onRestartCutscene() game.resetSubState();
+	public override function closeSubState() {
+		if (paused) {
+			game.persistentUpdate = _before[0];
+			game.persistentDraw = _before[1];
+			paused = false;
+		}
 
-	public function selectPauseOption(name:String):Bool {
-		switch(name) {
-			case 'Skip Cutscene': onSkipCutscene();
-			case 'Restart Cutscene': onRestartCutscene();
-			case 'Resume':
-				game.persistentUpdate = _before[0];
-				game.persistentDraw = _before[1];
+		super.closeSubState();
+	}
+
+	public function onSkipCutscene(event) close();
+	public function onRestartCutscene(event) event.name = "Restart Song";  // Making the whole PlayState restart just for precaution  - Nex
+	public function onResumeCutscene(event) event.name = "Resume";
+
+	public function selectPauseOption(event:NameEvent) {
+		switch(event.name) {
+			case 'Skip Cutscene': onSkipCutscene(event);
+			case 'Restart Cutscene': onRestartCutscene(event);
+			case 'Resume Cutscene': onResumeCutscene(event);
 		}
 
 		return true;

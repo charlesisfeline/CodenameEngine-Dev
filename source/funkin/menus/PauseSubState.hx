@@ -26,13 +26,13 @@ class PauseSubState extends MusicBeatSubstate
 	var pauseMusic:FlxSound;
 
 	public var pauseScript:Script;
-	public var selectCall:String->Bool;  // Mainly for extern stuff that aren't scripts (Note: Returning false won't make the pause check the classic hardcoded menuItems, aka works like event.cancelled)  - Nex
+	public var selectCall:NameEvent->Void;  // Mainly for extern stuff that aren't scripts  - Nex
 
 	public var game:PlayState = PlayState.instance; // shortcut
 
 	private var __cancelDefault:Bool = false;
 
-	public function new(?items:Array<String>, ?selectCall:String->Bool) {
+	public function new(?items:Array<String>, ?selectCall:NameEvent->Void) {
 		super();
 		menuItems = items != null ? items : Constants.DEFAULT_PAUSE_ITEMS;
 		this.selectCall = selectCall;
@@ -137,12 +137,11 @@ class PauseSubState extends MusicBeatSubstate
 
 	public function selectOption() {
 		var event = EventManager.get(NameEvent).recycle(menuItems[curSelected]);
+		if (selectCall != null) selectCall(event);
 		pauseScript.call("onSelectOption", [event]);
+		if (event.cancelled) return;
 
-		var name = event.name;
-		if (event.cancelled || (selectCall != null && !selectCall(name))) return;
-
-		switch (name)
+		switch (event.name)
 		{
 			case "Resume":
 				close();

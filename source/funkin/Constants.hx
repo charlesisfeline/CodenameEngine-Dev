@@ -90,7 +90,7 @@ class Constants {
 	public static var MAX_CAMERA_ZOOM = 1.35;
 
 	public static var DEFAULT_PAUSE_ITEMS = ['Resume', 'Restart Song', 'Change Controls', 'Change Options', 'Exit to menu', "Exit to charter"];
-	public static var DEFAULT_CUTSCENE_PAUSE_ITEMS = ['Resume', 'Skip Cutscene', 'Restart Cutscene', 'Exit to menu'];
+	public static var DEFAULT_CUTSCENE_PAUSE_ITEMS = ['Resume Cutscene', 'Skip Cutscene', 'Restart Cutscene', 'Exit to menu'];
 	public static var DEFAULT_GITAROO = false; // fuck you
 	public static var GITAROO_CHANCE = 0.1;
 	public static var DEFAULT_CAN_ACCESS_DEBUG_MENUS = true;
