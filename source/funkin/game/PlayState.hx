@@ -501,7 +501,8 @@ class PlayState extends MusicBeatState
 			if (e.percent <= acc && (rating == null || rating.percent < e.percent))
 				rating = e;
 
-		var event = scripts.event("onRatingUpdate", EventManager.get(RatingUpdateEvent).recycle(rating, curRating));
+		var event = EventManager.get(RatingUpdateEvent).recycle(rating, curRating);
+		gameAndCharsEvent("onRatingUpdate", event);
 		if (!event.cancelled)
 			curRating = event.rating;
 	}
@@ -513,6 +514,24 @@ class PlayState extends MusicBeatState
 			healthBar.setRange(healthBar.min, v);
 		}
 		return this.maxHealth = v;
+	}
+
+	public inline function callOnCharacters(func:String, ?parameters:Array<Dynamic>) {
+		if(strumLines != null) strumLines.forEachAlive(function (strLine:StrumLine) {
+			if (strLine.characters != null) for (character in strLine.characters)
+				if (character != null) character.script.call(func, parameters);
+		});
+	}
+
+	public inline function gameAndCharsCall(func:String, ?parameters:Array<Dynamic>, ?charsFunc:String) {
+		scripts.call(func, parameters);
+		callOnCharacters(charsFunc != null ? charsFunc : func, parameters);
+	}
+
+	public inline function gameAndCharsEvent<T:CancellableEvent>(func:String, ?event:T, ?charsFunc:String):T {
+		scripts.event(func, event);
+		callOnCharacters(charsFunc != null ? charsFunc : func, [event]);
+		return event;
 	}
 
 	@:dox(hide) override public function create()
@@ -675,9 +694,9 @@ class PlayState extends MusicBeatState
 		// HUD INITIALIZATION & CAMERA INITIALIZATION
 		#if REGION
 		var event = EventManager.get(AmountEvent).recycle(Constants.DEFAULT_STRUM_AMOUNT);
-		if (!scripts.event("onPreGenerateStrums", event).cancelled) {
+		if (!gameAndCharsEvent("onPreGenerateStrums", event).cancelled) {
 			generateStrums(event.amount);
-			scripts.event("onPostGenerateStrums", event);
+			gameAndCharsEvent("onPostGenerateStrums", event);
 		}
 
 		for(str in strumLines)
@@ -777,7 +796,7 @@ class PlayState extends MusicBeatState
 
 		__updateNote_event = EventManager.get(NoteUpdateEvent);
 
-		scripts.call("postCreate");
+		gameAndCharsCall("postCreate", null, "gamePostCreate");
 	}
 
 	/**
@@ -841,7 +860,7 @@ class PlayState extends MusicBeatState
 			_startCountdownCalled = true;
 			inCutscene = false;
 
-			if (scripts.event("onStartCountdown", new CancellableEvent()).cancelled) return;
+			if (gameAndCharsEvent("onStartCountdown", new CancellableEvent()).cancelled) return;
 		}
 
 		startedCountdown = true;
@@ -854,14 +873,14 @@ class PlayState extends MusicBeatState
 		{
 			countdown(swagCounter++);
 		}, introLength);
-		scripts.call("onPostStartCountdown");
+		gameAndCharsCall("onPostStartCountdown");
 	}
 
 	/**
 	 * Creates a fake countdown.
 	 */
 	public function countdown(swagCounter:Int) {
-		var event:CountdownEvent = scripts.event("onCountdown", EventManager.get(CountdownEvent).recycle(
+		var event:CountdownEvent = gameAndCharsEvent("onCountdown", EventManager.get(CountdownEvent).recycle(
 			swagCounter,
 			1,
 			introSounds[swagCounter],
@@ -904,12 +923,12 @@ class PlayState extends MusicBeatState
 		event.spriteTween = tween;
 		event.cancelled = false;
 
-		scripts.event("onPostCountdown", event);
+		gameAndCharsEvent("onPostCountdown", event);
 	}
 
 	@:dox(hide) function startSong():Void
 	{
-		scripts.call("onSongStart");
+		gameAndCharsCall("onSongStart");
 		startingSong = false;
 
 		inst.onComplete = endSong;
@@ -935,8 +954,7 @@ class PlayState extends MusicBeatState
 		inst.play();
 
 		updateDiscordPresence();
-
-		scripts.call("onStartSong");
+		gameAndCharsCall("onStartSong");
 	}
 
 	public override function destroy() {
@@ -1014,7 +1032,7 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	override function openSubState(SubState:FlxSubState)
 	{
-		var event = scripts.event("onSubstateOpen", EventManager.get(StateEvent).recycle(SubState));
+		var event = gameAndCharsEvent("onSubstateOpen", EventManager.get(StateEvent).recycle(SubState));
 
 		if (!postCreated)
 			MusicBeatState.skipTransIn = true;
@@ -1040,7 +1058,7 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	override function closeSubState()
 	{
-		var event = scripts.event("onSubstateClose", EventManager.get(StateEvent).recycle(subState));
+		var event = gameAndCharsEvent("onSubstateClose", EventManager.get(StateEvent).recycle(subState));
 		if (event.cancelled) return;
 
 		if (paused)
@@ -1069,12 +1087,12 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	override public function onFocus():Void
 	{
-		if (!paused && FlxG.autoPause) {
+		if (!startingSong && !paused && FlxG.autoPause) {
 			for (strumLine in strumLines.members) strumLine.vocals.resume();
 			inst.resume();
 			vocals.resume();
 		}
-		scripts.call("onFocus");
+		gameAndCharsCall("onFocus");
 		updateDiscordPresence();
 		super.onFocus();
 	}
@@ -1082,12 +1100,12 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	override public function onFocusLost():Void
 	{
-		if (!paused && FlxG.autoPause) {
+		if (!startingSong && !paused && FlxG.autoPause) {
 			for (strumLine in strumLines.members) strumLine.vocals.pause();
 			inst.pause();
 			vocals.pause();
 		}
-		scripts.call("onFocusLost");
+		gameAndCharsCall("onFocusLost");
 		updateDiscordPresence();
 		super.onFocusLost();
 	}
@@ -1106,14 +1124,14 @@ class PlayState extends MusicBeatState
 			strumLine.vocals.play();
 		}
 		vocals.play();
-		scripts.call("onVocalsResync");
+		gameAndCharsCall("onVocalsResync");
 	}
 
 	/**
 	 * Pauses the game.
 	 */
 	public function pauseGame() {
-		var e = scripts.event("onGamePause", new CancellableEvent());
+		var e = gameAndCharsEvent("onGamePause", new CancellableEvent());
 		if (e.cancelled) return;
 
 		persistentUpdate = false;
@@ -1278,7 +1296,7 @@ class PlayState extends MusicBeatState
 				pos.x /= r;
 				pos.y /= r;
 
-				var event = scripts.event("onCameraMove", EventManager.get(CamMoveEvent).recycle(pos, strumLines.members[curCameraTarget], r));
+				var event = gameAndCharsEvent("onCameraMove", EventManager.get(CamMoveEvent).recycle(pos, strumLines.members[curCameraTarget], r));
 				if (!event.cancelled)
 					camFollow.setPosition(pos.x, pos.y);
 			}
@@ -1326,12 +1344,9 @@ class PlayState extends MusicBeatState
 		if (event == null || event.params == null) return;
 
 		var e = EventManager.get(EventGameEvent).recycle(event);
-		scripts.event("onEvent", e);
-		strumLines.forEachAlive(function (strLine:StrumLine) {
-			if (strLine.characters != null) for (character in strLine.characters)
-				if (character != null) character.script.call("onEvent", [e]);
-		});
+		gameAndCharsEvent("onEvent", e);
 		if (e.cancelled) return;
+		var event = e.event;
 
 		switch(event.name) {
 			case "HScript Call":
@@ -1391,7 +1406,7 @@ class PlayState extends MusicBeatState
 	 */
 	public function gameOver(?character:Character, ?deathCharID:String, ?gameOverSong:String, ?lossSFX:String, ?retrySFX:String) {
 		var charToUse:Character = character.getDefault(opponentMode ? dad : boyfriend);  // Imma still make it check null later just in case dad or bf are also null for some weird scripts  - Nex
-		var event:GameOverEvent = scripts.event("onGameOver", EventManager.get(GameOverEvent).recycle(
+		var event:GameOverEvent = gameAndCharsEvent("onGameOver", EventManager.get(GameOverEvent).recycle(
 			charToUse == null ? 0 : charToUse.x,
 			charToUse == null ? 0 : charToUse.y,
 			charToUse,
@@ -1418,7 +1433,7 @@ class PlayState extends MusicBeatState
 
 		openSubState(new GameOverSubstate(event.x, event.y, event.deathCharID, event.isPlayer, event.gameOverSong, event.lossSFX, event.retrySFX));
 
-		scripts.event("onPostGameOver", event);
+		gameAndCharsEvent("onPostGameOver", event);
 	}
 
 	/**
@@ -1426,7 +1441,7 @@ class PlayState extends MusicBeatState
 	 */
 	public function endSong():Void
 	{
-		scripts.call("onSongEnd");
+		gameAndCharsCall("onSongEnd");
 		canPause = false;
 		inst.volume = 0;
 		vocals.volume = 0;
@@ -1547,7 +1562,7 @@ class PlayState extends MusicBeatState
 		var directionID:Null<Int> = note == null ? direction : note.strumID;
 		if (playerID == null || directionID == null || playerID == -1) return;
 
-		var event:NoteMissEvent = scripts.event("onPlayerMiss", EventManager.get(NoteMissEvent).recycle(note, -10, 1, muteVocalsOnMiss, note != null ? -0.0475 : -0.04, Paths.soundRandom('missnote', 1, 3), FlxG.random.float(0.1, 0.2), note == null, combo > 5, "sad", true, true, "miss", strumLines.members[playerID].characters, playerID, note != null ? note.noteType : null, directionID, 0));
+		var event:NoteMissEvent = gameAndCharsEvent("onPlayerMiss", EventManager.get(NoteMissEvent).recycle(note, -10, 1, muteVocalsOnMiss, note != null ? -0.0475 : -0.04, Paths.soundRandom('missnote', 1, 3), FlxG.random.float(0.1, 0.2), note == null, combo > 5, "sad", true, true, "miss", strumLines.members[playerID].characters, playerID, note != null ? note.noteType : null, directionID, 0));
 		strumLine.onMiss.dispatch(event);
 		if (event.cancelled) return;
 
@@ -1632,12 +1647,12 @@ class PlayState extends MusicBeatState
 
 		var event:NoteHitEvent;
 		if (strumLine != null && !strumLine.cpu)
-			event = scripts.event("onPlayerHit", EventManager.get(NoteHitEvent).recycle(false, !note.isSustainNote, !note.isSustainNote, note, strumLine.characters, true, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, score, note.isSustainNote ? null : accuracy, 0.023, daRating, Options.splashesEnabled && !note.isSustainNote && daRating == "sick"));
+			event = gameAndCharsEvent("onPlayerHit", EventManager.get(NoteHitEvent).recycle(false, !note.isSustainNote, !note.isSustainNote, note, strumLine.characters, true, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, score, note.isSustainNote ? null : accuracy, 0.023, daRating, Options.splashesEnabled && !note.isSustainNote && daRating == "sick"));
 		else
-			event = scripts.event("onDadHit", EventManager.get(NoteHitEvent).recycle(false, false, false, note, strumLine.characters, false, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, 0, null, 0, daRating, false));
+			event = gameAndCharsEvent("onDadHit", EventManager.get(NoteHitEvent).recycle(false, false, false, note, strumLine.characters, false, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, 0, null, 0, daRating, false));
 		if(note.isSustainNote) event.animSuffix += "-hold";
 		strumLine.onHit.dispatch(event);
-		scripts.event("onNoteHit", event);
+		gameAndCharsEvent("onNoteHit", event);
 
 		if (!event.cancelled) {
 			if (!note.isSustainNote) {

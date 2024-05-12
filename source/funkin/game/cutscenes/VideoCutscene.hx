@@ -25,7 +25,6 @@ class VideoCutscene extends Cutscene {
 
 	#if VIDEO_CUTSCENES
 	var video:FlxVideo;
-	public var skippable:Bool = true;
 	#end
 	var cutsceneCamera:FlxCamera;
 
@@ -39,7 +38,7 @@ class VideoCutscene extends Cutscene {
 	public var subtitles:Array<CutsceneSubtitle> = [];
 
 	public function new(path:String, callback:Void->Void) {
-		super(callback);
+		super(callback, false);
 		localPath = Assets.getPath(this.path = path);
 	}
 
@@ -177,6 +176,7 @@ class VideoCutscene extends Cutscene {
 			if (video.load(localPath))
 				new FlxTimer().start(0.001, function(tmr:FlxTimer) {
 					video.play();
+					__pausable = true;
 				});
 			else
 			{
@@ -200,12 +200,25 @@ class VideoCutscene extends Cutscene {
 		if (loadingBackdrop != null) {
 			loadingBackdrop.x -= elapsed * FlxG.width * 0.5;
 		}
-		if (skippable && video.isPlaying && controls.ACCEPT) {
-			video.onEndReached.dispatch();
-		}
 		#else
 		close();
 		#end
+	}
+
+	public override function pauseCutscene() {
+		video.pause();
+		super.pauseCutscene();
+	}
+
+	public override function onRestartCutscene() {
+		closeSubState();
+		video.position = 0;
+		video.play();
+	}
+
+	public override function onSkipCutscene() {
+		video.onEndReached.dispatch();
+		super.onSkipCutscene();
 	}
 
 	public function setSubtitle(sub:CutsceneSubtitle) {

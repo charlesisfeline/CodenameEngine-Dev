@@ -36,7 +36,7 @@ class DialogueCutscene extends Cutscene {
 	}
 
 	public function new(dialoguePath:String, callback:Void->Void) {
-		super(callback);
+		super(callback, false, false);
 		this.dialoguePath = dialoguePath;
 		camera = dialogueCamera = new FlxCamera();
 		dialogueCamera.bgColor = 0;

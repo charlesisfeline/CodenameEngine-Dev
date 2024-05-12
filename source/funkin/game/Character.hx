@@ -259,10 +259,11 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		}
 	}
 
-	public override function stepHit(curStep:Int) {
+	public override function measureHit(curMeasure:Int)
+		script.call("measureHit", [curMeasure]);
+
+	public override function stepHit(curStep:Int)
 		script.call("stepHit", [curStep]);
-		// nothing
-	}
 
 	var __reverseDrawProcedure:Bool = false;
 
