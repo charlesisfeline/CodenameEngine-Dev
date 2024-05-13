@@ -1,5 +1,6 @@
 package funkin.game.cutscenes;
 
+import flixel.tweens.FlxTween;
 import flixel.addons.display.FlxBackdrop;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
@@ -25,18 +26,20 @@ class VideoCutscene extends Cutscene {
 
 	#if VIDEO_CUTSCENES
 	var video:FlxVideoSprite;
-	#end
+	final mutex = new sys.thread.Mutex();
+
 	var cutsceneCamera:FlxCamera;
 
 	var text:FunkinText;
 	var loadingBackdrop:FlxBackdrop;
-	var videoReady:Bool = false;
+	private var __loaded:Bool = false;
 
 	var bg:FlxSprite;
 	var subtitle:FunkinText;
 
 	public var subtitles:Array<CutsceneSubtitle> = [];
 	var curSubtitle:Int = 0;
+	#end
 
 	public function new(path:String, callback:Void->Void) {
 		super(callback, false);
@@ -48,11 +51,11 @@ class VideoCutscene extends Cutscene {
 
 		// TODO: get vlc to stop autoloading those goddamn subtitles (use different file ext??)
 
+		#if VIDEO_CUTSCENES
 		cutsceneCamera = new FlxCamera();
 		cutsceneCamera.bgColor = 0;
 		FlxG.cameras.add(cutsceneCamera, false);
 
-		#if VIDEO_CUTSCENES
 		parseSubtitles();
 
 		add(video = new FlxVideoSprite());
@@ -73,37 +76,44 @@ class VideoCutscene extends Cutscene {
 		subtitle.alignment = CENTER;
 		subtitle.visible = false;
 
-		if (localPath.startsWith("[ZIP]")) {
-			text = new FunkinText(10, 10, Std.int(FlxG.width / 2), "Loading video...");
-			text.cameras = [cutsceneCamera];
-			text.visible = false;
-			@:privateAccess
-			text.regenGraphic();
-			add(text);
+		text = new FunkinText(10, 10, Std.int(FlxG.width / 2), "Loading video...");
+		text.cameras = [cutsceneCamera];
+		text.visible = false;
+		@:privateAccess
+		text.regenGraphic();
+		add(text);
 
-			loadingBackdrop = new FlxBackdrop(text.graphic, X);
-			loadingBackdrop.y = FlxG.height - 20 - loadingBackdrop.height;
-			loadingBackdrop.cameras = [cutsceneCamera];
-			add(loadingBackdrop);
+		loadingBackdrop = new FlxBackdrop(text.graphic, X);
+		loadingBackdrop.y = FlxG.height - 20 - loadingBackdrop.height;
+		loadingBackdrop.velocity.x = 70;
+		loadingBackdrop.cameras = [cutsceneCamera];
+		add(loadingBackdrop);
 
-			// ZIP PATH: EXPORT
-			// TODO: this but better and more ram friendly
-			localPath = './.temp/video-${curVideo++}.mp4';
-			Main.execAsync(function() {
+		loadingBackdrop.alpha = 0;
+		FlxTween.tween(loadingBackdrop, {alpha: 1}, 0.5, {ease: FlxEase.sineInOut});
+
+		Main.execAsync(function() {
+			if (localPath.startsWith("[ZIP]")) {
+				// ZIP PATH: EXPORT
+				// TODO: this but better and more ram friendly
+				localPath = './.temp/video-${curVideo++}.mp4';
 				File.saveBytes(localPath, Assets.getBytes(path));
-				videoReady = true;
-			});
-		} else {
-			if(video.load(localPath)) new FlxTimer().start(0.001, function(_) onReady());
-			else close();
-		}
+			}
+
+			if(video.load(localPath)) new FlxTimer().start(0.001, function(_) {mutex.acquire(); onReady(); mutex.release();});
+			else { mutex.acquire(); close(); mutex.release(); }
+		});
+
 		add(bg);
 		add(subtitle);
-		#end
 
 		cameras = [cutsceneCamera];
+		#else
+		close();
+		#end
 	}
 
+	#if VIDEO_CUTSCENES
 	public function parseSubtitles() {
 		var subtitlesPath = '${Path.withoutExtension(path)}.srt';
 
@@ -162,42 +172,23 @@ class VideoCutscene extends Cutscene {
 	}
 
 	public inline function onReady() {
+		FlxTween.cancelTweensOf(loadingBackdrop);
+		FlxTween.tween(loadingBackdrop, {alpha: 0}, 0.7, {ease: FlxEase.sineInOut, onComplete: function(_) {
+			loadingBackdrop.destroy();
+			text.destroy();
+		}});
+
+		__pausable = __loaded = true;
 		video.play();
-		__pausable = true;
 	}
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
-		#if VIDEO_CUTSCENES
-		if (videoReady) {
-			videoReady = false;
 
-			if (video.load(localPath)) new FlxTimer().start(0.001, function(_) onReady());
-			else
-			{
-				close();
-
-				if (loadingBackdrop != null)
-					loadingBackdrop.visible = false;
-
-				return;
-			}
-
-			if (loadingBackdrop != null)
-				loadingBackdrop.visible = false;
-		}
-
-		if(curSubtitle < subtitles.length && haxe.Int64.toInt(video.bitmap.time) >= subtitles[curSubtitle].time) {
+		if(loadingBackdrop == null && curSubtitle < subtitles.length && haxe.Int64.toInt(video.bitmap.time) >= subtitles[curSubtitle].time) {
 			setSubtitle(subtitles[curSubtitle]);
 			curSubtitle++;
 		}
-
-		if (loadingBackdrop != null) {
-			loadingBackdrop.x -= elapsed * FlxG.width * 0.5;
-		}
-		#else
-		close();
-		#end
 	}
 
 	@:dox(hide) override public function onFocus() {
@@ -241,6 +232,7 @@ class VideoCutscene extends Cutscene {
 		FlxG.cameras.remove(cutsceneCamera, true);
 		super.destroy();
 	}
+	#end
 }
 
 typedef CutsceneSubtitle = {
