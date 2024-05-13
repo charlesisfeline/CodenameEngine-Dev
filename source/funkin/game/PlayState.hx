@@ -1052,7 +1052,7 @@ class PlayState extends MusicBeatState
 				startTimer.active = false;
 		}
 
-		super.openSubState(SubState);
+		super.openSubState(event.substate is FlxSubState ? cast event.substate : SubState);
 	}
 
 	@:dox(hide)

@@ -32,8 +32,11 @@ class Cutscene extends MusicBeatSubstate {
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
-		if (controls.PAUSE && __pausable) pauseCutscene();
+		if (pauseCheck()) pauseCutscene();
 	}
+
+	public function pauseCheck():Bool
+		return controls.PAUSE && __pausable;
 
 	var _before:Array<Bool> = [false, true];
 	public function pauseCutscene() {
@@ -55,9 +58,9 @@ class Cutscene extends MusicBeatSubstate {
 		super.closeSubState();
 	}
 
-	public function onSkipCutscene(event) close();
-	public function onRestartCutscene(event) event.name = "Restart Song";  // Making the whole PlayState restart just for precaution  - Nex
-	public function onResumeCutscene(event) event.name = "Resume";
+	public function onSkipCutscene(event:NameEvent) close();
+	public function onRestartCutscene(event:NameEvent) event.name = "Restart Song";  // Making the whole PlayState restart just for precaution  - Nex
+	public function onResumeCutscene(event:NameEvent) event.name = "Resume";
 
 	public function selectPauseOption(event:NameEvent) {
 		switch(event.name) {
