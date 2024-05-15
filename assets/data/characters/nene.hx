@@ -6,18 +6,17 @@ var PUPIL_STATE_LEFT = 1;
 
 var abot:FunkinSprite;
 //var abotViz:ABotVis;
-var stereoBG:FlxSprite;
-var eyeWhites:FlxSprite;
+var stereoBG:FunkinSprite;
+var eyeWhites:FunkinSprite;
 var pupil:FunkinSprite;
 
 var animationFinished:Bool = false;
 
 function postCreate() {
-	stereoBG = new FlxSprite(0, 0, Paths.image('characters/abot/stereoBG'));
+	stereoBG = new FunkinSprite(0, 0, Paths.image('characters/abot/stereoBG'));
 	eyeWhites = new FunkinSprite().makeSolid(160, 60);
 	pupil = new FunkinSprite(0, 0, Paths.image("characters/abot/systemEyes"));
 	abot = new FunkinSprite(0, 0, Paths.image('characters/abot/abotSystem'));
-	stereoBG.antialiasing = eyeWhites.antialiasing = pupil.antialiasing = abot.antialiasing = true;
 
 	animation.finishCallback = function (name:String) {
 		switch(currentState) {
@@ -54,6 +53,9 @@ function postCreate() {
 	abotViz.zIndex = abot.zIndex + 1;
 	FlxG.debugger.track(abotViz);*/
 }
+
+function gamePostCreate()
+	checkForEyes(PlayState.instance.curCameraTarget);
 
 /**
  * At this amount of life, Nene will raise her knife.
@@ -142,25 +144,31 @@ function onDance(event) {
 	}
 }
 
+function checkForEyes(target:Int) {
+	if(pupilState == PUPIL_STATE_LEFT) pupil.globalCurFrame = 17;
+	else pupil.globalCurFrame = 31;
+	pupil.stopAnimation();
+
+	if (target == 1 && PlayState.instance.boyfriend.x >= PlayState.instance.dad.x) movePupilsRight();
+	else movePupilsLeft();
+}
+
+function onEvent(e)
+	if (PlayState.instance.strumLines != null && e.event.name == "Camera Movement") checkForEyes(e.event.params[0]);
+
 function movePupilsLeft() {
 	if (pupilState == PUPIL_STATE_LEFT) return;
-	trace("left");
-	pupil.playAnim('');
-	pupil.globalCurFrame = 0;
-	pupilState = PUPIL_STATE_LEFT;
+	pupil.playAnim('', true, null, false, 0);
 }
 
 function movePupilsRight() {
 	if (pupilState == PUPIL_STATE_NORMAL) return;
-	trace("right");
-	pupil.playAnim('');
-	pupil.globalCurFrame = 17;
-	pupilState = PUPIL_STATE_NORMAL;
+	pupil.playAnim('', true, null, false, 17);
 }
 
 function moveByNoteKind(kind:String) {
 	// Force ABot to look where the action is happening.
-	switch(event.note.kind) {
+	switch(kind) {
 		case "weekend-1-lightcan":
 			movePupilsLeft();
 		case "weekend-1-kickcan":
@@ -175,17 +183,8 @@ function moveByNoteKind(kind:String) {
 	}
 }
 
-function onNoteHit(event:HitNoteScriptEvent)
-{
-	super.onNoteHit(event);
-	moveByNoteKind(event.note.kind);
-}
-
-function onNoteMiss(event:NoteScriptEvent)
-{
-	super.onNoteMiss(event);
-	moveByNoteKind(event.note.kind);
-}
+function onNoteHit(event) moveByNoteKind(event.noteType);
+function onNoteMiss(event) moveByNoteKind(event.noteType);
 
 function draw(_) {
 	stereoBG.draw();
@@ -194,22 +193,13 @@ function draw(_) {
 	abot.draw();
 }
 
-var __firstTime:Bool = true;
 function update(elapsed) {
-	// Set the visibility of ABot to match Nene's.
-	abot.visible = this.visible;
-	pupil.visible = this.visible;
-	eyeWhites.visible = this.visible;
-	stereoBG.visible = this.visible;
-
-	var right:Bool = PlayState.instance.camFollow.x > this.getCameraPosition().x;
-	if (__firstTime) {
-		__firstTime = false;
-		pupilState = right ? PUPIL_STATE_NORMAL : PUPIL_STATE_LEFT ;
-	}
-
-	if (right) movePupilsRight();
-	else movePupilsLeft();
+	stereoBG.visible = eyeWhites.visible = pupil.visible = abot.visible = this.visible;
+	stereoBG.antialiasing = eyeWhites.antialiasing = pupil.antialiasing = abot.antialiasing = this.antialiasing;
+	stereoBG.scrollFactor = eyeWhites.scrollFactor = pupil.scrollFactor = abot.scrollFactor = this.scrollFactor;
+	stereoBG.flipX = eyeWhites.flipX = pupil.flipX = abot.flipX = this.flipX;
+	stereoBG.scale = pupil.scale = abot.scale = this.scale;
+	eyeWhites.scale.set(this.scale.x * 160, this.scale.y * 60);
 
 	if (!pupil.isAnimFinished())
 	{
@@ -218,12 +208,14 @@ function update(elapsed) {
 			case PUPIL_STATE_NORMAL:
 				if (pupil.globalCurFrame >= 17)
 				{
+					pupilState = PUPIL_STATE_LEFT;
 					pupil.stopAnimation();
 				}
 
 			case PUPIL_STATE_LEFT:
 				if (pupil.globalCurFrame >= 31)
 				{
+					pupilState = PUPIL_STATE_NORMAL;
 					pupil.stopAnimation();
 				}
 
@@ -231,24 +223,20 @@ function update(elapsed) {
 	}
 
 	abot.update(elapsed);
-	abot.x = this.x - 100;
-	abot.y = this.y + 316; // 764 - 740
+	abot.setPosition(globalOffset.x + this.x - 100, globalOffset.y + this.y + 316);
 
 	/*abotViz.x = this.x + 100;
 	abotViz.y = this.y + 400;
 	*/
 
 	eyeWhites.update(elapsed);
-	eyeWhites.x = abot.x + 40;
-	eyeWhites.y = abot.y + 250;
+	eyeWhites.setPosition(abot.x + 40, abot.y + 250);
 
 	pupil.update(elapsed);
-	pupil.x = this.x - 607;
-	pupil.y = this.y - 176;
+	pupil.setPosition(abot.x - 507, abot.y - 492);
 
 	stereoBG.update(elapsed);
-	stereoBG.x = abot.x + 150;
-	stereoBG.y = abot.y + 30;
+	stereoBG.setPosition(abot.x + 140, abot.y + 30);
 
 	if (shouldTransitionState()) {
 		transitionState();
@@ -263,9 +251,8 @@ function update(elapsed) {
 	}
 }*/
 
-function shouldTransitionState():Bool {
+function shouldTransitionState():Bool
 	return PlayState.instance.boyfriend?.curCharacter != "pico-blazin";
-}
 
 function transitionState() {
 	switch (currentState) {
@@ -308,4 +295,12 @@ function transitionState() {
 			// trace('UKNOWN STATE ' + currentState);
 			currentState = STATE_DEFAULT;
 	}
+}
+
+function destroy() {
+	stereoBG.destroy();
+	eyeWhites.destroy();
+	pupil.destroy();
+	abot.destroy();
+	//abotViz.destroy();
 }
