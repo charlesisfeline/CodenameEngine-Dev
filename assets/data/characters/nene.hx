@@ -279,7 +279,7 @@ function transitionState() {
 			if (animationFinished) {
 				// trace('NENE: Animation finished, transitioning to STATE_DEFAULT');
 				currentState = STATE_DEFAULT;
-				animationFinished = false;
+				danced = !(animationFinished = false);
 			}
 		default:
 			// trace('UKNOWN STATE ' + currentState);
