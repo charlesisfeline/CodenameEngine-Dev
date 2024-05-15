@@ -35,18 +35,6 @@ function postCreate() {
 		}
 	}
 
-	animation.callback = function (name:String, frameNumber:Int, frameIndex:Int) {
-		switch(currentState) {
-			case STATE_PRE_RAISE:
-				if (name == "danceLeft" && frameNumber == 14) {
-					animationFinished = true;
-					transitionState();
-				}
-			default:
-				// Ignore.
-		}
-	}
-
 	/*abotViz = new ABotVis(FlxG.sound.music);
 	abotViz.x = this.x;
 	abotViz.y = this.y;
@@ -126,21 +114,25 @@ var MIN_BLINK_DELAY:Int = 3;
 var MAX_BLINK_DELAY:Int = 7;
 var blinkCountdown:Int = MIN_BLINK_DELAY;
 
+// Then, perform the appropriate animation for the current state.
 function onDance(event) {
 	//abot.playAnim("", forceRestart);
 
-	// Then, perform the appropriate animation for the current state.
-	switch(currentState) {
-		case STATE_PRE_RAISE: event.danced = true;
-		case STATE_READY:
-			if (blinkCountdown == 0) {
-				playAnim('idleKnife', false, PlayAnimContext.LOCK);
-				blinkCountdown = FlxG.random.int(MIN_BLINK_DELAY, MAX_BLINK_DELAY);
-			} else {
-				blinkCountdown--;
-			}
-		default:
-			// In other states, don't interrupt the existing animation.
+	if(currentState == STATE_PRE_RAISE && danced) {
+		event.cancelled = animationFinished = true;
+		transitionState();
+	}
+}
+
+function onTryDance(event) {
+	if (currentState == STATE_READY) {
+		event.cancelled = true;
+		if (blinkCountdown == 0) {
+			playAnim('idleKnife', true, "DANCE");
+			blinkCountdown = FlxG.random.int(MIN_BLINK_DELAY, MAX_BLINK_DELAY);
+		} else {
+			blinkCountdown--;
+		}
 	}
 }
 
@@ -260,17 +252,15 @@ function transitionState() {
 			if (PlayState.instance.health <= VULTURE_THRESHOLD) {
 				// trace('NENE: Health is low, transitioning to STATE_PRE_RAISE');
 				currentState = STATE_PRE_RAISE;
-			} else {
-				currentState = STATE_DEFAULT;
 			}
 		case STATE_PRE_RAISE:
 			if (PlayState.instance.health > VULTURE_THRESHOLD) {
 				// trace('NENE: Health went back up, transitioning to STATE_DEFAULT');
 				currentState = STATE_DEFAULT;
 			} else if (animationFinished) {
-				// trace('NENE: Animation finished, transitioning to STATE_RAISE');
+				//trace('NENE: Animation finished, transitioning to STATE_RAISE');
 				currentState = STATE_RAISE;
-				playAnim('raiseKnife');
+				playAnim('raiseKnife', true, "LOCK");
 				animationFinished = false;
 			}
 		case STATE_RAISE:
@@ -283,7 +273,7 @@ function transitionState() {
 			if (PlayState.instance.health > VULTURE_THRESHOLD) {
 				// trace('NENE: Health went back up, transitioning to STATE_LOWER');
 				currentState = STATE_LOWER;
-				playAnim('lowerKnife');
+				playAnim('lowerKnife', true);
 			}
 		case STATE_LOWER:
 			if (animationFinished) {

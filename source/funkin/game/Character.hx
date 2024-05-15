@@ -8,6 +8,7 @@ import funkin.backend.FunkinSprite;
 import funkin.backend.scripting.DummyScript;
 import funkin.backend.scripting.Script;
 import funkin.backend.scripting.events.DanceEvent;
+import funkin.backend.scripting.events.CancellableEvent;
 import funkin.backend.scripting.events.DirectionAnimEvent;
 import funkin.backend.scripting.events.PlayAnimContext;
 import funkin.backend.scripting.events.PlayAnimEvent;
@@ -230,6 +231,11 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 
 	public function tryDance()
 	{
+		var event = new CancellableEvent();
+		script.call("onTryDance", [event]);
+		if (event.cancelled)
+			return;
+
 		switch (lastAnimContext) {
 			case SING | MISS:
 				if (lastHit + (Conductor.stepCrochet * holdTime) < Conductor.songPosition)
