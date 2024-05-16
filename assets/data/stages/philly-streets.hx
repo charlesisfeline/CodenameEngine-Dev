@@ -47,7 +47,7 @@ function resetCar(left:Bool, right:Bool) {
 	if(left) {
 		carWaiting = false;
 		carInterruptable = true;
-		if (__script__.interp.variables["cars1"] != null) {
+		if (stage.getSprite("cars1") != null) {
 			FlxTween.cancelTweensOf(cars1);
 			cars1.x = 1200;
 			cars1.y = 818;
@@ -57,7 +57,7 @@ function resetCar(left:Bool, right:Bool) {
 
 	if(right) {
 		car2Interruptable = true;
-		if (__script__.interp.variables["cars2"] != null) {
+		if (stage.getSprite("cars2") != null) {
 			FlxTween.cancelTweensOf(cars2);
 			cars2.x = 1200;
 			cars2.y = 818;
@@ -299,7 +299,7 @@ function resetStageValues() {
 	lastChange = 0;
 	changeInterval = 8;
 	lightsStop = false;
-	if(__script__.interp.variables["trafficLights"] != null)
+	if(stage.getSprite("trafficLights") != null)
 		trafficLights.animation.play('togreen');
 }
 
@@ -324,7 +324,7 @@ function update(elapsed)
 
 function beatHit(beat:Int)
 {
-	if (__script__.interp.variables["cars1"] != null)
+	if (stage.getSprite("cars1") != null)
 	{
 		// Try driving a car when its possible
 		if(FlxG.random.bool(10) && beat != (lastChange + changeInterval) && carInterruptable)
@@ -334,11 +334,11 @@ function beatHit(beat:Int)
 		}
 
 		// change the light state.
-		if (__script__.interp.variables["trafficLights"] != null && beat == (lastChange + changeInterval)) changeLights(beat);
+		if (stage.getSprite("trafficLights") != null && beat == (lastChange + changeInterval)) changeLights(beat);
 	}
 
 	// try driving one on the right too. in this case theres no red light logic, it just can only spawn on green lights
-	if(__script__.interp.variables["cars2"] != null && FlxG.random.bool(10) && beat != (lastChange + changeInterval) && car2Interruptable && !lightsStop) driveCarBack(cars2);
+	if(stage.getSprite("cars2") != null && FlxG.random.bool(10) && beat != (lastChange + changeInterval) && car2Interruptable && !lightsStop) driveCarBack(cars2);
 }
 
 /*function setupFrameBuffers()
