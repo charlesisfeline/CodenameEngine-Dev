@@ -1,40 +1,50 @@
 <!DOCTYPE codename-engine-stage>
-<stage zoom="0.77" name="philly-streets" folder="stages/philly-streets/">
-	<sprite name="bg" x="-545" y="-273" sprite="phillySkyline" scroll="0.2" zoomfactor="0"/>
+<stage zoom="0.77" name="philly-streets" folder="stages/philly-streets/" startCamPosX="1800" startCamPosY="700">
+	<sprite name="bg" x="-545" y="-273" sprite="phillySkyline" scroll="0.2"/>
 
-	<sprite name="city" x="625" y="94" sprite="phillyForegroundCity" scroll="0.3" zoomfactor="0.3"/>
-	<sprite name="construction" x="1800" y="364" sprite="phillyConstruction" scrollx="0.3" zoomfactor="0.5"/>
+	<high-memory>
+		<sprite name="city" x="625" y="94" sprite="phillyForegroundCity" scroll="0.3"/>
+		<sprite name="construction" x="1800" y="364" sprite="phillyConstruction" scrollx="0.7"/>
 
-	<sprite name="highwayLights" x="284" y="305" sprite="phillyHighwayLights" zoomfactor="0.7"/>
-	<sprite name="highwayLightsMap" x="284" y="305" sprite="phillyHighwayLights_lightmap" zoomfactor="0.7"/>
-	<sprite name="highway" x="139" y="209" sprite="phillyHighway" zoomfactor="0.9"/>
+		<sprite name="highwayLights" x="284" y="305" sprite="phillyHighwayLights"/>
+		<sprite name="highwayLightsMap" x="284" y="305" sprite="phillyHighwayLights_lightmap">
+			<property name="alpha" type="float" value="0.6" />
+			<property name="blend" type="float" value="0" />
+		</sprite>
+		<sprite name="highway" x="139" y="209" sprite="phillyHighway"/>
 
-	<sprite name="smog" x="-6" y="245" sprite="phillySmog" zoomfactor="0.9"/>
+		<sprite name="smog" x="-6" y="245" sprite="phillySmog"/>
 
-	<sprite name="cars1" x="1748" y="818" sprite="phillyCars" type="none">
-		<anim name="car1" anim="car1" loop="false" />
-		<anim name="car2" anim="car2" loop="false" />
-		<anim name="car3" anim="car3" loop="false" />
-		<anim name="car4" anim="car4" loop="false" />
-	</sprite>
-	<sprite name="cars2" x="1748" y="818" sprite="phillyCars" type="none">
-		<anim name="car1" anim="car1" loop="false" />
-		<anim name="car2" anim="car2" loop="false" />
-		<anim name="car3" anim="car3" loop="false" />
-		<anim name="car4" anim="car4" loop="false" />
-	</sprite>
+		<sprite name="cars1" x="1748" y="818" sprite="phillyCars" type="none">
+			<anim name="car1" anim="car1" loop="false" />
+			<anim name="car2" anim="car2" loop="false" />
+			<anim name="car3" anim="car3" loop="false" />
+			<anim name="car4" anim="car4" loop="false" />
+		</sprite>
+		<sprite name="cars2" x="1748" y="818" sprite="phillyCars" type="none" flipX="true">
+			<anim name="car1" anim="car1" loop="false" />
+			<anim name="car2" anim="car2" loop="false" />
+			<anim name="car3" anim="car3" loop="false" />
+			<anim name="car4" anim="car4" loop="false" />
+		</sprite>
 
-	<sprite name="trafficLights" x="1840" y="608" sprite="phillyTraffic" type="none" scrollx="0.9">
-		<anim name="togreen" anim="redtogreen" loop="false" />
-		<anim name="tored" anim="greentored" loop="false" />
-	</sprite>
-	<sprite name="trafficLightsMap" x="1840" y="608" sprite="phillyTraffic_lightmap" type="none" scrollx="0.9"/>
+		<sprite name="trafficLights" x="1840" y="608" sprite="phillyTraffic" type="none" scrollx="0.9">
+			<anim name="togreen" anim="redtogreen" loop="false" />
+			<anim name="tored" anim="greentored" loop="false" />
+		</sprite>
+		<sprite name="trafficLightsMap" x="1840" y="608" sprite="phillyTraffic_lightmap" type="none" scrollx="0.9">
+			<property name="alpha" type="float" value="0.6" />
+			<property name="blend" type="float" value="0" />
+		</sprite>
+	</high-memory>
 
 	<sprite name="fg" x="88" y="317" sprite="phillyForeground"/>
 
-	<girlfriend x="1453" y="900"/>
-	<dad x="900" y="350" camxoffset="500" />
-	<boyfriend x="2151" y="468" camxoffset="-350" />
+	<girlfriend x="1203" y="454" scroll="1" />
+	<dad x="640" y="410" camxoffset="470" />
+	<boyfriend x="1751" y="448" camxoffset="-220" camyoffset="55" />
 
-	<sprite name="cans" x="920" y="1045" sprite="spraycanPile"/>
+	<high-memory>
+		<sprite name="cans" x="920" y="1045" sprite="spraycanPile"/>
+	</high-memory>
 </stage>

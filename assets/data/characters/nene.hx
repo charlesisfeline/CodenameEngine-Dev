@@ -137,11 +137,8 @@ function onTryDance(event) {
 }
 
 function checkForEyes(target:Int) {
-	if(pupilState == PUPIL_STATE_LEFT) pupil.globalCurFrame = 17;
-	else pupil.globalCurFrame = 31;
-	pupil.stopAnimation();
-
-	if (target == 1 && PlayState.instance.boyfriend.x >= PlayState.instance.dad.x) movePupilsRight();
+	var bf = PlayState.instance.boyfriend; var dad = PlayState.instance.dad;
+	if (target == 1 && (bf.x + bf.globalOffset.x) >= (dad.x + dad.globalOffset.x)) movePupilsRight();
 	else movePupilsLeft();
 }
 
@@ -149,12 +146,17 @@ function onEvent(e)
 	if (PlayState.instance.strumLines != null && e.event.name == "Camera Movement") checkForEyes(e.event.params[0]);
 
 function movePupilsLeft() {
+	pupil.stopAnimation();
 	if (pupilState == PUPIL_STATE_LEFT) return;
+	pupil.globalCurFrame = 17;
+
 	pupil.playAnim('', true, null, false, 0);
 }
 
 function movePupilsRight() {
+	pupil.stopAnimation();
 	if (pupilState == PUPIL_STATE_NORMAL) return;
+	pupil.globalCurFrame = 31;
 	pupil.playAnim('', true, null, false, 17);
 }
 
