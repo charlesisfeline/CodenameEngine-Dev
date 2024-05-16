@@ -5,8 +5,8 @@
 	<anim x="2" loop="false" y="3" fps="24" anim="Right Flame Loop0" name="singLEFT-hold"/>
 	<anim x="10" loop="false" y="5" fps="24" anim="Pose Up0" name="singUP"/>
 	<anim x="10" loop="false" y="5" fps="24" anim="Up Flame Loop0" name="singUp-hold"/>
-	<anim x="-6" loop="false" y="-3" fps="24" anim="Pose Down0" name="singDOWN"/>
-	<anim x="-6" loop="false" y="-3" fps="24" anim="Down Flame Loop0" name="singDOWN-hold"/>
+	<anim x="-6" loop="false" y="-10" fps="24" anim="Pose Down0" name="singDOWN"/>
+	<anim x="-6" loop="false" y="-10" fps="24" anim="Down Flame Loop0" name="singDOWN-hold"/>
 	<anim x="2" loop="false" y="0" fps="24" anim="Pose Left0" name="singRIGHT"/>
 	<anim x="2" loop="false" y="0" fps="24" anim="Left Flame Loop0" name="singRIGHT-hold"/>
 	<anim x="1" loop="false" y="2" fps="24" anim="Laugh0" name="laugh"/>

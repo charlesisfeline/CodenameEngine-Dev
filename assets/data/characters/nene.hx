@@ -1,14 +1,20 @@
 // Took the one inside the BaseGame source as a base  - Nex
+import funkin.vis.audioclip.frontends.LimeAudioClip;
+import funkin.vis.dsp.SpectralAnalyzer;
+import Lambda;
+
 var pupilState:Int = 0;
 
 var PUPIL_STATE_NORMAL = 0;
 var PUPIL_STATE_LEFT = 1;
 
 var abot:FunkinSprite;
-//var abotViz:ABotVis;
 var stereoBG:FunkinSprite;
 var eyeWhites:FunkinSprite;
 var pupil:FunkinSprite;
+
+var abotViz:FlxSpriteGroup;
+var analyzer:SpectralAnalyzer;
 
 var animationFinished:Bool = false;
 
@@ -35,11 +41,27 @@ function postCreate() {
 		}
 	}
 
-	/*abotViz = new ABotVis(FlxG.sound.music);
-	abotViz.x = this.x;
-	abotViz.y = this.y;
-	abotViz.zIndex = abot.zIndex + 1;
-	FlxG.debugger.track(abotViz);*/
+	// The audio visualizer  - Nex
+	abotViz = new FlxSpriteGroup();
+	var visFrms = Paths.loadFrames(Paths.image('characters/abot/aBotViz'));
+
+	// these are the differences in X position, from left to right
+	var positionX:Array<Float> = [0, 59, 56, 66, 54, 52, 51];
+	var positionY:Array<Float> = [0, -8, -3.5, -0.4, 0.5, 4.7, 7];
+
+	for (lol in 1...8)
+	{
+		var sum = function(num:Float, total:Float) return total += num;
+		var posX:Float = Lambda.fold(positionX.slice(0, lol), sum, 0);
+		var posY:Float = Lambda.fold(positionY.slice(0, lol), sum, 0);
+
+		var viz:FlxSprite = new FlxSprite(posX, posY);
+		viz.frames = visFrms;
+		abotViz.add(viz);
+
+		viz.animation.addByPrefix('VIZ', 'viz' + lol, 0);
+		viz.animation.play('VIZ', false, false, 6);
+	}
 }
 
 function gamePostCreate()
@@ -146,7 +168,7 @@ function onEvent(e)
 	if (PlayState.instance.strumLines != null && e.event.name == "Camera Movement") checkForEyes(e.event.params[0]);
 
 function movePupilsLeft() {
-	pupil.stopAnimation();
+	//pupil.stopAnimation();
 	if (pupilState == PUPIL_STATE_LEFT) return;
 	pupil.globalCurFrame = 17;
 
@@ -154,7 +176,7 @@ function movePupilsLeft() {
 }
 
 function movePupilsRight() {
-	pupil.stopAnimation();
+	//pupil.stopAnimation();
 	if (pupilState == PUPIL_STATE_NORMAL) return;
 	pupil.globalCurFrame = 31;
 	pupil.playAnim('', true, null, false, 17);
@@ -181,10 +203,37 @@ function onNoteHit(event) moveByNoteKind(event.noteType);
 function onNoteMiss(event) moveByNoteKind(event.noteType);
 
 function draw(_) {
+	#if web
+	if (analyzer != null) drawFFT();
+	#end
+
 	stereoBG.draw();
+	abotViz.draw();
 	eyeWhites.draw();
 	pupil.draw();
 	abot.draw();
+}
+
+/**
+ * TJW funkin.vis based visualizer! updateFFT() is the old nasty shit that dont worky!
+ */
+function drawFFT()
+{
+	var levels = analyzer.getLevels(false);
+
+	var grp = abotViz.group.members.length;
+	var lvls = levels.length;
+	for (i in 0...(grp > lvls ? lvls : grp))
+	{
+		var animFrame:Int = Math.round(levels[i].value * 5);
+
+		animFrame = Math.floor(Math.min(5, animFrame));
+		animFrame = Math.floor(Math.max(0, animFrame));
+
+		animFrame = Std.int(Math.abs(animFrame - 5)); // shitty dumbass flip, cuz dave got da shit backwards lol!
+
+		abotViz.group.members[i].animation.curAnim.curFrame = animFrame;
+	}
 }
 
 function update(elapsed) {
@@ -219,9 +268,8 @@ function update(elapsed) {
 	abot.update(elapsed);
 	abot.setPosition(globalOffset.x + this.x - 100, globalOffset.y + this.y + 316);
 
-	/*abotViz.x = this.x + 100;
-	abotViz.y = this.y + 400;
-	*/
+	abotViz.update(elapsed);
+	abotViz.setPosition(abot.x, abot.y + 716);
 
 	eyeWhites.update(elapsed);
 	eyeWhites.setPosition(abot.x + 40, abot.y + 250);
@@ -237,13 +285,11 @@ function update(elapsed) {
 	}
 }
 
-/*public function onScriptEvent(event:ScriptEvent):Void {
-	if (event.type == "SONG_START")
-	{
-		abotViz.snd = FlxG.sound.music;
-		abotViz.initAnalyzer();
-	}
-}*/
+function onStartSong() {
+	analyzer = new SpectralAnalyzer(7, new LimeAudioClip(FlxG.sound.music._channel.__source), 0.01, 30);
+	analyzer.maxDb = -35;
+	// analyzer.fftN = 2048;
+}
 
 function shouldTransitionState():Bool
 	return PlayState.instance.boyfriend?.curCharacter != "pico-blazin";
@@ -294,5 +340,5 @@ function destroy() {
 	eyeWhites.destroy();
 	pupil.destroy();
 	abot.destroy();
-	//abotViz.destroy();
+	abotViz.destroy();
 }
