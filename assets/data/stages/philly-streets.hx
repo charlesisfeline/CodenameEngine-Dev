@@ -1,15 +1,6 @@
 // Took the one inside the BaseGame source as a base  - Nex
 import flixel.addons.display.FlxTiledSprite;
 
-var rainShader:CustomShader = null;
-// var blurFilter:BlurFilter = new BlurFilter(6, 6);
-
-// as song goes on, these are used to make the rain more intense throught the song
-// these values are also used for the rain sound effect volume intensity!
-var rainShaderStartIntensity:Float;
-var rainShaderEndIntensity:Float;
-
-// var rainSndAmbience:FunkinSound;
 // var carSndAmbience:FunkinSound;
 
 var lightsStop:Bool = false; // state of the traffic lights
@@ -77,40 +68,19 @@ function onStartCountdown(_) {
 
 function create()
 {
-	// rainSndAmbience = FunkinSound.load(Paths.sound("rainAmbience", "weekend1"), true, false, true);
-	// rainSndAmbience.volume = 0;
-	// rainSndAmbience.play(false, FlxG.random.float(0, rainSndAmbience.length));
-
 	// carSndAmbience = FunkinSound.load(Paths.sound("carAmbience", "weekend1"), true, false, true);
 	// carSndAmbience.volume = 0;
 	// carSndAmbience.play(false, FlxG.random.float(0, carSndAmbience.length));
 
-	if (/*Options.gameplayShaders*/ false) {
-		camGame.addShader(rainShader = new CustomShader('rainShader'));
-		//FlxG.camera.setFilters([new openfl.filters.BlurFilter(16,16)]);
-
-		// rainShader.puddleMap = Assets.getBitmapData(Paths.image("phillyStreets/puddle"));
-		rainShader.scale = FlxG.height / 200; // adjust this value so that the rain looks nice
-
-		FlxG.console.registerObject("rainShader", rainShader);
-		switch (PlayState.instance.curSong)
-		{
-			case "lit-up":
-				rainShaderStartIntensity = 0.1;
-				rainShaderEndIntensity = 0.2;
-			case "2hot":
-				rainShaderStartIntensity = 0.2;
-				rainShaderEndIntensity = 0.4;
-			default:
-				rainShaderStartIntensity = 0;
-				rainShaderEndIntensity = 0.1;
-		}
-
-		rainShader.intensity = rainShaderStartIntensity;
-
-		// set the shader input
-		//rainShader.mask = frameBufferMan.getFrameBuffer("mask");
-		//rainShader.lightMap = frameBufferMan.getFrameBuffer("lightmap");
+	importScript("data/scripts/rain-effect");
+	switch (PlayState.instance.curSong)
+	{
+		case "lit-up":
+			rainShaderStartIntensity = 0.1;
+			rainShaderEndIntensity = 0.2;
+		case "2hot":
+			rainShaderStartIntensity = 0.2;
+			rainShaderEndIntensity = 0.4;
 	}
 
 	resetCar(true, true);
@@ -135,7 +105,6 @@ function onStageXMLParsed(event)
 	//if (cars2 != null) FlxTween.cancelTweensOf(cars2);
 
 	// Fully stop ambiance.
-	// if (rainSndAmbience != null) rainSndAmbience.stop();
 	// if (carSndAmbience != null) carSndAmbience.stop();
 
 	// trace('Done');
@@ -306,21 +275,7 @@ function resetStageValues() {
 var rainDropTimer:Float = 0;
 var rainDropWait:Float = 6;
 
-function update(elapsed)
-{
-	if (rainShader != null) {
-		var remappedIntensityValue:Float = FlxMath.remapToRange(Conductor.instance.songPosition, 0, FlxG.sound.music != null ? FlxG.sound.music.length : 0.0, rainShaderStartIntensity, rainShaderEndIntensity);
-		rainShader.intensity = remappedIntensityValue;
-		rainShader.updateViewInfo(FlxG.width, FlxG.height, FlxG.camera);
-		rainShader.update(elapsed);
-	}
-
-	scrollingSky?.scrollX -= FlxG.elapsed * 22;
-
-	// if (rainSndAmbience != null) {
-	// 	rainSndAmbience.volume = Math.min(0.3, remappedIntensityValue * 2);
-	// }
-}
+function update(elapsed) scrollingSky?.scrollX -= FlxG.elapsed * 22;
 
 function beatHit(beat:Int)
 {
@@ -340,42 +295,3 @@ function beatHit(beat:Int)
 	// try driving one on the right too. in this case theres no red light logic, it just can only spawn on green lights
 	if(stage.getSprite("cars2") != null && FlxG.random.bool(10) && beat != (lastChange + changeInterval) && car2Interruptable && !lightsStop) driveCarBack(cars2);
 }
-
-/*function setupFrameBuffers()
-{
-	//frameBufferMan.createFrameBuffer("mask", 0xFF000000);
-	//frameBufferMan.createFrameBuffer("lightmap", 0xFF000000);
-}
-
-var screen:FixedBitmapData;
-function draw(_)
-{
-	//screen = grabScreen(false);
-	//BitmapDataUtil.applyFilter(screen, blurFilter);
-	//rainShader.blurredScreen = screen;
-}*/
-
-function onGameOver(_) {
-	// Make it so the rain shader doesn't show over the game over screen
-	if (rainShader != null) FlxG.camera.removeShader(rainShader);
-}
-
-function onStageNodeParsed(event)
-{
-	if (event.sprite is FunkinSprite && event.sprite.name == "puddle" && rainShader != null)
-	{
-		rainShader.puddleY = event.sprite.y + 80;
-		rainShader.puddleScaleY = 0.3;
-		//frameBufferMan.copySpriteTo("mask", event.sprite, 0xFFFFFF);
-	}
-	else
-	{
-		//frameBufferMan.copySpriteTo("mask", event.sprite, 0x000000);
-	}
-}
-
-/*function addCharacter(character:BaseCharacter, charType:CharacterType)
-{
-	// add to the mask so that characters hide puddles
-	// frameBufferMan.copySpriteTo("mask", character, 0x000000);
-}*/

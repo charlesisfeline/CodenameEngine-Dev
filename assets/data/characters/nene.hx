@@ -203,9 +203,7 @@ function onNoteHit(event) moveByNoteKind(event.noteType);
 function onNoteMiss(event) moveByNoteKind(event.noteType);
 
 function draw(_) {
-	#if web
-	if (analyzer != null) drawFFT();
-	#end
+	if(analyzer != null) drawFFT();
 
 	stereoBG.draw();
 	abotViz.draw();
@@ -241,8 +239,14 @@ function update(elapsed) {
 	stereoBG.antialiasing = eyeWhites.antialiasing = pupil.antialiasing = abot.antialiasing = this.antialiasing;
 	stereoBG.scrollFactor = eyeWhites.scrollFactor = pupil.scrollFactor = abot.scrollFactor = this.scrollFactor;
 	stereoBG.flipX = eyeWhites.flipX = pupil.flipX = abot.flipX = this.flipX;
-	stereoBG.scale = pupil.scale = abot.scale = this.scale;
-	eyeWhites.scale.set(this.scale.x * 160, this.scale.y * 60);
+	stereoBG.scale = pupil.scale = abot.scale = this.scale; eyeWhites.scale.set(this.scale.x * 160, this.scale.y * 60);
+	abotViz.forEachAlive(function (spr) {
+		spr.visible = this.visible;
+		spr.antialiasing = this.antialiasing;
+		spr.scrollFactor = this.scrollFactor;
+		spr.flipX = this.flipX;
+		spr.scale = this.scale;
+	});
 
 	if (!pupil.isAnimFinished())
 	{
@@ -269,7 +273,7 @@ function update(elapsed) {
 	abot.setPosition(globalOffset.x + this.x - 100, globalOffset.y + this.y + 316);
 
 	abotViz.update(elapsed);
-	abotViz.setPosition(abot.x, abot.y + 716);
+	abotViz.setPosition(abot.x + 200, abot.y + 90);
 
 	eyeWhites.update(elapsed);
 	eyeWhites.setPosition(abot.x + 40, abot.y + 250);
