@@ -1,5 +1,4 @@
 // Took the one inside the BaseGame source as a base  - Nex
-import funkin.vis.audioclip.frontends.LimeAudioClip;
 import funkin.vis.dsp.SpectralAnalyzer;
 import Lambda;
 
@@ -217,7 +216,7 @@ function draw(_) {
  */
 function drawFFT()
 {
-	var levels = analyzer.getLevels(false);
+	var levels = analyzer.getLevels(false, FlxG.elapsed);
 
 	var grp = abotViz.group.members.length;
 	var lvls = levels.length;
@@ -290,8 +289,8 @@ function update(elapsed) {
 }
 
 function onStartSong() {
-	analyzer = new SpectralAnalyzer(7, new LimeAudioClip(FlxG.sound.music._channel.__source), 0.01, 30);
-	analyzer.maxDb = -35;
+	analyzer = new SpectralAnalyzer(FlxG.sound.music._channel.__source, 7, 0.01, 30);
+	// analyzer.maxDb = -35;
 	// analyzer.fftN = 2048;
 }
 
