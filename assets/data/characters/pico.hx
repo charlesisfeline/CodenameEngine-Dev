@@ -2,9 +2,9 @@
 import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.effects.FlxFlicker;
 
-function postCreate() {
-	if(debugMode) return;
+var casingFrames = null;
 
+function gamePostCreate() {
 	animation.callback = function(name:String, frameNumber:Int, frameIndex:Int) {
 		if (name == "cock" && frameNumber == 3) {
 			createCasing();
@@ -24,13 +24,37 @@ function postCreate() {
 		}
 	}
 
-	var game = PlayState.instance;
-	game.gameOverSong = "pico/gameOver";
-	game.lossSFX = "pico/fnf_loss_sfx-pico-gutpunch";
-	game.retrySFX = "pico/gameOverEnd";
+	// Precaching  - Nex
+	var arr = PlayState.instance.SONG.noteTypes;
+	if(arr.contains("cockgun")) {
+		loadCasingFrames();
+		FlxG.sound.load(Paths.sound('pico/Gun_Prep'));
+	}
+	if(arr.contains("firegun")) {
+		FlxG.sound.load(Paths.sound('pico/Pico_Bonk'));
+		for (i in 1...4) FlxG.sound.load(Paths.sound('pico/shot' + i));
+	}
 }
 
-function onPlayerHit(event)
+function loadCasingFrames() {
+	casingFrames = Paths.getFrames('characters/PicoBullet');
+}
+
+function onGameOver(event) {
+	if (event.character == this && event.deathCharID == 'pico-stabbed') {
+		event.retrySFX = "pico/gameOverEnd";
+		if(getAnimName() == "shootMISS") {
+			event.deathCharID = "pico-explode";
+			event.gameOverSong = "pico/gameOverStart-explode";
+			event.lossSFX = "pico/fnf_loss_sfx-pico-explode";
+		} else {
+			event.gameOverSong = "pico/gameOver";
+			event.lossSFX = "pico/fnf_loss_sfx-pico-gutpunch";
+		}
+	}
+}
+
+function onNoteHit(event)
 {
 	if (event.cancelled) {
 		// onNoteHit event was cancelled by the gameplay module.  Its different on cne, but I get it, I'll leave this here if someone wants to do smth through mods  - Nex
@@ -78,8 +102,11 @@ function createCasing() {
 		game.insert(game.members.indexOf(this), casingGroup);
 	}
 
+	if(casingFrames == null)
+		loadCasingFrames();
+
 	var casing = new FlxSprite();
-	casing.frames = Paths.getFrames('characters/PicoBullet');
+	casing.frames = casingFrames;
 	casing.antialiasing = this.antialiasing;
 	casing.scale = this.scale;
 	casing.scrollFactor = this.scrollFactor;

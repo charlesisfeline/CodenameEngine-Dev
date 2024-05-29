@@ -2,16 +2,17 @@
 import funkin.Constants;
 
 function postCreate() {
+	var game = GameOverSubstate.instance;
 	deathSpriteRetry = new FunkinSprite(0, 0, Paths.image("characters/picoGameover/Pico_Death_Retry"));
 	deathSpriteRetry.animation.addByPrefix('idle', "Retry Text Loop0", 24, true);
 	deathSpriteRetry.animation.addByPrefix('confirm', "Retry Text Confirm0", 24, false);
 	//FlxG.debugger.track(deathSpriteRetry);
 	this.animation.callback = function(name:String, frameNumber:Int, frameIndex:Int) {
 		if (name == "firstDeath" && frameNumber == 35) {
-			GameOverSubstate.instance.add(deathSpriteRetry);
+			game.add(deathSpriteRetry);
 			deathSpriteRetry.animation.play('idle');
 			deathSpriteRetry.visible = true;
-			if(!GameOverSubstate.instance.isEnding) CoolUtil.playMusic(Paths.music(PlayState.instance?.gameOverSong), false, 1, true, Constants.DEFAULT_BPM);
+			if(!game.isEnding) CoolUtil.playMusic(Paths.music(game?.gameOverSong), false, 1, true, Constants.DEFAULT_BPM);
 			// force the deathloop to play in here, since we are starting the music early it
 			// doesn't check this in gameover substate !
 			// also no animation suffix 🤔
@@ -35,7 +36,7 @@ function postCreate() {
 		deathSpriteNene.visible = false;
 	}
 
-	GameOverSubstate.instance.add(deathSpriteNene);
+	game.add(deathSpriteNene);
 	deathSpriteNene.animation.play("throw");
 }
 
