@@ -69,7 +69,7 @@ class MainMenuState extends MusicBeatState
 
 		FlxG.camera.follow(camFollow, null, 0.06);
 
-		var versionShit:FunkinText = new FunkinText(5, FlxG.height - 2, 0, '${Constants.VERSION_MESSAGE}\n${Constants.COMMIT_MESSAGE}\n[TAB] Open Mods menu\n');
+		var versionShit:FunkinText = new FunkinText(5, FlxG.height - 2, 0, '${Constants.VERSION_MESSAGE}\n${Constants.COMMIT_MESSAGE}\n' #if MOD_SUPPORT + '[${controls.getKeyName(SWITCHMOD)}] Open Mods menu\n' #end );
 		versionShit.y -= versionShit.height;
 		versionShit.scrollFactor.set();
 		add(versionShit);

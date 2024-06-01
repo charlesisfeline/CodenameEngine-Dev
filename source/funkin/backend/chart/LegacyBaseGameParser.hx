@@ -131,7 +131,7 @@ class LegacyBaseGameParser {
 					if ((swagSection.mustHitSection && strumLine.type == OPPONENT) ||
 						(!swagSection.mustHitSection && strumLine.type == PLAYER))
 						sectionNote[1] += 4;
-					swagSection.sectionNotes.push(note);
+					swagSection.sectionNotes.push(sectionNote);
 				}
 			}
 
