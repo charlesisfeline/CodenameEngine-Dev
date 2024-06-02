@@ -2,23 +2,17 @@ package funkin.editors.charter;
 
 import flixel.group.FlxGroup;
 import flixel.text.FlxText.FlxTextFormat;
+import funkin.editors.charter.CharterSelection.SongCreationData;
 import flixel.text.FlxText.FlxTextFormatMarkerPair;
 import funkin.backend.chart.ChartData.ChartMetaData;
-import haxe.io.Bytes;
 
-typedef SongCreationData = {
-	var meta:ChartMetaData;
-	var instBytes:Bytes;
-	var voicesBytes:Bytes;
-}
-
-class SongCreationScreen extends UISubstateWindow {
+class SongCreationScreen extends UIStepSubstateWindow {
 	private var onSave:Null<SongCreationData> -> Void = null;
 
 	public var songNameTextBox:UITextBox;
 	public var bpmStepper:UINumericStepper;
 	public var beatsPerMeasureStepper:UINumericStepper;
-	public var stepsPerBeatStepper :UINumericStepper;
+	public var stepsPerBeatStepper:UINumericStepper;
 	public var instExplorer:UIFileExplorer;
 	public var voicesExplorer:UIFileExplorer;
 
@@ -30,20 +24,12 @@ class SongCreationScreen extends UISubstateWindow {
 	public var colorWheel:UIColorwheel;
 	public var difficulitesTextBox:UITextBox;
 
-	public var backButton:UIButton;
-	public var saveButton:UIButton;
-	public var closeButton:UIButton;
-
 	public var songDataGroup:FlxGroup = new FlxGroup();
 	public var menuDataGroup:FlxGroup = new FlxGroup();
 
-	public var pages:Array<FlxGroup> = [];
-	public var pageSizes:Array<FlxPoint> = [];
-	public var curPage:Int = 0;
-
 	public function new(?onSave:SongCreationData->Void) {
-		super();
-		if (onSave != null) this.onSave = onSave;
+		if(onSave != null) this.onSave = onSave;
+		super("Save & Close", saveSongInfo);
 	}
 
 	public override function create() {
@@ -100,9 +86,6 @@ class SongCreationScreen extends UISubstateWindow {
 		songDataGroup.add(voicesExplorer);
 
 		voicesUIText = addLabelOn(voicesExplorer, "Vocal Audio File");
-		voicesUIText.applyMarkup(
-			"Vocal Audio File $* Required$",
-			[new FlxTextFormatMarkerPair(new FlxTextFormat(0xFFAD1212), "$")]);
 
 		var menuTitle:UIText;
 		menuDataGroup.add(menuTitle = new UIText(windowSpr.x + 20, windowSpr.y + 30 + 16, 0, "Menus Data (Freeplay/Story)", 28));
@@ -136,78 +119,13 @@ class SongCreationScreen extends UISubstateWindow {
 		for (checkbox in [opponentModeCheckbox, coopAllowedCheckbox])
 			{checkbox.y += 6; checkbox.x += 4;}
 
-		saveButton = new UIButton(windowSpr.x + windowSpr.bWidth - 20 - 125, windowSpr.y + windowSpr.bHeight - 16 - 32, "Save & Close", function() {
-			if (curPage == pages.length-1) {
-				saveSongInfo();
-				close();
-			} else {
-				curPage++;
-				refreshPages();
-			}
-
-			updatePagesTexts();
-		}, 125);
-		add(saveButton);
-
-		backButton = new UIButton(saveButton.x - 20 - saveButton.bWidth, saveButton.y, "< Back", function() {
-			curPage--;
-			refreshPages();
-
-			updatePagesTexts();
-		}, 125);
-		add(backButton);
-
-		closeButton = new UIButton(backButton.x - 20 - saveButton.bWidth, saveButton.y, "Cancel", function() {
-			close();
-		}, 125);
-		add(closeButton);
-		closeButton.color = 0xFFFF0000;
-
-		pages.push(cast add(songDataGroup));
-		pageSizes.push(FlxPoint.get(748 - 32 + 40, 340));
-
-		pages.push(cast add(menuDataGroup));
-		pageSizes.push(FlxPoint.get(748 - 32 + 40, 400));
-
-		refreshPages();
-		updatePagesTexts();
+		addPage(songDataGroup, FlxPoint.get(winWidth, 340));
+		addPage(menuDataGroup, FlxPoint.get(winWidth, 400));
 	}
 
 	public override function update(elapsed:Float) {
-		if (curPage == 0) {
-			if (instExplorer.file != null)
-				saveButton.selectable = true;
-			else saveButton.selectable = false;
-		} else
-			saveButton.selectable = true;
-
-		saveButton.alpha = saveButton.field.alpha = saveButton.selectable ? 1 : 0.4;
+		finishButton.selectable = curPage == 0 ? instExplorer.file != null : true;
 		super.update(elapsed);
-	}
-
-	function refreshPages() {
-		for (i=>page in pages)
-			page.visible = page.exists = i == curPage;
-	}
-
-	function updatePagesTexts() {
-		windowSpr.bWidth = Std.int(pageSizes[curPage].x);
-		windowSpr.bHeight = Std.int(pageSizes[curPage].y);
-
-		titleSpr.x = windowSpr.x + 25;
-		titleSpr.y = windowSpr.y + ((30 - titleSpr.height) / 2);
-
-		saveButton.field.text = curPage == pages.length-1 ? "Save & Close" : 'Next >';
-		titleSpr.text = 'Creating New Song (${curPage+1}/${pages.length})';
-
-		backButton.field.text = '< Back';
-		backButton.visible = backButton.exists = curPage > 0;
-
-		backButton.x = (saveButton.x = windowSpr.x + windowSpr.bWidth - 20 - 125) - 20 - saveButton.bWidth;
-		closeButton.x = (curPage > 0 ? backButton : saveButton).x - 20 - saveButton.bWidth;
-
-		for (button in [saveButton, backButton, closeButton])
-			button.y = windowSpr.y + windowSpr.bHeight - 16 - 32;
 	}
 
 	function updateIcon(icon:String) {

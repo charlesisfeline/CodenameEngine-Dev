@@ -4,14 +4,20 @@ import funkin.backend.chart.ChartData.ChartMetaData;
 import funkin.backend.chart.ChartData;
 import funkin.backend.system.framerate.Framerate;
 import funkin.editors.EditorTreeMenu;
-import funkin.editors.charter.SongCreationScreen.SongCreationData;
 import funkin.menus.FreeplayState.FreeplaySonglist;
 import funkin.options.*;
 import funkin.options.type.*;
 import funkin.options.type.NewOption;
+import haxe.io.Bytes;
 import haxe.Json;
 
 using StringTools;
+
+typedef SongCreationData = {
+	var meta:ChartMetaData;
+	var instBytes:Bytes;
+	var voicesBytes:Bytes;
+}
 
 class CharterSelection extends EditorTreeMenu {
 	public var freeplayList:FreeplaySonglist;
@@ -41,6 +47,10 @@ class CharterSelection extends EditorTreeMenu {
 			}, s.parsedColor.getDefault(0xFFFFFFFF))
 		];
 
+		list.insert(0, new NewOption("Import Song", "Import Song", function() {
+			FlxG.state.openSubState(new SongImportScreen(/*saveSong*/));
+		}));
+
 		list.insert(0, new NewOption("New Song", "New Song", function() {
 			FlxG.state.openSubState(new SongCreationScreen(saveSong));
 		}));
@@ -53,7 +63,7 @@ class CharterSelection extends EditorTreeMenu {
 	override function createPost() {
 		super.createPost();
 
-		main.changeSelection(1);
+		main.changeSelection(2);
 	}
 
 	public override function update(elapsed:Float) {
@@ -130,7 +140,7 @@ class CharterSelection extends EditorTreeMenu {
 
 		// Add to List
 		freeplayList.songs.insert(0, creation.meta);
-		main.insert(1, option);
+		main.insert(2, option);
 	}
 
 	public function saveChart(name:String, data:ChartData) {

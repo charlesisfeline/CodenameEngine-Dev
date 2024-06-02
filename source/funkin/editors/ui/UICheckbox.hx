@@ -1,6 +1,7 @@
 package funkin.editors.ui;
 
 class UICheckbox extends UISprite {
+	public var checkable:Bool = true;
 	public var checked:Bool = false;
 	public var onChecked:Bool->Void = null;
 
@@ -27,7 +28,7 @@ class UICheckbox extends UISprite {
 
 	public override function update(elapsed:Float) {
 		// ANIMATION HANDLING
-		animation.play(hovered ? (pressed ? "pressed" : "hover") : "normal");
+		animation.play(hovered && checkable ? (pressed ? "pressed" : "hover") : "normal");
 
 		// CHECKMARK HANDLING
 		check.alpha = checked ? 1 : 0;
@@ -52,7 +53,7 @@ class UICheckbox extends UISprite {
 
 	public override function onHovered() {
 		super.onHovered();
-		if (FlxG.mouse.justReleased) {
+		if (FlxG.mouse.justReleased && checkable) {
 			// clicked
 			checked = !checked;
 			check.scale.set(1.25, 1.25);
