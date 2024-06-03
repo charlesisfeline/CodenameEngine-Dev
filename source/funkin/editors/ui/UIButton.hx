@@ -5,9 +5,10 @@ class UIButton extends UISliceSprite {
 	public var field:UIText;
 	public var shouldPress = true;
 	public var hasBeenPressed = false;
+	public var hoverAnim:Bool = true;
 
-	public override function new(x:Float, y:Float, text:String, callback:Void->Void, w:Int = 120, h:Int = 32) {
-		super(x, y, w, h, 'editors/ui/button');
+	public override function new(x:Float, y:Float, text:String, callback:Void->Void, w:Int = 120, h:Int = 32, skin:String = 'editors/ui/button') {
+		super(x, y, w, h, skin);
 		this.callback = callback;
 		members.push(field = new UIText(x, y, w, text));
 		field.alignment = CENTER;
@@ -31,14 +32,18 @@ class UIButton extends UISliceSprite {
 	}
 
 	public override function update(elapsed:Float) {
-		field.follow(this, 0, (bHeight - field.height) / 2);
 		if (!hovered && hasBeenPressed && FlxG.mouse.justReleased) hasBeenPressed = false;
-		if (autoAlpha) alpha = field.alpha = selectable ? 1 : 0.4;
+		if (autoAlpha) alpha = selectable ? 1 : 0.4;
+		if (field != null) {
+			field.follow(this, 0, (bHeight - field.height) / 2);
+			field.alpha = alpha;
+		}
+
 		super.update(elapsed);
 	}
 
 	public override function draw() {
-		framesOffset = hovered ? (pressed ? 18 : 9) : 0;
+		framesOffset = hovered && hoverAnim ? (pressed ? 18 : 9) : 0;
 		super.draw();
 	}
 }

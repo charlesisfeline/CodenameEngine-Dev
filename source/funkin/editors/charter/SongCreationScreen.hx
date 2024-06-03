@@ -1,5 +1,6 @@
 package funkin.editors.charter;
 
+import haxe.io.Bytes;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText.FlxTextFormat;
 import funkin.editors.charter.CharterSelection.SongCreationData;
@@ -14,7 +15,7 @@ class SongCreationScreen extends UIStepSubstateWindow {
 	public var beatsPerMeasureStepper:UINumericStepper;
 	public var stepsPerBeatStepper:UINumericStepper;
 	public var instExplorer:UIFileExplorer;
-	public var voicesExplorer:UIFileExplorer;
+	public var voicesExplorer:UIButtonList<UIFileExplorer>;
 
 	public var displayNameTextBox:UITextBox;
 	public var iconTextBox:UITextBox;
@@ -66,26 +67,27 @@ class SongCreationScreen extends UIStepSubstateWindow {
 		stepsPerBeatStepper = new UINumericStepper(beatsPerMeasureStepper.x + 30 + 24, beatsPerMeasureStepper.y, 4, 1, 0, 1, null, 54);
 		songDataGroup.add(stepsPerBeatStepper);
 
-		var voicesUIText:UIText = null;
-
 		instExplorer = new UIFileExplorer(songNameTextBox.x, songNameTextBox.y + 32 + 36, null, null, Constants.SOUND_EXT, function (res) {
-			var audioPlayer:UIAudioPlayer = new UIAudioPlayer(instExplorer.x + 8, instExplorer.y + 8, res);
-			instExplorer.members.push(audioPlayer);
-			instExplorer.uiElement = audioPlayer;
+			instExplorer.members.push(instExplorer.uiElement = new UIAudioPlayer(0, 0, res));
+			instExplorer.uiOffset.set(8, 8);
 		});
 		songDataGroup.add(instExplorer);
 		addLabelOn(instExplorer, "Inst Audio File").applyMarkup(
 			"Inst Audio File $* Required$",
 			[new FlxTextFormatMarkerPair(new FlxTextFormat(0xFFAD1212), "$")]);
 
-		voicesExplorer = new UIFileExplorer(instExplorer.x + 320 + 26, instExplorer.y, null, null, Constants.SOUND_EXT, function (res) {
-			var audioPlayer:UIAudioPlayer = new UIAudioPlayer(voicesExplorer.x + 8, voicesExplorer.y + 8, res);
-			voicesExplorer.members.push(audioPlayer);
-			voicesExplorer.uiElement = audioPlayer;
-		});
-		songDataGroup.add(voicesExplorer);
+		function makeCoolExplorer():UIFileExplorer {
+			var explorer:UIFileExplorer = null; explorer = new UIFileExplorer(0, 0, null, null, Constants.SOUND_EXT, function(res) {
+				explorer.members.push(explorer.uiElement = new UIAudioPlayer(0, 0, res));
+				explorer.uiOffset.set(8, 8);
+			});
+			return explorer;
+		}
 
-		voicesUIText = addLabelOn(voicesExplorer, "Vocal Audio File");
+		songDataGroup.add(voicesExplorer = new UIButtonList<UIFileExplorer>(instExplorer.x + 320 + 26, instExplorer.y - 24, 340, 120, "Vocal Audio File", FlxPoint.get(320, 45)));
+		voicesExplorer.members.remove(voicesExplorer.addIcon); voicesExplorer.addIcon = FlxDestroyUtil.destroy(voicesExplorer.addIcon); voicesExplorer.members.remove(voicesExplorer.addButton); voicesExplorer.addButton = FlxDestroyUtil.destroy(voicesExplorer.addButton); voicesExplorer.addButton = makeCoolExplorer();
+		voicesExplorer.addButton.callback = function() voicesExplorer.add(makeCoolExplorer());
+		voicesExplorer.members.push(voicesExplorer.addButton);
 
 		var menuTitle:UIText;
 		menuDataGroup.add(menuTitle = new UIText(windowSpr.x + 20, windowSpr.y + 30 + 16, 0, "Menus Data (Freeplay/Story)", 28));
@@ -165,10 +167,13 @@ class SongCreationScreen extends UIStepSubstateWindow {
 			difficulties: [for (diff in difficulitesTextBox.label.text.split(",")) diff.trim()],
 		};
 
+		var voices:Map<String, Bytes> = [];
+		for(button in voicesExplorer.buttons) if(button.file != null) voices.set("yes", button.file);
+
 		if (onSave != null) onSave({
 			meta: meta,
 			instBytes: instExplorer.file,
-			voicesBytes: voicesExplorer.file
+			voicesBytes: voices
 		});
 	}
 

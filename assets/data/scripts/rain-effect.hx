@@ -3,8 +3,8 @@ import openfl.display.ShaderParameter;
 // Took the one inside the BaseGame source as a base  - Nex
 var rainShader:ScriptableShader = null;
 
-public var rainShaderStartIntensity:Float = 0.5;
-public var rainShaderEndIntensity:Float = 0.5;
+public var rainShaderStartIntensity:Float = 0.1;
+public var rainShaderEndIntensity:Float = 0.2;
 
 function postCreate()
 {

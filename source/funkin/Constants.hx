@@ -51,7 +51,7 @@ class Constants {
 	public static var DEFAULT_BEATS_PER_MEASURE = 4;
 	public static var DEFAULT_STEPS_PER_BEAT = 4;
 
-	public static var SUPPORTED_CHART_RUNTIME_FORMATS = ["Old BaseGame", "Psych Engine"];
+	public static var SUPPORTED_CHART_RUNTIME_FORMATS = ["Legacy", "Psych Engine"];
 	public static var SUPPORTED_CHART_FORMATS = ["BaseGame"];
 
 	public static var BASEGAME_SONG_METADATA_VERSION = "2.2.2";

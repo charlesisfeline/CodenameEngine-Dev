@@ -3,7 +3,7 @@ package funkin.editors.ui;
 import haxe.io.Bytes;
 import lime.ui.FileDialog;
 
-class UIFileExplorer extends UISliceSprite {
+class UIFileExplorer extends UIButton {
 	public var uploadButton:UIButton;
 	public var uploadIcon:FlxSprite;
 
@@ -14,13 +14,17 @@ class UIFileExplorer extends UISliceSprite {
 	public var onFile:Bytes->Void;
 
 	public var uiElement:UISprite;
+	public var uiOffset:FlxPoint = FlxPoint.get();
 
 	public function new(x:Float, y:Float, ?w:Int, ?h:Int, fileType:String = "txt", ?onFile:Bytes->Void) {
-		super(x, y, (w != null ? w : 320), (h != null ? h : 58), 'editors/ui/inputbox');
+		super(x, y, "", null, (w != null ? w : 320), (h != null ? h : 58), 'editors/ui/inputbox');
+		members.remove(field); field = FlxDestroyUtil.destroy(field);
+		autoAlpha = hoverAnim = false;
+		cursor = ARROW;
 
 		if (onFile != null) this.onFile = onFile;
 
-		uploadButton = new UIButton(x + 8, y+ 8, "", function () {
+		uploadButton = new UIButton(x + 8, y + 8, "", function () {
 			var fileDialog = new FileDialog();
 			fileDialog.onOpen.add(function(res) {
 				file = cast res;
@@ -50,10 +54,16 @@ class UIFileExplorer extends UISliceSprite {
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		alpha = selectable ? 1 : 0.4;
-		uploadButton.alpha = deleteButton.alpha = deleteIcon.alpha = uploadIcon.alpha = alpha;
+		uploadButton.alpha = deleteButton.alpha = deleteIcon.alpha = uploadIcon.alpha = alpha = selectable ? 1 : 0.4;
+
+		uploadButton.follow(this, 8, 8);
+		uploadIcon.follow(uploadButton, uploadButton.bWidth / 2 - 8, ((bHeight-16)/2) - 8);
+
+		deleteButton.follow(this, bWidth - (bHeight - 16) - 8, 8);
+		deleteIcon.follow(deleteButton, ((bHeight - 16)/2) - 8, ((bHeight - 16)/2) - 8);
 
 		if (uiElement != null) {
+			uiElement.follow(this, uiOffset.x, uiOffset.y);
 			uiElement.alpha = alpha;
 			if (uiElement is UIButton)
 				cast(uiElement, UIButton).selectable = selectable;
@@ -63,7 +73,7 @@ class UIFileExplorer extends UISliceSprite {
 	public function removeFile() {
 		if (uiElement != null) {
 			members.remove(uiElement);
-			uiElement.destroy();
+			uiElement = FlxDestroyUtil.destroy(uiElement);
 		}
 
 		file = null;

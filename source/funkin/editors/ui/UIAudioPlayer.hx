@@ -70,7 +70,7 @@ class UIAudioPlayer extends UIButton {
 		volumeBarSpr.cursor = BUTTON;
 		members.push(volumeBarSpr);
 
-		volumeIcon = new FlxSprite(volumeBar.x - 12 - 8, volumeBar.y-1).loadGraphic(Paths.image('editors/ui/audio-icon'));
+		volumeIcon = new FlxSprite(volumeBar.x - 20, volumeBar.y-1).loadGraphic(Paths.image('editors/ui/audio-icon'));
 		volumeIcon.antialiasing = false;
 		members.push(volumeIcon);
 	}
@@ -82,6 +82,17 @@ class UIAudioPlayer extends UIButton {
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
+
+		playingSprite.follow(this, ((58 - 16)/2) - 8, ((58 - 16)/2) - 8);
+		timeText.follow(this, bWidth + 8, 4);
+
+		timeBar.follow(this, bWidth + 8, (58 - 16) - ((58 - 16)/3) - 4);
+		timeBarPlayer.follow(timeBar);
+		timeBarSpr.follow(timeBar);
+
+		volumeBar.follow(timeBar, timeBar.barWidth - 56); volumeBar.y = y + 6;
+		volumeBarSpr.follow(volumeBar);
+		volumeIcon.follow(volumeBar, -20, -1);
 
 		if (sound != null) {
 			playingSprite.animation.play(sound.playing ? "playing" : "paused");
