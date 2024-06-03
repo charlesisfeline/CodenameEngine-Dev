@@ -71,16 +71,21 @@ function create()
 	// carSndAmbience = FunkinSound.load(Paths.sound("carAmbience", "weekend1"), true, false, true);
 	// carSndAmbience.volume = 0;
 	// carSndAmbience.play(false, FlxG.random.float(0, carSndAmbience.length));
-
 	importScript("data/scripts/rain-effect");
-	switch (PlayState.instance.curSong)
+	switch (PlayState.instance.curSongID)
 	{
+		case "darnell":
+			rainShaderStartIntensity = 0;
+			rainShaderEndIntensity = 0.1;
 		case "lit-up":
 			rainShaderStartIntensity = 0.1;
 			rainShaderEndIntensity = 0.2;
 		case "2hot":
 			rainShaderStartIntensity = 0.2;
 			rainShaderEndIntensity = 0.4;
+		case "dadbattle":
+			rainShaderStartIntensity = 0.5;
+			rainShaderEndIntensity = 0.5;
 	}
 
 	resetCar(true, true);

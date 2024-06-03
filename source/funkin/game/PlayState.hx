@@ -236,6 +236,10 @@ class PlayState extends MusicBeatState
 	 */
 	public var curSong:String = "";
 	/**
+	 * Current song name (lowercase and spaces to dashes)
+	 */
+	public var curSongID:String = "";
+	/**
 	 * Current stage name
 	 */
 	public var curStage:String = "";
@@ -1006,6 +1010,7 @@ class PlayState extends MusicBeatState
 		Conductor.changeBPM(songData.meta.bpm, cast songData.meta.beatsPerMeasure.getDefault(4), cast songData.meta.stepsPerBeat.getDefault(4));
 
 		curSong = songData.meta.name.toLowerCase();
+		curSongID = curSong.replace(" ", "-");
 
 		inst = FlxG.sound.load(Paths.inst(SONG.meta.name, difficulty));
 		if (Assets.exists(Paths.voices(SONG.meta.name, difficulty))) // null or true

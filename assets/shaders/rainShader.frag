@@ -1,8 +1,5 @@
 #pragma header
 
-
-
-
 // TODO: shouldn't this be isolated?
 
 //
@@ -222,13 +219,8 @@ vec3 lightUp(vec2 p) {
 	return res;
 }
 
-vec2 worldToBackground(vec2 worldCoord) {
-	// this should work as long as the background sprite is placed at the origin without scaling
-	return worldCoord / uScreenResolution;
-}
-
 void main() {
-	vec2 wpos = screenToWorld(screenCoord);
+	vec2 wpos = getCamPos(openfl_TextureCoordv);
 	vec2 origWpos = wpos;
 	float intensity = uIntensity;
 
@@ -256,7 +248,7 @@ void main() {
 
 	//vec3 light = (texture2D(uLightMap, screenCoord).xyz + lightUp(wpos)) * intensity;
 
-	vec3 color = sampleBitmapWorld(wpos).xyz;
+	vec3 color = textureCam(bitmap, wpos).xyz;
 
 	/*
 	bool isPuddle = texture2D(uMask, screenCoord).x > 0.5;
@@ -270,8 +262,7 @@ void main() {
 	*/
 
 	vec3 rainColor = vec3(0.4, 0.5, 0.8);
-	color += add;
-	color = mix(color, rainColor, 0.1 * rainSum);
+	color = mix(color + add, rainColor, 0.1 * rainSum);
 
 	// vec3 fog = light * (0.5 + rainSum * 0.5);
 	// color = color / (1.0 + fog) + fog;
