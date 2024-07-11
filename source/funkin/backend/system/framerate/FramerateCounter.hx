@@ -1,5 +1,6 @@
 package funkin.backend.system.framerate;
 
+import lime.app.Application;
 import haxe.ds.Vector;
 import openfl.display.Sprite;
 import openfl.text.TextField;
@@ -13,13 +14,16 @@ class FramerateCounter extends Sprite {
 
 	public var fpsHistoryIndex:Int = 0;
 	public var fpsHistory:Vector<Float>;
+	public var cpuHistory:Vector<Float>;
 
 	public function new() {
 		super();
 
 		fpsHistory = new Vector(FRAME_TIME_HISTORY);
+		cpuHistory = new Vector(FRAME_TIME_HISTORY);
 		// Initialize to 60 FPS, so that the initial estimation until we get enough data is always reasonable.
 		fpsHistory.fill(1000.0 / 60.0);
+		cpuHistory.fill(1000.0 / 60.0);
 
 		fpsNum = new TextField();
 		fpsLabel = new TextField();
@@ -35,24 +39,43 @@ class FramerateCounter extends Sprite {
 		}
 	}
 
+	public var iii = 0;
+
 	public override function __enterFrame(t:Int) {
 		if (alpha <= 0.05) return;
 		super.__enterFrame(t);
 
-		// todo use gpu time
-		fpsHistory[fpsHistoryIndex] = FlxG.elapsed * 1000;
+		var gpuTimeFrame:Float;
+		var cpuTimeFrame:Float;
+
+		//#if cpp
+		var app = FlxG.stage;//@:privateAccess Application.current.__backend;
+		//gpuTimeFrame = app.lastRenderEnd - app.lastRenderStart;
+		cpuTimeFrame = app.latestUpdate - app.lastUpdate;
+		gpuTimeFrame = app.lastRenderEnd - app.lastRenderStart;
+		//trace(gpuTimeFrame, app.curRenderEnd, app.lastRenderStart);
+		//#else
+		//gpuTimeFrame = FlxG.elapsed * 1000;
+		//#end
+
+		fpsHistory[fpsHistoryIndex] = gpuTimeFrame;
+		cpuHistory[fpsHistoryIndex] = cpuTimeFrame;
 		fpsHistoryIndex = (fpsHistoryIndex + 1) % FRAME_TIME_HISTORY;
 
-		// Calculate average CPU time.
+		// Calculate average frame time.
 		// Code based on Godot's FPS counter.
+		var frameTime = 0.0;
 		var cpuTime = 0.0;
 		for(i in 0...FRAME_TIME_HISTORY) {
-			cpuTime += fpsHistory[i];
+			frameTime += fpsHistory[i];
+			cpuTime += cpuHistory[i];
 		}
+		frameTime /= FRAME_TIME_HISTORY;
 		cpuTime /= FRAME_TIME_HISTORY;
-		cpuTime = Math.max(0.01, cpuTime); // Prevent unrealistically low values.
+		frameTime = Math.max(0.01, frameTime); // Prevent unrealistically low values.
+		cpuTime = Math.max(0.01, cpuTime);
 
-		fpsNum.text = Std.string(Math.floor(1000.0 / cpuTime));
+		fpsNum.text = Std.string(Math.floor(1000.0 / frameTime)) + "\nCPU: " + Math.floor(1000.0 / cpuTime) + "fps\nframe:" + iii++ + "\nCPU Start: " + app.latestUpdate + "\nCPU End: " + app.lastUpdate + "\nGPU Start: " + app.lastRenderStart + "\nGPU End: " + app.lastRenderEnd;
 		fpsLabel.x = fpsNum.x + fpsNum.width;
 		fpsLabel.y = (fpsNum.y + fpsNum.height) - fpsLabel.height;
 	}
