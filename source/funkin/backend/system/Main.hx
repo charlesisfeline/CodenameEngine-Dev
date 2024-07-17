@@ -25,6 +25,7 @@ import sys.thread.Thread;
 import android.content.Context;
 import android.os.Build;
 #end
+import flixel.FlxTypes;
 
 class Main extends Sprite
 {
@@ -50,7 +51,7 @@ class Main extends Sprite
 
 	public static var game:FunkinGame;
 
-	public static var time:Int = 0;
+	public static var time:LimeTime = 0;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -98,8 +99,12 @@ class Main extends Sprite
 		#end
 	}
 
-	private static function getTimer():Int {
+	private static function getTimer():LimeTime {
+		#if CNE_LIME
+		return time = lime.system.Tools.getAccurateTimer();
+		#else
 		return time = Lib.getTimer();
+		#end
 	}
 
 	public static function loadGameSettings() {
@@ -110,7 +115,9 @@ class Main extends Sprite
 		FlxG.game.getTimer = getTimer;
 		#if ALLOW_MULTITHREADING
 		for(i in 0...4)
-			gameThreads.push(Thread.createWithEventLoop(function() {Thread.current().events.promise();}));
+			gameThreads.push(Thread.createWithEventLoop(function() {
+				Thread.current().events.promise();
+			}));
 		#end
 		FunkinCache.init();
 		Paths.assetsTree = new AssetsLibraryList();

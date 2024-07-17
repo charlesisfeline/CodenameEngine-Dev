@@ -29,7 +29,7 @@ class MemoryCounter extends Sprite {
 		memoryPeakText.alpha = 0.5;
 	}
 
-	public override function __enterFrame(t:Int) {
+	public override function __enterFrame(t:Float) {
 		if (alpha <= 0.05) return;
 		super.__enterFrame(t);
 
