@@ -210,9 +210,13 @@ class PlayState extends MusicBeatState
 	 */
 	public var canAccessDebugMenus:Bool = Constants.DEFAULT_CAN_ACCESS_DEBUG_MENUS;
 	/**
-	 * Wether or not to show the secret gitaroo pause.
+	 * Whether or not to show the secret gitaroo pause.
 	 */
 	public var allowGitaroo:Bool = Constants.DEFAULT_GITAROO;
+	/**
+	 * Whether or not to bop the icons on beat.
+	 */
+	public var doIconBop:Bool = true;
 
 	/**
 	 * Whenever cam zooming is enabled, enables on a note hit if not cancelled.
@@ -359,12 +363,20 @@ class PlayState extends MusicBeatState
 	 */
 	public var defaultCamZoom:Float = Constants.DEFAULT_CAM_ZOOM;
 
-	public var cameraZoomLerp:Float = Constants.DEFAULT_CAM_ZOOM_LERP;
+	/**
+	 * Speed at which the game camera zoom lerps to.
+	 */
+	public var camGameZoomLerp:Float = Constants.DEFAULT_CAM_ZOOM_LERP;
 
 	/**
 	 * Camera zoom at which the hud lerps to.
 	 */
 	public var defaultHudZoom:Float = Constants.DEFAULT_HUD_ZOOM;
+
+	/**
+	 * Speed at which the hud camera zoom lerps to.
+	 */
+	public var camHUDZoomLerp:Float = Constants.DEFAULT_HUD_ZOOM_LERP;
 
 	/**
 	 * Zoom for the pixel assets.
@@ -1255,13 +1267,14 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		var iconLerp = Constants.ICON_LERP;
-		iconP1.scale.set(lerp(iconP1.scale.x, 1, iconLerp), lerp(iconP1.scale.y, 1, iconLerp));
-		iconP2.scale.set(lerp(iconP2.scale.x, 1, iconLerp), lerp(iconP2.scale.y, 1, iconLerp));
+        if (doIconBop) {
+			var iconLerp = Constants.ICON_LERP;
+			iconP1.scale.set(lerp(iconP1.scale.x, 1, iconLerp), lerp(iconP1.scale.y, 1, iconLerp));
+			iconP2.scale.set(lerp(iconP2.scale.x, 1, iconLerp), lerp(iconP2.scale.y, 1, iconLerp));
 
-		iconP1.updateHitbox();
-		iconP2.updateHitbox();
-
+			iconP1.updateHitbox();
+			iconP2.updateHitbox();
+		}
 		updateIconPositions();
 
 		if (startingSong)
@@ -1310,8 +1323,8 @@ class PlayState extends MusicBeatState
 
 		if (camZooming)
 		{
-			FlxG.camera.zoom = lerp(FlxG.camera.zoom, defaultCamZoom, cameraZoomLerp);
-			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom, cameraZoomLerp);
+			FlxG.camera.zoom = lerp(FlxG.camera.zoom, defaultCamZoom, camGameZoomLerp);
+			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom, camHUDZoomLerp);
 		}
 
 		// RESET = Quick Game Over Screen
@@ -1815,12 +1828,15 @@ class PlayState extends MusicBeatState
 			camHUD.zoom += Constants.HUD_BOP_STRENGTH * camZoomingStrength;
 		}
 
-		var iconScale = Constants.BOP_ICON_SCALE;
-		iconP1.scale.set(iconScale, iconScale);
-		iconP2.scale.set(iconScale, iconScale);
+        if (doIconBop)
+		{
+			var iconScale = Constants.BOP_ICON_SCALE;
+			iconP1.scale.set(iconScale, iconScale);
+			iconP2.scale.set(iconScale, iconScale);
 
-		iconP1.updateHitbox();
-		iconP2.updateHitbox();
+			iconP1.updateHitbox();
+			iconP2.updateHitbox();
+		}
 
 		scripts.call("beatHit", [curBeat]);
 	}
