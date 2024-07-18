@@ -116,6 +116,7 @@ class Constants {
 	public static var VOCAL_OFFSET_VIOLATION_THRESHOLD = 25;
 
 	public static var DEFAULT_CAM_ZOOM_LERP = 0.05;
+	public static var DEFAULT_HUD_ZOOM_LERP = 0.05;
 
 	public static var BOP_ICON_SCALE = 1.2;
 
