@@ -21,7 +21,7 @@ class RatingManager {
 	 * @param time		The timing window to judge, usually `Math.abs(Conductor.songPosition - note.strumTime)`.
 	**/
 	public function judgeNote(time:Float):Rating {
-		for (idx => ratingin ratingsList)
+		for (idx => rating in ratingsList)
 			if (rating.hittable && rating.window > -1 && time <= rating.window)
 				return rating;
 		return ratingsList.last();
