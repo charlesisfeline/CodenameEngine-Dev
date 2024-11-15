@@ -467,6 +467,10 @@ class PlayState extends MusicBeatState
 	 */
 	public var comboGroup:RotatingSpriteGroup;
 	/**
+	 * The thing that helps us judging your note hits to give ratings.
+	 */
+	public var ratingJudger:RatingManager = new RatingManager();
+	/**
 	 * Whenever the Rating sprites should be shown or not.
 	 *
 	 * NOTE: This is just a default value for the final value, the final value can be changed through notes hit events.
@@ -1682,7 +1686,7 @@ class PlayState extends MusicBeatState
 		 * CALCULATES RATING
 		 */
 		var noteDiff = Math.abs(Conductor.songPosition - note.strumTime);
-		var daRating:Rating = RatingManager.judgeNote(noteDiff);
+		var daRating:Rating = ratingJudger.judgeNote(noteDiff);
 		// RatingManager.judgeNoteLegacy(noteDiff, hitWindow)
 		// ^ judgeNote uses the same timings as judgeNoteLegacy
 		// so this shouldn't be that big of a deal
