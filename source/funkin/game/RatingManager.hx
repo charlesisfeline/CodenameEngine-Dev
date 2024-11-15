@@ -11,19 +11,23 @@ using StringTools;
  */
 class RatingManager {
 	public var ratingsList:Array<Rating> = [];
+	public var hittableRatings:Array<Int> = [];
 	
 	public function new():Void {
 		ratingsList = getRatingsDefault();
+		hittableRatings = [0, 1, 2, 3]; // Sick, Good, Bad, Shit
 	}
 
 	/**
 	 * Returns a rating based on a window of time
-	 * @param diff		The timing window to judge, usually `Math.abs(Conductor.songPosition - note.strumTime)`.
+	 * @param time		The timing window to judge, usually `Math.abs(Conductor.songPosition - note.strumTime)`.
 	**/
-	public function judgeNote(diff: Float):Rating {
-		for (idx => rating in ratingsList)
-			if (rating.window <= diff)
+	public function judgeNote(time:Float):Rating {
+		for (idx in hittableRatings) {
+			var rating = ratingsList[idx];
+			if (rating.window > -1 && time <= rating.window)
 				return rating;
+		}
 		return ratingsList.last();
 	}
 
