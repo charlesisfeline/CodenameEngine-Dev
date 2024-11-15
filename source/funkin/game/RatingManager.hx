@@ -11,11 +11,9 @@ using StringTools;
  */
 class RatingManager {
 	public var ratingsList:Array<Rating> = [];
-	public var hittableRatings:Array<Int> = [];
-	
+
 	public function new():Void {
 		ratingsList = getRatingsDefault();
-		hittableRatings = [0, 1, 2, 3]; // Sick, Good, Bad, Shit
 	}
 
 	/**
@@ -23,11 +21,9 @@ class RatingManager {
 	 * @param time		The timing window to judge, usually `Math.abs(Conductor.songPosition - note.strumTime)`.
 	**/
 	public function judgeNote(time:Float):Rating {
-		for (idx in hittableRatings) {
-			var rating = ratingsList[idx];
-			if (rating.window > -1 && time <= rating.window)
+		for (idx => ratingin ratingsList)
+			if (rating.hittable && rating.window > -1 && time <= rating.window)
 				return rating;
-		}
 		return ratingsList.last();
 	}
 
@@ -44,7 +40,6 @@ class RatingManager {
 			{name: "Shit", image: "shit", window: 250.0, accuracy: 0.25, score: 50, splash: false}
 		];
 	}
-
 
 	/**
 	 * Old judgeNote function just in case you want the old system.
@@ -104,6 +99,7 @@ class Rating {
 	 * Timing window (in milliseconds) to hit this rating.
 	 */
 	public var window:Float = -1;
+	
 	/**
 	 * Score amount gained when hitting this rating.
 	 */
@@ -118,4 +114,8 @@ class Rating {
 	 * If unspecified, this rating won't show up when hitting notes.
 	 */
 	@:optional public var image: String = null;
+	/**
+	 * If this rating is hittable, doesn't get accounted for otherwise.
+	 */
+	@:optional public var hittable:Bool = true;
 }
