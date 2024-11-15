@@ -26,6 +26,7 @@ import funkin.backend.system.RotatingSpriteGroup;
 import funkin.editors.SaveWarning;
 import funkin.editors.charter.Charter;
 import funkin.editors.charter.CharterSelection;
+import funkin.game.RatingManager;
 import funkin.game.SplashHandler;
 import funkin.game.cutscenes.*;
 import funkin.menus.*;
@@ -1681,34 +1682,16 @@ class PlayState extends MusicBeatState
 		 * CALCULATES RATING
 		 */
 		var noteDiff = Math.abs(Conductor.songPosition - note.strumTime);
-		var daRating:String = "sick";
-		var score:Int = 300;
-		var accuracy:Float = 1;
-
-		if (noteDiff > hitWindow * 0.9)
-		{
-			daRating = 'shit';
-			score = 50;
-			accuracy = 0.25;
-		}
-		else if (noteDiff > hitWindow * 0.75)
-		{
-			daRating = 'bad';
-			score = 100;
-			accuracy = 0.45;
-		}
-		else if (noteDiff > hitWindow * 0.2)
-		{
-			daRating = 'good';
-			score = 200;
-			accuracy = 0.75;
-		}
+		var daRating:Rating = RatingManager.judgeNote(noteDiff);
+		// RatingManager.judgeNoteLegacy(noteDiff, hitWindow)
+		// ^ judgeNote uses the same timings as judgeNoteLegacy
+		// so this shouldn't be that big of a deal
 
 		var event:NoteHitEvent;
 		if (strumLine != null && !strumLine.cpu)
-			event = EventManager.get(NoteHitEvent).recycle(false, !note.isSustainNote, !note.isSustainNote, null, defaultDisplayRating, defaultDisplayCombo, note, strumLine.characters, true, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, score, note.isSustainNote ? null : accuracy, 0.023, daRating, Options.splashesEnabled && !note.isSustainNote && daRating == "sick");
+			event = EventManager.get(NoteHitEvent).recycle(false, !note.isSustainNote, !note.isSustainNote, null, defaultDisplayRating, defaultDisplayCombo, note, strumLine.characters, true, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, daRating.score, note.isSustainNote ? null : daRating.accuracy, 0.023, daRating.image, Options.splashesEnabled && !note.isSustainNote && daRating.splash);
 		else
-			event = EventManager.get(NoteHitEvent).recycle(false, false, false, null, defaultDisplayRating, defaultDisplayCombo, note, strumLine.characters, false, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, 0, null, 0, daRating, false);
+			event = EventManager.get(NoteHitEvent).recycle(false, false, false, null, defaultDisplayRating, defaultDisplayCombo, note, strumLine.characters, false, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, 0, null, 0, daRating.image, false);
 		event.deleteNote = !note.isSustainNote; // work around, to allow sustain notes to be deleted
 		event = scripts.event(strumLine != null && !strumLine.cpu ? "onPlayerHit" : "onDadHit", event);
 		strumLine.onHit.dispatch(event);
