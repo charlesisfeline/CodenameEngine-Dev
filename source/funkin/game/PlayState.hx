@@ -26,9 +26,9 @@ import funkin.backend.system.RotatingSpriteGroup;
 import funkin.editors.SaveWarning;
 import funkin.editors.charter.Charter;
 import funkin.editors.charter.CharterSelection;
-import funkin.game.RatingManager;
 import funkin.game.SplashHandler;
 import funkin.game.cutscenes.*;
+import funkin.game.scoring.*;
 import funkin.menus.*;
 import funkin.menus.StoryMenuState.WeekData;
 import funkin.backend.utils.FunkinSave;
@@ -1686,7 +1686,7 @@ class PlayState extends MusicBeatState
 		 * CALCULATES RATING
 		 */
 		var noteDiff = Math.abs(Conductor.songPosition - note.strumTime);
-		var daRating:Rating = ratingJudger.judgeNote(noteDiff);
+		var daRating:RatingData = ratingJudger.judgeNote(noteDiff);
 		// RatingManager.judgeNoteLegacy(noteDiff, hitWindow)
 		// ^ judgeNote uses the same timings as judgeNoteLegacy
 		// so this shouldn't be that big of a deal
