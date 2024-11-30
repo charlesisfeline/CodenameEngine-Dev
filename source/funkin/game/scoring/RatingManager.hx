@@ -2,37 +2,6 @@ package funkin.game.scoring;
 
 using StringTools;
 
-// wip
-enum abstract HitWindowPreset(Int) from Int to Int {
-	var JUDGE_FIVE = 0;
-	var CNE_CLASSIC = 1;
-	var FNF_CLASSIC = 2;
-	var FNF_CURRENT = 3;
-
-	public function list():Array<Float> {
-		return switch (this) {
-			// old CNE timings, shit ratings are pretty hard to get with these
-			case CNE_CLASSIC: [50.0, 187.5, 225.0, 250.0];
-			// week 7, these where real specific damn
-			case FNF_CLASSIC: [33.334, 125.0025, 150.003, 166.67];
-			// current FNF, PBOT1 hit windows
-			case FNF_CURRENT: [45.0, 90.0, 135.0, 160.0];
-			// current timings, based on etterna
-			case _: [37.8, 75.6, 113.4, 180.0];
-		}
-	}
-
-	public function toString():String {
-		return switch (this) {
-			// current timings
-			case CNE_CLASSIC: "Codename (Classic)";
-			case FNF_CLASSIC: "Funkin' (Week 7)";
-			case FNF_CURRENT: "Funkin' (V-Slice)";
-			case _: "Judge Five";
-		}
-	}
-}
-
 /**
  * Judges thing and returns thing.
  *
@@ -66,7 +35,7 @@ class RatingManager {
 		// this kinda sucks and I need to make this *actually* customisable later
 		// this is just to have timing presets in the meantime we implement this new system
 		// whatever comes off as better windows for the engine generally.
-		var hitWindows: Array<Float> = HitWindowPreset.JUDGE_FIVE.list();
+		var hitWindows: Array<Float> = HitWindowPreset.JUDGE_FIVE.listTimings();
 		return [
 			{name: "Sick", image: "sick", window: hitWindows[0], accuracy: 1.0, score: 350, splash: true},
 			{name: "Good", image: "good", window: hitWindows[1], accuracy: 0.75, score: 200, splash: false},
