@@ -323,6 +323,10 @@ class PlayState extends MusicBeatState
 	 */
 	public var misses:Int = 0;
 	/**
+	 * The player's amount of combo breaks.
+	 */
+	public var breaks:Int = 0;
+	/**
 	 * The player's accuracy (shortcut to `accuracyPressedNotes / totalAccuracyAmount`).
 	 */
 	public var accuracy(get, set):Float;
@@ -1690,6 +1694,11 @@ class PlayState extends MusicBeatState
 		// RatingManager.judgeNoteLegacy(noteDiff, hitWindow)
 		// ^ judgeNote uses the same timings as judgeNoteLegacy
 		// so this shouldn't be that big of a deal
+
+		if (daRating.comboBreak) {
+			breaks += 1;
+			combo = 0;
+		}
 
 		var event:NoteHitEvent;
 		if (strumLine != null && !strumLine.cpu)

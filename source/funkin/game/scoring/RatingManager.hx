@@ -2,7 +2,6 @@ package funkin.game.scoring;
 
 using StringTools;
 
-// using flixel.util.FlxArrayUtil;
 // wip
 enum abstract HitWindowPreset(Int) from Int to Int {
 	var JUDGE_FIVE = 0;

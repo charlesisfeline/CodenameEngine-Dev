@@ -41,4 +41,9 @@ class RatingData {
 	 * If this rating is hittable, doesn't get accounted for otherwise.
 	 */
 	@:optional public var hittable:Bool = true;
+
+	/**
+	 * If this rating causes a combo break when hit.
+	 */
+	@:optional public var comboBreak:Bool = false;
 }
