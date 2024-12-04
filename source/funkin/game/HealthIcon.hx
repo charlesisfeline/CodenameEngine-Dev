@@ -71,7 +71,7 @@ class HealthIcon extends FlxSprite
 		scrollFactor.set();
 	}
 
-	public function setIcon(char:String, animated:Bool = false) {
+	public function setIcon(char:String, animated:Bool = true) {
 		if(curCharacter != char) {
 			curCharacter = char;
 			var iconPath = char;
@@ -125,7 +125,7 @@ class HealthIcon extends FlxSprite
 				if (animsFound["winning"])
 					healthSteps[80] = "winning"; // winning icon
 			} else {
-				var iconAsset:FlxGraphic = FlxGraphic.fromAssetKey(path, false, null, false);
+				var iconAsset:FlxGraphic = FlxG.bitmap.add(path);
 				var assetW:Float = iconAsset.width; var assetH:Float = iconAsset.height;
 
 				var iconAmt:Int = Math.floor(assetW / assetH);
