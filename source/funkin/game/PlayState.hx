@@ -1309,11 +1309,11 @@ class PlayState extends MusicBeatState
 
 		if (doIconBop) {
 			var iconLerp = Flags.ICON_LERP;
-			iconP1.scale.set(lerp(iconP1.scale.x, 1, iconLerp), lerp(iconP1.scale.y, 1, iconLerp));
-			iconP2.scale.set(lerp(iconP2.scale.x, 1, iconLerp), lerp(iconP2.scale.y, 1, iconLerp));
-
-			iconP1.updateHitbox();
-			iconP2.updateHitbox();
+			for (icon in [iconP1, iconP2])
+			{
+				icon.scale.set(lerp(icon.scale.x, icon.defaultScale, iconLerp), lerp(icon.scale.y, icon.defaultScale, iconLerp));
+				icon.updateHitbox();
+			}
 		}
 		updateIconPositions();
 
@@ -1873,11 +1873,11 @@ class PlayState extends MusicBeatState
 		if (doIconBop)
 		{
 			var iconScale = Flags.BOP_ICON_SCALE;
-			iconP1.scale.set(iconScale, iconScale);
-			iconP2.scale.set(iconScale, iconScale);
-
-			iconP1.updateHitbox();
-			iconP2.updateHitbox();
+			for (icon in [iconP1, iconP2])
+			{
+				icon.scale.set(icon.defaultScale * iconScale, icon.defaultScale * iconScale);
+				icon.updateHitbox();
+			}
 		}
 
 		scripts.call("beatHit", [curBeat]);
