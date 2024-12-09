@@ -1,5 +1,6 @@
 package funkin.game;
 
+import haxe.xml.Access;
 import flixel.graphics.FlxGraphic;
 import flixel.util.typeLimit.OneOfTwo;
 
@@ -36,11 +37,15 @@ class HealthIcon extends FlxSprite
 	 */
 	public var defaultScale:Float = 1;
 
-
 	/**
 	 * Whenever or not the icon is animated
 	 */
-	 public var animated:Bool = false;
+	public var animated:Bool = false;
+
+	/**
+	 * XML Icon data😼😼😼😼😼
+	 */
+	public var xmlData:Access;
 
 	/**
 	 * Helper for HScript who can't make maps
@@ -68,6 +73,8 @@ class HealthIcon extends FlxSprite
 		this.isPlayer = isPlayer;
 		setIcon(char != null ? char : Flags.DEFAULT_CHARACTER);
 
+		animation.finishCallback = animFinishCallback;
+
 		scrollFactor.set();
 	}
 
@@ -81,39 +88,39 @@ class HealthIcon extends FlxSprite
 				iconPath = Flags.DEFAULT_HEALTH_ICON;
 				path = Paths.image('icons/' + Flags.DEFAULT_HEALTH_ICON);
 			}
-			var iconXmlPath = Paths.getPath('images/icons/$iconPath.xml');
+			var iconXmlPath = Paths.getPath('images/icons/$iconPath/data.xml');
 			var iconFoundAnimated = Assets.exists(iconXmlPath);
 
 			this.animated = animated && iconFoundAnimated;
 
 			if (this.animated)
 			{
-				frames = Paths.getSparrowAtlas('icons/$iconPath');
+				frames = Paths.getSparrowAtlas('icons/$iconPath/icon');
+				
+				var plainXML:String = Assets.getText(iconXmlPath);
 
-				//normaized anim name for the engine => animations names for idk what you want
-				var animationsPrefixes:Map<String, Array<String>> = [
-					"neutral" => ["neutral", "normal"],
-					"losing" => ["losing", "loss", "lose"],
-					"winning" => ["winning", "win"],
-				];
-				var animsFound:Map<String, Bool> = [];
+				var charXML:Xml = Xml.parse(plainXML).firstElement();
+				if (charXML == null)  {
+					//go to normal icon instead
+					setIcon(char, false);
+					return;
+				}
+				xmlData = new Access(charXML);
 
-				for (name => prefixes in animationsPrefixes)
-				{
-					for (i in 0...prefixes.length)
-					{
-						var prefix = prefixes[i];
-						var prevPrefix = prefixes[i - 1]; //to check if an anim has started checking stuff
-						if (prevPrefix != null)
-						{
-							if (animation.getByName(name) == null)
-								animation.addByPrefix(name, prefix, 24, true, isPlayer);
-						} else 
-							animation.addByPrefix(name, prefix, 24, true, isPlayer);
+				for(node in xmlData.elements)
+					switch(node.name) {
+						case "transition":
+							animation.addByPrefix("to-" + node.x.get("to"), node.x.get("anim"), Std.parseInt(node.x.get("fps")).getDefault(24), node.x.get("looped").getDefault("false").toLowerCase() == "true", isPlayer);
+						case "anim":
+							animation.addByPrefix(node.x.get("name"), node.x.get("anim"), Std.parseInt(node.x.get("fps")).getDefault(24), node.x.get("looped").getDefault("false").toLowerCase() == "true", isPlayer);
 					}
 
+				//normaized anim name for the engine to check if a certain exists
+				var animationsPrefixes:Array<String> = ["neutral", "losing", "winning"];
+				var animsFound:Map<String, Bool> = [];
+
+				for (name in animationsPrefixes)
 					animsFound.set(name, animation.getByName(name) != null);
-				}
 
 				animation.play("neutral");
 
@@ -175,13 +182,28 @@ class HealthIcon extends FlxSprite
 				funkin.backend.scripting.GlobalScript.event("onHealthIconAnimChange", event);
 				if (!event.cancelled) {
 					if (animated) {
-						animation.play(event.amount);
+						if (animation.getByName("to-" + event.amount) != null)
+						{
+							animation.play("to-" + event.amount);
+						} else
+							animation.play(event.amount);
 					} else
 						animation.curAnim.curFrame = event.amount;
 				}
 
 				curAnimState = event.amount;
 			}
+		}
+	}
+
+	function animFinishCallback(anim:String)
+	{
+		var event = EventManager.get(funkin.backend.scripting.events.healthicon.HealthIconAnimFinishedEvent).recycle(anim, this);
+		funkin.backend.scripting.GlobalScript.event("onHealthIconAnimFinished", event);
+		if (animated)
+		{
+			if (anim.startsWith("to-"))
+				animation.play(anim.substr(3));
 		}
 	}
 }
