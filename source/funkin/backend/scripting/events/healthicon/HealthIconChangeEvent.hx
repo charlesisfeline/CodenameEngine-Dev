@@ -4,9 +4,9 @@ import flixel.util.typeLimit.OneOfTwo;
 
 final class HealthIconChangeEvent extends CancellableEvent {
 	/**
-	 * Amount
+	 * Animation or Frame that is about to ne played
 	 */
-	public var amount:OneOfTwo<String, Int>;
+	public var animOrFrame:OneOfTwo<String, Int>;
 
 	/**
 	 * The health icon

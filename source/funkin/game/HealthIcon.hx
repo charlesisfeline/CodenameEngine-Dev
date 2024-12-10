@@ -1,10 +1,11 @@
 package funkin.game;
 
 import haxe.xml.Access;
+import flixel.math.FlxPoint;
 import flixel.graphics.FlxGraphic;
 import flixel.util.typeLimit.OneOfTwo;
 
-class HealthIcon extends FlxSprite
+class HealthIcon extends FunkinSprite
 {
 	/**
 	 * Used for FreeplayState! If you use it elsewhere, prob gonna annoying
@@ -43,9 +44,14 @@ class HealthIcon extends FlxSprite
 	public var animated:Bool = false;
 
 	/**
-	 * XML Icon data😼😼😼😼😼
+	 * XML Animated Icon data
 	 */
 	public var xmlData:Access;
+
+	/**
+	 * Extra offsets to add when updating the hitbox
+	 */
+	public var extraOffsets:FlxPoint = FlxPoint.get();
 
 	/**
 	 * Helper for HScript who can't make maps
@@ -83,13 +89,13 @@ class HealthIcon extends FlxSprite
 			curCharacter = char;
 			var iconPath = char;
 			var path = Paths.image('icons/$char');
-			if (!Assets.exists(path))
+			var iconXmlPath = Paths.getPath('images/icons/$char/data.xml');
+			var iconFoundAnimated = Assets.exists(iconXmlPath);
+			if (!Assets.exists(path) && !iconFoundAnimated)
 			{
 				iconPath = Flags.DEFAULT_HEALTH_ICON;
 				path = Paths.image('icons/' + Flags.DEFAULT_HEALTH_ICON);
 			}
-			var iconXmlPath = Paths.getPath('images/icons/$iconPath/data.xml');
-			var iconFoundAnimated = Assets.exists(iconXmlPath);
 
 			this.animated = animated && iconFoundAnimated;
 
@@ -99,19 +105,23 @@ class HealthIcon extends FlxSprite
 				
 				var plainXML:String = Assets.getText(iconXmlPath);
 
-				var charXML:Xml = Xml.parse(plainXML).firstElement();
-				if (charXML == null)  {
+				var iconDataXML:Xml = Xml.parse(plainXML).firstElement();
+				if (iconDataXML == null)  {
 					//go to normal icon instead
 					setIcon(char, false);
 					return;
 				}
-				xmlData = new Access(charXML);
+				xmlData = new Access(iconDataXML);
 
 				for(node in xmlData.elements)
 					switch(node.name) {
 						case "transition":
-							animation.addByPrefix("to-" + node.x.get("to"), node.x.get("anim"), Std.parseInt(node.x.get("fps")).getDefault(24), node.x.get("looped").getDefault("false").toLowerCase() == "true", isPlayer);
+							if (node.has.offsetx || node.has.offsety)
+								addOffset('from-${node.x.get("from")}-to-${node.x.get("to")}', Std.parseFloat(node.x.get("offsetx")).getDefault(0), Std.parseFloat(node.x.get("offsety")).getDefault(0));
+							animation.addByPrefix('from-${node.x.get("from")}-to-${node.x.get("to")}', node.x.get("anim"), Std.parseInt(node.x.get("fps")).getDefault(24), node.x.get("looped").getDefault("false").toLowerCase() == "true", isPlayer);
 						case "anim":
+							if (node.has.offsetx || node.has.offsety)
+								addOffset(node.x.get("name"), Std.parseFloat(node.x.get("offsetx")).getDefault(0), Std.parseFloat(node.x.get("offsety")).getDefault(0));
 							animation.addByPrefix(node.x.get("name"), node.x.get("anim"), Std.parseInt(node.x.get("fps")).getDefault(24), node.x.get("looped").getDefault("false").toLowerCase() == "true", isPlayer);
 					}
 
@@ -122,7 +132,7 @@ class HealthIcon extends FlxSprite
 				for (name in animationsPrefixes)
 					animsFound.set(name, animation.getByName(name) != null);
 
-				animation.play("neutral");
+				playAnim("neutral");
 
 				healthSteps = [
 					0  => "losing", // losing icon
@@ -144,7 +154,7 @@ class HealthIcon extends FlxSprite
 				updateHitbox();
 
 				animation.add(char, [for(i in 0...iconAmt) i], 0, false, isPlayer);
-				animation.play(char);
+				playAnim(char);
 
 				healthSteps = [
 					0  => 1, // losing icon
@@ -182,16 +192,18 @@ class HealthIcon extends FlxSprite
 				funkin.backend.scripting.GlobalScript.event("onHealthIconAnimChange", event);
 				if (!event.cancelled) {
 					if (animated) {
-						if (animation.getByName("to-" + event.amount) != null)
-						{
-							animation.play("to-" + event.amount);
-						} else
-							animation.play(event.amount);
+						var animName = 'from-${animation.curAnim.name.substr(animation.curAnim.name.lastIndexOf('-') + 1)}-to-${event.animOrFrame}';
+						var toAnimExists = hasAnimation(animName);
+						if (!toAnimExists)
+							animName = event.animOrFrame;
+
+						if (hasAnimation(animName))
+							playAnim(animName);
 					} else
-						animation.curAnim.curFrame = event.amount;
+						animation.curAnim.curFrame = event.animOrFrame;
 				}
 
-				curAnimState = event.amount;
+				curAnimState = event.animOrFrame;
 			}
 		}
 	}
@@ -200,10 +212,15 @@ class HealthIcon extends FlxSprite
 	{
 		var event = EventManager.get(funkin.backend.scripting.events.healthicon.HealthIconAnimFinishedEvent).recycle(anim, this);
 		funkin.backend.scripting.GlobalScript.event("onHealthIconAnimFinished", event);
-		if (animated)
-		{
-			if (anim.startsWith("to-"))
-				animation.play(anim.substr(3));
+		if (animated) {
+			if (anim.startsWith("from-"))
+				playAnim(anim.substr(anim.lastIndexOf('-') + 1));
 		}
+	}
+
+	override function updateHitbox()
+	{
+		super.updateHitbox();
+		offset += extraOffsets;
 	}
 }
