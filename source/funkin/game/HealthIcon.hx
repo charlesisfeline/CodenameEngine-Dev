@@ -55,7 +55,7 @@ class HealthIcon extends FunkinSprite
 
 	/**
 	 * Helper for HScript who can't make maps
-	 * @param steps Something like this: `[[0, 1], [20, 0]]`
+	 * @param steps Something like this: `[[0, 1], [20, 0]]` or `[[0, "losing"], [20, "neutral"]]` for animated icons
 	 */
 	public function setHealthSteps(steps:Array<Array<OneOfTwo<String, Int>>>) { // helper for hscript that can't do maps
 		if (steps == null) return;
@@ -82,6 +82,20 @@ class HealthIcon extends FunkinSprite
 		animation.finishCallback = animFinishCallback;
 
 		scrollFactor.set();
+	}
+
+	public dynamic function bump()
+	{
+		var iconScale = Flags.BOP_ICON_SCALE;
+		scale.set(defaultScale * iconScale, defaultScale * iconScale);
+		updateHitbox();
+	}
+
+	public dynamic function updateBump()
+	{
+		var iconLerp = Flags.ICON_LERP;
+		scale.set(CoolUtil.fpsLerp(scale.x, defaultScale, iconLerp), CoolUtil.fpsLerp(scale.y, defaultScale, iconLerp));
+		updateHitbox();
 	}
 
 	public function setIcon(char:String, animated:Bool = true) {

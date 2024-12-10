@@ -1307,14 +1307,11 @@ class PlayState extends MusicBeatState
 			}*/
 		}
 
-		if (doIconBop) {
-			var iconLerp = Flags.ICON_LERP;
+		if (doIconBop)
 			for (icon in [iconP1, iconP2])
-			{
-				icon.scale.set(lerp(icon.scale.x, icon.defaultScale, iconLerp), lerp(icon.scale.y, icon.defaultScale, iconLerp));
-				icon.updateHitbox();
-			}
-		}
+				if (icon.updateBump != null)
+					icon.updateBump();
+
 		updateIconPositions();
 
 		if (startingSong)
@@ -1871,14 +1868,9 @@ class PlayState extends MusicBeatState
 		}
 
 		if (doIconBop)
-		{
-			var iconScale = Flags.BOP_ICON_SCALE;
 			for (icon in [iconP1, iconP2])
-			{
-				icon.scale.set(icon.defaultScale * iconScale, icon.defaultScale * iconScale);
-				icon.updateHitbox();
-			}
-		}
+				if (icon.bump != null)
+					icon.bump();
 
 		scripts.call("beatHit", [curBeat]);
 	}
