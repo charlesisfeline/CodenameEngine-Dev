@@ -137,6 +137,12 @@ class HealthIcon extends FunkinSprite
 							if (node.has.offsetx || node.has.offsety)
 								addOffset(node.x.get("name"), Std.parseFloat(node.x.get("offsetx")).getDefault(0), Std.parseFloat(node.x.get("offsety")).getDefault(0));
 							animation.addByPrefix(node.x.get("name"), node.x.get("anim"), Std.parseInt(node.x.get("fps")).getDefault(24), node.x.get("looped").getDefault("false").toLowerCase() == "true", isPlayer);
+						case "steps":
+							var parsedSteps:Map<Int, String> = [];
+							for(subnode in node.elements)
+								parsedSteps.set(Std.parseInt(subnode.x.get("percent")).getDefault(0), subnode.x.get("type"));
+							
+							healthSteps = parsedSteps;
 					}
 
 				//normaized anim name for the engine to check if a certain exists
