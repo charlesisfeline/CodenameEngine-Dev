@@ -1,13 +1,10 @@
 package funkin.backend.system;
 
-import lime.utils.AssetLibrary;
 import lime.utils.AssetType;
 import flixel.util.FlxColor;
 
 import lime.app.Application;
 import funkin.backend.system.macros.GitCommitMacro;
-import funkin.backend.assets.IModsAssetLibrary;
-import funkin.backend.assets.ScriptedAssetLibrary;
 
 /**
  * A class that reads the `flags.ini` file, allowing to read settable Flags (customs too).
@@ -51,9 +48,9 @@ class Flags {
 	public static var DEFAULT_SCROLL_SPEED:Float = 2.0;
 	public static var DEFAULT_HEALTH_ICON:String = "face";
 
-	public static var SONGS_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
-	public static var GAME_MODES_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
-	public static var WEEKS_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
+	public static var SONGS_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "oneOFtwo";
+	public static var GAME_MODES_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "oneOFtwo";
+	public static var WEEKS_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "oneOFtwo";
 
 	public static var DEFAULT_BPM:Float = 100.0;
 	public static var DEFAULT_BEATS_PER_MEASURE:Float = 4;

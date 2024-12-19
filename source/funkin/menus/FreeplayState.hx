@@ -120,7 +120,7 @@ class FreeplayState extends MusicBeatState
 			}
 		}
 
-		trace(gameModeLabels = FreeplayGameMode.get());
+		gameModeLabels = FreeplayGameMode.get();
 
 		DiscordUtil.call("onMenuLoaded", ["Freeplay"]);
 
@@ -473,7 +473,7 @@ class FreeplayGameMode {
 
 	public static inline function getGameModesFromSource(source:AssetSource = BOTH, useTxt:Bool = true):Array<FreeplayGameMode> {
 		var path = 'data/gamemodes';
-		var txt = Paths.txt('gamemodes/gamemodes');
+		var txt = Paths.txt('gamemodes/list');
 		var list = useTxt && Paths.assetsTree.existsSpecific(txt, "TEXT", source) ? CoolUtil.coolTextFile(txt) : Paths.getFolderContent(path, false, source);
 
 		return [for (file in list) {
@@ -498,7 +498,9 @@ class FreeplayGameMode {
 				list = getGameModesFromSource(MODS, useTxt).concat(getGameModesFromSource(SOURCE, useTxt));
 			case 'append':
 				list = getGameModesFromSource(SOURCE, useTxt).concat(getGameModesFromSource(MODS, useTxt));
-			default /*case 'override'*/:
+			case 'override':
+				list = getGameModesFromSource(BOTH, useTxt);
+			default /*case 'oneOFtwo'*/:
 				if ((list = getGameModesFromSource(MODS, useTxt)).length == 0)
 					list = getGameModesFromSource(SOURCE, useTxt);
 		}
@@ -512,7 +514,7 @@ class FreeplaySonglist {
 
 	public function new() {}
 
-	public function getSongsFromSource(source:AssetSource, useTxt:Bool = true) {
+	public function getSongsFromSource(source:AssetSource = BOTH, useTxt:Bool = true) {
 		var path:String = Paths.txt('freeplaySonglist');
 		var songsFound:Array<String> = useTxt && Paths.assetsTree.existsSpecific(path, "TEXT", source) ? CoolUtil.coolTextFile(path) : Paths.getFolderDirectories('songs', false, source);
 
@@ -534,7 +536,9 @@ class FreeplaySonglist {
 			case 'append':
 				songList.getSongsFromSource(SOURCE, useTxt);
 				songList.getSongsFromSource(MODS, useTxt);
-			default /*case 'override'*/:
+			case 'override':
+				songList.getSongsFromSource(BOTH, useTxt);
+			default /*case 'oneOFtwo'*/:
 				if (songList.getSongsFromSource(MODS, useTxt))
 					songList.getSongsFromSource(SOURCE, useTxt);
 		}

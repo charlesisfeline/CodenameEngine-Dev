@@ -254,7 +254,9 @@ class StoryMenuState extends MusicBeatState {
 			case 'append':
 				getWeeksFromSource(weeks, SOURCE);
 				getWeeksFromSource(weeks, MODS);
-			default /*case 'override'*/:
+			case 'override':
+				getWeeksFromSource(weeks, BOTH);
+			default /*case 'oneOFtwo'*/:
 				if (getWeeksFromSource(weeks, MODS))
 					getWeeksFromSource(weeks, SOURCE);
 		}
@@ -344,15 +346,10 @@ class StoryMenuState extends MusicBeatState {
 		}
 	}
 
-	public function getWeeksFromSource(weeks:Array<String>, source:funkin.backend.assets.AssetsLibraryList.AssetSource) {
-		var path:String = Paths.txt('freeplaySonglist');
-		var weeksFound:Array<String> = [];
-		if (Paths.assetsTree.existsSpecific(path, "TEXT", source)) {
-			var trim = "";
-			weeksFound = CoolUtil.coolTextFile(Paths.txt('weeks/weeks'));
-		} else {
-			weeksFound = [for(c in Paths.getFolderContent('data/weeks/weeks/', false, source)) if (Path.extension(c).toLowerCase() == "xml") Path.withoutExtension(c)];
-		}
+	public function getWeeksFromSource(weeks:Array<String>, source:funkin.backend.assets.AssetsLibraryList.AssetSource = BOTH) {
+		var path:String = Paths.txt('weeks/weeks');
+		var weeksFound:Array<String> = Paths.assetsTree.existsSpecific(path, "TEXT", source) ? CoolUtil.coolTextFile(path) :
+			[for(c in Paths.getFolderContent('data/weeks/weeks/', false, source)) if (Path.extension(c).toLowerCase() == "xml") Path.withoutExtension(c)];
 
 		if (weeksFound.length > 0) {
 			for(s in weeksFound)
