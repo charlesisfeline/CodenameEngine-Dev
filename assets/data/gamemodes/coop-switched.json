@@ -1,5 +1,5 @@
 {
 	"displayName": "Co-Op Mode (Switched)",
-	"modeID": "codenamecrew.defaulmodes.coop-opponent",
+	"modeID": "codenamecrew.defaultmodes.coop-opponent",
 	"scripts": ["opponent", "coop"]
 }
