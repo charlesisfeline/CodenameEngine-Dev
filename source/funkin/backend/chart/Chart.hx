@@ -74,7 +74,7 @@ class Chart {
 		var data:Array<ChartEvent> = null;
 		if (Assets.exists(path)) {
 			try {
-				data = Json.parse(Assets.getText(path)).events;
+				data = CoolUtil.parseJson(path).events;
 			} catch(e) {
 				Logs.trace('Failed to load song event data for ${songName} ($path): ${Std.string(e)}', ERROR);
 			}
@@ -95,7 +95,7 @@ class Chart {
 			if (Assets.exists(path)) {
 				fromMods = Paths.assetsTree.existsSpecific(path, "TEXT", MODS);
 				try {
-					data = Json.parse(Assets.getText(path));
+					data = CoolUtil.parseJson(path);
 				} catch(e) {
 					Logs.trace('Failed to load song metadata for ${songName} ($path): ${Std.string(e)}', ERROR);
 				}
@@ -166,7 +166,7 @@ class Chart {
 		var data:Dynamic = null;
 		try {
 			if (valid)
-				data = Json.parse(Assets.getText(chartPath));
+				data = CoolUtil.parseJson(chartPath);
 		} catch(e) {
 			Logs.trace('Could not parse chart for song ${songName} ($difficulty): ${Std.string(e)}', ERROR, RED);
 		}

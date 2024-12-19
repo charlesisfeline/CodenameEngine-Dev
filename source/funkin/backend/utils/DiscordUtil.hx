@@ -78,7 +78,7 @@ class DiscordUtil
 		if (Assets.exists(jsonPath))
 		{
 			try
-				config = Json.parse(Assets.getText(jsonPath))
+				config = CoolUtil.parseJson(jsonPath)
 			catch (e)
 				Logs.trace('Couldn\'t load Discord RPC configuration: ${e.toString()}', ERROR);
 		}

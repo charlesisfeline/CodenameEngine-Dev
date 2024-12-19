@@ -6,6 +6,7 @@ import funkin.backend.chart.Chart;
 import funkin.backend.chart.ChartData.ChartMetaData;
 import funkin.backend.scripting.events.menu.MenuChangeEvent;
 import funkin.backend.scripting.events.menu.freeplay.*;
+import funkin.backend.assets.AssetsLibraryList.AssetSource;
 import funkin.game.HealthIcon;
 import funkin.backend.utils.FunkinSave;
 
@@ -21,13 +22,7 @@ class FreeplayState extends MusicBeatState
 	/**
 	 * Array containing all labels for game modes.
 	 */
-	public var gameModeLabels:Array<FreeplayGameMode> = [
-		FreeplayGameMode.generateDefault(),
-		new FreeplayGameMode("Opponent Mode", "opponentMode", {opponentMode: true}),
-		new FreeplayGameMode("Co-Op Mode", "coopMode", {coopMode: true}),
-		new FreeplayGameMode("Co-Op Mode (Switched)", "coopMode-opponentMode", {coopMode: true, opponentMode: true}),
-		new FreeplayGameMode("Botplay", "botplayMode", {botplayMode: true})
-	];
+	public var gameModeLabels:Array<FreeplayGameMode> = [];
 
 	/**
 	 * Currently selected song
@@ -124,6 +119,8 @@ class FreeplayState extends MusicBeatState
 				}
 			}
 		}
+
+		trace(gameModeLabels = FreeplayGameMode.get());
 
 		DiscordUtil.call("onMenuLoaded", ["Freeplay"]);
 
@@ -446,15 +443,16 @@ class FreeplayState extends MusicBeatState
 class FreeplayGameMode {
 	public var modeName:String;
 	public var modeID:String;
+	public var scripts(default, set):Array<String>;
 	public var fields(default, set):Dynamic;
 
+	@:noCompletion function set_scripts(val:Array<String>) return scripts = (val == null ? [] : val);
 	@:noCompletion function set_fields(val:Dynamic) return fields = (val == null ? {} : val);
 
-	public static inline function generateDefault() return new FreeplayGameMode("Solo", "solo");
-
-	public function new(modeName:String, modeID:String, ?fields:Dynamic) {
+	public function new(modeName:String, modeID:String, ?scripts:Array<String>, ?fields:Dynamic) {
 		this.modeName = modeName;
 		this.modeID = modeID;
+		this.scripts = scripts;
 		this.fields = fields;
 	}
 
@@ -470,6 +468,43 @@ class FreeplayGameMode {
 		}
 		return modifiers;
 	}
+
+	public static inline function generateDefault() return new FreeplayGameMode("Solo Mode", "solo");
+
+	public static inline function getGameModesFromSource(source:AssetSource = BOTH, useTxt:Bool = true):Array<FreeplayGameMode> {
+		var path = 'data/gamemodes';
+		var txt = Paths.txt('gamemodes/gamemodes');
+		var list = useTxt && Paths.assetsTree.existsSpecific(txt, "TEXT", source) ? CoolUtil.coolTextFile(txt) : Paths.getFolderContent(path, false, source);
+
+		return [for (file in list) {
+			if (useTxt) file += ".json";
+			else if (haxe.io.Path.extension(file) != "json") continue;
+
+			var meta:FreeplayGameMode = null;
+			try {
+				var data = CoolUtil.parseJson(Paths.file(path + "/" + file));
+				var id = data.modeID;
+				meta = new FreeplayGameMode(CoolUtil.getDefault(data.displayName, id), id, data.scripts, data.fields);
+			} catch(e) Logs.trace('Failed to load game mode metadata for $file ($path): ${Std.string(e)}', ERROR);
+			if (meta != null) meta;
+		}];
+	}
+
+	public static function get(useTxt:Bool = true) {
+		var list:Array<FreeplayGameMode>;
+
+		switch(Flags.GAME_MODES_LIST_MOD_MODE) {
+			case 'prepend':
+				list = getGameModesFromSource(MODS, useTxt).concat(getGameModesFromSource(SOURCE, useTxt));
+			case 'append':
+				list = getGameModesFromSource(SOURCE, useTxt).concat(getGameModesFromSource(MODS, useTxt));
+			default /*case 'override'*/:
+				if ((list = getGameModesFromSource(MODS, useTxt)).length == 0)
+					list = getGameModesFromSource(SOURCE, useTxt);
+		}
+
+		return list;
+	}
 }
 
 class FreeplaySonglist {
@@ -477,14 +512,9 @@ class FreeplaySonglist {
 
 	public function new() {}
 
-	public function getSongsFromSource(source:funkin.backend.assets.AssetsLibraryList.AssetSource, useTxt:Bool = true) {
+	public function getSongsFromSource(source:AssetSource, useTxt:Bool = true) {
 		var path:String = Paths.txt('freeplaySonglist');
-		var songsFound:Array<String> = [];
-		if (useTxt && Paths.assetsTree.existsSpecific(path, "TEXT", source)) {
-			songsFound = CoolUtil.coolTextFile(Paths.txt('freeplaySonglist'));
-		} else {
-			songsFound = Paths.getFolderDirectories('songs', false, source);
-		}
+		var songsFound:Array<String> = useTxt && Paths.assetsTree.existsSpecific(path, "TEXT", source) ? CoolUtil.coolTextFile(path) : Paths.getFolderDirectories('songs', false, source);
 
 		if (songsFound.length > 0) {
 			for(s in songsFound)

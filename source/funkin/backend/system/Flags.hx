@@ -52,6 +52,7 @@ class Flags {
 	public static var DEFAULT_HEALTH_ICON:String = "face";
 
 	public static var SONGS_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
+	public static var GAME_MODES_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
 	public static var WEEKS_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
 
 	public static var DEFAULT_BPM:Float = 100.0;

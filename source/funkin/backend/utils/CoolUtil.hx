@@ -76,9 +76,8 @@ class CoolUtil
 	 * Shortcut to parse JSON from an Asset path
 	 * @param assetPath Path to the JSON asset.
 	 */
-	public static function parseJson(assetPath:String) {
+	public static function parseJson(assetPath:String):Dynamic
 		return Json.parse(Assets.getText(assetPath));
-	}
 
 	/**
 	 * Deletes a folder recursively
