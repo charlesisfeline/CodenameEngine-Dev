@@ -19,6 +19,17 @@ class FreeplayState extends MusicBeatState
 	public var songs:Array<ChartMetaData> = [];
 
 	/**
+	 * Array containing all labels for game modes.
+	 */
+	public var gameModeLabels:Array<FreeplayGameMode> = [
+		FreeplayGameMode.generateDefault(),
+		new FreeplayGameMode("Opponent Mode", "opponentMode", {opponentMode: true}),
+		new FreeplayGameMode("Co-Op Mode", "coopMode", {coopMode: true}),
+		new FreeplayGameMode("Co-Op Mode (Switched)", "coopMode-opponentMode", {coopMode: true, opponentMode: true}),
+		new FreeplayGameMode("Botplay", "botplayMode", {botplayMode: true})
+	];
+
+	/**
 	 * Currently selected song
 	 */
 	public var curSelected:Int = 0;
@@ -360,16 +371,6 @@ class FreeplayState extends MusicBeatState
 	}
 
 	/**
-	 * Array containing all labels for Co-Op / Opponent modes.
-	 */
-	public var coopLabels:Array<String> = [
-		"[TAB] Solo",
-		"[TAB] Opponent Mode",
-		"[TAB] Co-Op Mode",
-		"[TAB] Co-Op Mode (Switched)"
-	];
-
-	/**
 	 * Change the current coop mode context.
 	 * @param change How much to change
 	 * @param force Force the change, even if `change` is equal to 0.
@@ -387,11 +388,7 @@ class FreeplayState extends MusicBeatState
 
 		updateScore();
 
-		if (bothEnabled) {
-			coopText.text = coopLabels[curCoopMode];
-		} else {
-			coopText.text = coopLabels[curCoopMode * (songs[curSelected].coopAllowed ? 2 : 1)];
-		}
+		coopText.text = "[TAB] " + gameModeLabels[curCoopMode].modeName;
 	}
 
 	/**
@@ -438,6 +435,40 @@ class FreeplayState extends MusicBeatState
 			if (item.targetY == 0)
 				item.alpha =  #if PRELOAD_ALL songInstPlaying ? event.selectedPlayingAlpha : #end event.selectedAlpha;
 		}
+	}
+}
+
+/**
+ * Class used for the Freeplay menu game modes.
+ *
+ * **NOTE**: `fields` is useable not just for boolean values!!
+ */
+class FreeplayGameMode {
+	public var modeName:String;
+	public var modeID:String;
+	public var fields(default, set):Dynamic;
+
+	@:noCompletion function set_fields(val:Dynamic) return fields = (val == null ? {} : val);
+
+	public static inline function generateDefault() return new FreeplayGameMode("Solo", "solo");
+
+	public function new(modeName:String, modeID:String, ?fields:Dynamic) {
+		this.modeName = modeName;
+		this.modeID = modeID;
+		this.fields = fields;
+	}
+
+	public function toModifiers():Array<Dynamic> {
+		var fields = this.fields;
+		var modifiers:Array<Dynamic> = [];
+		for (field in {var _ = Reflect.fields(fields); _.sort(Reflect.compare); _;}) {
+			var val:Dynamic = Reflect.field(fields, field);
+			if (val != null && val != false) { // allow true, and floats/ints
+				modifiers.push(field);
+				modifiers.push(val);
+			}
+		}
+		return modifiers;
 	}
 }
 
