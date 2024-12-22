@@ -70,8 +70,6 @@ class Flags {
 	 * Default background colors for songs without bg color
 	 */
 	public static var DEFAULT_COLOR:FlxColor = 0xFF9271FD;
-	public static var DEFAULT_COOP_ALLOWED:Bool = false;
-	public static var DEFAULT_OPPONENT_MODE_ALLOWED:Bool = false;
 
 	@:also(funkin.game.PlayState.coopMode)
 	public static var DEFAULT_COOP_MODE:Bool = false; // used in playstate if it doesn't find it

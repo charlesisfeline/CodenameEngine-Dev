@@ -25,8 +25,7 @@ class SongCreationScreen extends UISubstateWindow {
 	public var displayNameTextBox:UITextBox;
 	public var iconTextBox:UITextBox;
 	public var iconSprite:FlxSprite;
-	public var opponentModeCheckbox:UICheckbox;
-	public var coopAllowedCheckbox:UICheckbox;
+	public var excludedGameModesList:UIAutoCompleteButtonList;
 	public var colorWheel:UIColorwheel;
 	public var difficultiesTextBox:UITextBox;
 
@@ -114,23 +113,18 @@ class SongCreationScreen extends UISubstateWindow {
 
 		updateIcon("Icon");
 
-		opponentModeCheckbox = new UICheckbox(displayNameTextBox.x, iconTextBox.y + 10 + 32 + 26, "Opponent Mode", true);
-		menuDataGroup.add(opponentModeCheckbox);
-		addLabelOn(opponentModeCheckbox, "Modes Allowed");
+		menuDataGroup.add(excludedGameModesList = new UIAutoCompleteButtonList(displayNameTextBox.x, iconTextBox.y + 62, Std.int(displayNameTextBox.bWidth), 100, "", [for (mode in funkin.menus.FreeplayState.FreeplayGameMode.get()) mode.modeID]));
+		excludedGameModesList.frames = Paths.getFrames('editors/ui/inputbox');
+		excludedGameModesList.cameraSpacing = 0;
+		addLabelOn(excludedGameModesList, "Excluded Game Modes (IDs)");
 
-		coopAllowedCheckbox = new UICheckbox(opponentModeCheckbox.x + 150 + 26, opponentModeCheckbox.y, "Co-op Mode", true);
-		menuDataGroup.add(coopAllowedCheckbox);
-
-		colorWheel = new UIColorwheel(iconTextBox.x, coopAllowedCheckbox.y, 0xFFFFFF);
+		colorWheel = new UIColorwheel(iconTextBox.x, excludedGameModesList.y, 0xFFFFFF);
 		menuDataGroup.add(colorWheel);
 		addLabelOn(colorWheel, "Color");
 
-		difficultiesTextBox = new UITextBox(opponentModeCheckbox.x, opponentModeCheckbox.y + 6 + 32 + 26, "");
+		difficultiesTextBox = new UITextBox(excludedGameModesList.x, excludedGameModesList.y + excludedGameModesList.bHeight + 32, "");
 		menuDataGroup.add(difficultiesTextBox);
 		addLabelOn(difficultiesTextBox, "Difficulties");
-
-		for (checkbox in [opponentModeCheckbox, coopAllowedCheckbox])
-			{checkbox.y += 6; checkbox.x += 4;}
 
 		saveButton = new UIButton(windowSpr.x + windowSpr.bWidth - 20 - 125, windowSpr.y + windowSpr.bHeight - 16 - 32, "Save & Close", function() {
 			if (curPage == pages.length-1) {
@@ -238,8 +232,7 @@ class SongCreationScreen extends UISubstateWindow {
 			icon: iconTextBox.label.text,
 			color: colorWheel.curColorString,
 			parsedColor: colorWheel.curColor,
-			opponentModeAllowed: opponentModeCheckbox.checked,
-			coopAllowed: coopAllowedCheckbox.checked,
+			excludedGameModes: [for (button in excludedGameModesList.buttons.members) button.textBox.label.text.trim()],
 			difficulties: [for (diff in difficultiesTextBox.label.text.split(",")) diff.trim()],
 		};
 
@@ -249,5 +242,4 @@ class SongCreationScreen extends UISubstateWindow {
 			voicesBytes: voicesExplorer.file
 		});
 	}
-
 }

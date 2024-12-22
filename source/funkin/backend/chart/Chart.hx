@@ -89,13 +89,26 @@ class Chart {
 		var metaPath = Paths.file('songs/${songNameLower}/meta.json');
 		var metaDiffPath = Paths.file('songs/${songNameLower}/meta-${difficulty.toLowerCase()}.json');
 
+		var blacklist:Array<String> = [];
 		var data:ChartMetaData = null;
 		var fromMods:Bool = fromMods;
-		for(path in [metaDiffPath, metaPath]) {
+		for (path in [metaDiffPath, metaPath]) {
 			if (Assets.exists(path)) {
 				fromMods = Paths.assetsTree.existsSpecific(path, "TEXT", MODS);
 				try {
-					data = CoolUtil.parseJson(path);
+					var temp = CoolUtil.parseJson(path);
+
+					// Backwards compatibility (they both can be null so != true)  - Nex
+					if (Reflect.hasField(temp, "coopAllowed") && Reflect.field(temp, "coopAllowed") != true) {
+						blacklist = blacklist.concat(["codename.coop", "codename.coop-opponent"]);
+						Reflect.deleteField(temp, "coopAllowed");
+					}
+					if (Reflect.hasField(temp, "opponentModeAllowed") && Reflect.field(temp, "opponentModeAllowed") != true) {
+						blacklist.push("codename.opponent");
+						Reflect.deleteField(temp, "opponentModeAllowed");
+					}
+
+					data = temp;
 				} catch(e) {
 					Logs.trace('Failed to load song metadata for ${songName} ($path): ${Std.string(e)}', ERROR);
 				}
@@ -114,10 +127,10 @@ class Chart {
 		data.setFieldDefault("needsVoices", true);
 		data.setFieldDefault("icon", Flags.DEFAULT_HEALTH_ICON);
 		data.setFieldDefault("difficulties", []);
-		data.setFieldDefault("coopAllowed", Flags.DEFAULT_COOP_ALLOWED);
-		data.setFieldDefault("opponentModeAllowed", Flags.DEFAULT_OPPONENT_MODE_ALLOWED);
 		data.setFieldDefault("displayName", data.name);
 		data.setFieldDefault("parsedColor", data.color.getColorFromDynamic().getDefault(Flags.DEFAULT_COLOR));
+
+		data.setFieldDefault("excludedGameModes", blacklist);
 
 		if (data.difficulties.length <= 0) {
 			data.difficulties = [for(f in Paths.getFolderContent('songs/${songNameLower}/charts/', false, fromMods ? MODS : SOURCE)) if (Path.extension(f = f.toUpperCase()) == "JSON") Path.withoutExtension(f)];

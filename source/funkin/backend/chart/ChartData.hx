@@ -23,8 +23,7 @@ typedef ChartMetaData = {
 	public var ?icon:String;
 	public var ?color:Dynamic;
 	public var ?difficulties:Array<String>;
-	public var ?coopAllowed:Bool;
-	public var ?opponentModeAllowed:Bool;
+	public var ?excludedGameModes:Array<String>;
 	public var ?customValues:Dynamic;
 	public var ?needsVoices:Bool;
 	public var ?artist:String;
