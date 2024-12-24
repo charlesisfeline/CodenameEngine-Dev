@@ -76,7 +76,7 @@ class CoolUtil
 	 * Shortcut to parse JSON from an Asset path
 	 * @param assetPath Path to the JSON asset.
 	 */
-	public static function parseJson(assetPath:String):Dynamic
+	@:noUsing public static function parseJson(assetPath:String):Dynamic
 		return Json.parse(Assets.getText(assetPath));
 
 	/**
@@ -225,7 +225,7 @@ class CoolUtil
 	 * @param str Path to the JSON string
 	 * @return Parsed JSON
 	 */
-	public inline static function parseJsonString(str:String)
+	@:noUsing public inline static function parseJsonString(str:String)
 		return Json.parse(str);
 
 	/**
