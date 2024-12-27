@@ -168,7 +168,7 @@ class FreeplayState extends MusicBeatState
 		diffText.font = scoreText.font;
 		add(diffText);
 
-		gameModeText = new FlxText(diffText.x, diffText.y + diffText.height + 2, 0, "[TAB] Solo", 24);
+		gameModeText = new FlxText(diffText.x, diffText.y + diffText.height + 2, 0, "", 24);
 		gameModeText.font = scoreText.font;
 		add(gameModeText);
 
@@ -355,11 +355,23 @@ class FreeplayState extends MusicBeatState
 	public function changeGameMode(change:Int = 0, force:Bool = false) {
 		if (change == 0 && !force) return;
 
-		var e = EventManager.get(MenuChangeEvent).recycle(curGameMode, FlxMath.wrap(curGameMode + change, 0, 3), change);
+		var i = 0;
+		var allowed = getAllowedGameModesID();
+		var wrapped = FlxMath.wrap(curGameMode + change, 0, gameModeLabels.length - 1);
+		while (!allowed.contains(gameModeLabels[wrapped].modeID)) {  // Skipping the blacklisted ones  - Nex
+			wrapped = FlxMath.wrap(wrapped + change, 0, gameModeLabels.length - 1);
+			if (i++ > allowed.length) {
+				curGameMode = 0;  // Idk honestly if I should modify the other event's variables  - Nex
+				break;
+			}
+		}
+
+		var e = EventManager.get(MenuChangeEvent).recycle(curGameMode, wrapped, change);
 		event("onChangeCoopMode", e);  // Backwards compat  - Nex
 		if (event("onChangeGameMode", e).cancelled) return;
 
-		gameModeText.text = "[TAB] " + gameModeLabels[curGameMode = e.value].modeName;
+		// Getting from scratch the allowed game modes just in case they changed when the event got called  - Nex
+		if (gameModeText.visible = getAllowedGameModesID().length > 0) gameModeText.text = "[TAB] " + gameModeLabels[curGameMode = e.value].modeName;
 		updateScore();
 	}
 
@@ -384,13 +396,12 @@ class FreeplayState extends MusicBeatState
 		if (event.playMenuSFX) CoolUtil.playMenuSFX(SCROLL, 0.7);
 
 		changeDiff(0, true);
+		changeGameMode(0, true);
 
 		#if PRELOAD_ALL
 		autoplayElapsed = 0;
 		songInstPlaying = false;
 		#end
-
-		gameModeText.visible = getAllowedGameModesID().length > 0;
 	}
 
 	function updateOptionsAlpha() {
@@ -424,10 +435,7 @@ class FreeplayState extends MusicBeatState
 	@:noCompletion var __opponentMode(get, default):Bool = false;  // God this is so cursed  - Nex
 	@:noCompletion private function get___opponentMode() return getAllowedGameModesID().contains("codename.opponent");
 	@:noCompletion var __coopMode(get, default):Bool = false;
-	@:noCompletion private function get___coopMode() {
-		var allowed = getAllowedGameModesID();
-		return allowed.contains("codename.coop") && allowed.contains("codename.coop-opponent");
-	}
+	@:noCompletion private function get___coopMode() return getAllowedGameModesID().contains("codename.coop");
 
 	@:noCompletion var curCoopMode(get, set):Int;
 	@:noCompletion private function get_curCoopMode() return curGameMode;
@@ -439,16 +447,17 @@ class FreeplayState extends MusicBeatState
 		gameModeLabels = [for(name in names) {
 			if (name.startsWith("[TAB] ")) name = name.substr("[TAB] ".length);
 			new FreeplayGameMode(name, switch(name) {
-				case "Solo": "solo";
-				case "Opponent Mode": "opponentMode";
-				case "Co-Op Mode": "coopMode";
-				case "Co-Op Mode (Switched)": "coopMode-opponentMode";
+				case "Solo": "codename.solo";
+				case "Opponent Mode": "codename.opponent";
+				case "Co-Op Mode": "codename.coop";
+				case "Co-Op Mode (Switched)": "codename.coop-opponent";
 				default: name.toLowerCase().replace(" ", "-");
 			}, switch(name) {
-				case "Opponent Mode": {opponentMode: true};
-				case "Co-Op Mode": {coopMode: true};
-				case "Co-Op Mode (Switched)": {coopMode: true, opponentMode: true};
-				default: {};
+				case "Solo": ["solo"];
+				case "Opponent Mode": ["opponent"];
+				case "Co-Op Mode": ["coop"];
+				case "Co-Op Mode (Switched)": ["coop-switched", "opponent", "coop"];
+				default: null;
 			});
 		}];
 		return names;

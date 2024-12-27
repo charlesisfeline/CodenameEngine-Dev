@@ -1,4 +1,4 @@
-package funkin.backend.scripting.events;
+package funkin.backend.scripting.events.menu.freeplay;
 
 import funkin.menus.FreeplayState.FreeplayGameMode;
 
@@ -19,17 +19,19 @@ final class FreeplaySongSelectEvent extends CancellableEvent {
 
 	// Backwards compat
 	@:noCompletion public var opponentMode(get, set):Bool;
-	@:noCompletion private function get_opponentMode() return gameMode.modeID == "codename.opponent";
+	@:noCompletion private function get_opponentMode() return gameMode.modeID == "codename.opponent" || gameMode.modeID == "codename.coop-opponent";
 	@:noCompletion private function set_opponentMode(val:Bool) {
-		if (val != opponentMode) {  // brb imma resume from here next time  - Nex
-			if (coopMode) gameMode = val ? : new FreeplayGameMode("Opponent Mode", "codename.opponent", ["opponent"]) : null;
-		}
-		return opponentMode = val;
+		gameMode = coopMode ?
+			(val ? new FreeplayGameMode("Co-Op Mode (Switched)", "codename.coop-opponent", ["coop-switched", "opponent", "coop"]) : new FreeplayGameMode("Opponent Mode", "codename.opponent", ["opponent"])) :
+			(val ? new FreeplayGameMode("Opponent Mode", "codename.opponent", ["opponent"]) : null);
+		return val;
 	}
 	@:noCompletion public var coopMode(get, set):Bool;
 	@:noCompletion private function get_coopMode() return gameMode.modeID == "codename.coop" || gameMode.modeID == "codename.coop-opponent";
 	@:noCompletion private function set_coopMode(val:Bool) {
-		if (val == coopMode) return val;
-		return val ? new FreeplayGameMode("Opponent Mode", "codename.coop", ["coop"]) : gameMode = null;
+		gameMode = opponentMode ?
+			(val ? new FreeplayGameMode("Co-Op Mode (Switched)", "codename.coop-opponent", ["coop-switched", "opponent", "coop"]) : new FreeplayGameMode("Co-Op Mode", "codename.coop", ["coop"])) :
+			(val ? new FreeplayGameMode("Co-Op Mode", "codename.coop", ["coop"]) : null);
+		return val;
 	}
 }

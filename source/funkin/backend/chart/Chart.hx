@@ -99,12 +99,15 @@ class Chart {
 					var temp = CoolUtil.parseJson(path);
 
 					// Backwards compatibility (they both can be null so != true)  - Nex
+					var coopExlc = false;
 					if (Reflect.hasField(temp, "coopAllowed") && Reflect.field(temp, "coopAllowed") != true) {
 						blacklist = blacklist.concat(["codename.coop", "codename.coop-opponent"]);
 						Reflect.deleteField(temp, "coopAllowed");
+						coopExlc = true;
 					}
 					if (Reflect.hasField(temp, "opponentModeAllowed") && Reflect.field(temp, "opponentModeAllowed") != true) {
 						blacklist.push("codename.opponent");
+						if (!coopExlc) blacklist.push("codename.coop-opponent");
 						Reflect.deleteField(temp, "opponentModeAllowed");
 					}
 
@@ -129,7 +132,6 @@ class Chart {
 		data.setFieldDefault("difficulties", []);
 		data.setFieldDefault("displayName", data.name);
 		data.setFieldDefault("parsedColor", data.color.getColorFromDynamic().getDefault(Flags.DEFAULT_COLOR));
-
 		data.setFieldDefault("excludedGameModes", blacklist);
 
 		if (data.difficulties.length <= 0) {
