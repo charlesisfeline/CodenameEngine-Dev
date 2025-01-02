@@ -105,7 +105,7 @@ class SongCreationScreen extends UISubstateWindow {
 		menuDataGroup.add(displayNameTextBox);
 		addLabelOn(displayNameTextBox, "Display Name");
 
-		add(iconSprite = new HealthIcon("Icon"));
+		menuDataGroup.add(iconSprite = new HealthIcon("Icon"));
 		iconSprite.scale.set(0.5, 0.5);
 		iconSprite.updateHitbox();
 
