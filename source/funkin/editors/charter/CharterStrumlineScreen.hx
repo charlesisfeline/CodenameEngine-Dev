@@ -1,5 +1,7 @@
 package funkin.editors.charter;
 
+import funkin.editors.ui.UIAutoCompleteButtonList.UITypedAutoCompleteButtonList;
+import funkin.editors.ui.UIAutoCompleteButtonList.UIAutoCompleteButton;
 import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData.ChartStrumLine;
 import funkin.game.Character;
@@ -9,7 +11,7 @@ class CharterStrumlineScreen extends UISubstateWindow {
 	public var strumLineID:Int = -1;
 	public var strumLine:ChartStrumLine;
 
-	public var charactersList:UIButtonList<CharacterButton>;
+	public var charactersList:UITypedAutoCompleteButtonList<CharacterButton>;
 	public var typeDropdown:UIDropDown;
 	public var vocalsSuffixDropDown:UIDropDown;
 	public var stagePositionDropdown:UIDropDown;
@@ -19,8 +21,6 @@ class CharterStrumlineScreen extends UISubstateWindow {
 	public var visibleCheckbox:UICheckbox;
 	public var scrollSpeedStepper:UINumericStepper;
 	public var usesChartScrollSpeed:UICheckbox;
-
-	public var characterIcons:Array<HealthIcon> = [];
 
 	public var saveButton:UIButton;
 	public var closeButton:UIButton;
@@ -64,7 +64,7 @@ class CharterStrumlineScreen extends UISubstateWindow {
 		var charFileList = Character.getList(true);
 		if (charFileList.length == 0) charFileList = Character.getList(false);
 
-		charactersList = new UIButtonList<CharacterButton>(15, title.y + title.height + 36, 250, 269, "", FlxPoint.get(250, 54), null, 0);
+		charactersList = new UITypedAutoCompleteButtonList<CharacterButton>(15, title.y + title.height + 36, 250, 269, "", FlxPoint.get(250, 54), null, 0);
 		charactersList.addButton.callback = () -> charactersList.add(new CharacterButton(0, 0, "New Char", charFileList, charactersList));
 		charactersList.cameraSpacing = 0;
 		for (i in strumLine.characters)
@@ -182,56 +182,27 @@ class CharterStrumlineScreen extends UISubstateWindow {
 	}
 }
 
-class CharacterButton extends UIButton {
+class CharacterButton extends UIAutoCompleteButton {
 	public var charIcon:HealthIcon;
-	public var textBox:UIAutoCompleteTextBox;
-	public var deleteButton:UIButton;
-	public var deleteIcon:FlxSprite;
 
-	public function new(x:Float, y:Float, char:String, charsList:Array<String>, parent:UIButtonList<CharacterButton>) {
-		super(x, y, "", null, 250, 54);
+	public function new(x:Float, y:Float, char:String, charsList:Array<String>, parent:UITypedAutoCompleteButtonList<CharacterButton>, iconScale:Float = 0.3, ?w:Int, ?h:Int, multiline:Bool = false) {
+		super(x, y, cast parent, charsList, char, w, h, multiline);
 
-		charIcon = new HealthIcon(Character.getIconFromCharName(char));
-		charIcon.scale.set(0.3, 0.3);
+		members.push(charIcon = new HealthIcon(Character.getIconFromCharName(char)));
+		charIcon.scale.set(iconScale, iconScale);
 		charIcon.updateHitbox();
-		charIcon.setPosition(x + 10, bHeight/2 - charIcon.height / 2);
-		charIcon.scrollFactor.set(1,1);
+		charIcon.setPosition(x + 10, bHeight / 2 - charIcon.height / 2);
+		charIcon.scrollFactor.set(1, 1);
 
-		members.push(charIcon);
-
-		members.push(textBox = new UIAutoCompleteTextBox(charIcon.x + charIcon.width + 16, bHeight/2 - (32/2), char, 115));
-		textBox.suggestItems = charsList;
-		textBox.antialiasing = true;
-		textBox.onChange = function(char:String) {
-			char = Character.getIconFromCharName(char);
-			var image = Paths.image("icons/" + char);
-			if(!Assets.exists(image))
-				image = Paths.image("icons/" + Flags.DEFAULT_HEALTH_ICON);
-			charIcon.loadGraphic(image, true, 150, 150);
-			charIcon.updateHitbox();
-		}
-
-		deleteButton = new UIButton(textBox.x + 115 + 16, bHeight/2 - (32/2), "", function () {
-			parent.remove(this);
-		}, 32);
-		deleteButton.color = 0xFFFF0000;
-		deleteButton.autoAlpha = false;
-		members.push(deleteButton);
-
-		deleteIcon = new FlxSprite(deleteButton.x + (15/2), deleteButton.y + 8).loadGraphic(Paths.image('editors/delete-button'));
-		deleteIcon.antialiasing = false;
-		members.push(deleteIcon);
+		var distance = 40 * iconScale;
+		deleteButton.setPosition(bWidth - distance - deleteButton.bWidth, bHeight / 2 - distance);
+		textBox.bWidth = Std.int(bWidth - charIcon.x - charIcon.width - distance - deleteButton.bWidth - distance - 10);
+		textBox.setPosition(charIcon.x + charIcon.width + distance, bHeight / 2 - distance);
+		textBox.onChange = (char:String) -> charIcon.setIcon(Character.getIconFromCharName(char));
 	}
 
 	override function update(elapsed) {
 		charIcon.y = y + bHeight / 2 - charIcon.height / 2;
-		deleteButton.y = y + bHeight / 2 - deleteButton.bHeight / 2;
-		textBox.y = y + bHeight/2 - 16;
-		deleteIcon.x = deleteButton.x + (15/2); deleteIcon.y = deleteButton.y + 8;
-
-		deleteButton.selectable = selectable;
-		deleteButton.shouldPress = shouldPress;
-
 		super.update(elapsed);
 	}
 }

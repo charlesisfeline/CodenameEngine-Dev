@@ -106,8 +106,8 @@ class Chart {
 						coopExlc = true;
 					}
 					if (Reflect.hasField(temp, "opponentModeAllowed") && Reflect.field(temp, "opponentModeAllowed") != true) {
-						blacklist.push("codename.opponent");
 						if (!coopExlc) blacklist.push("codename.coop-opponent");
+						blacklist.push("codename.opponent");
 						Reflect.deleteField(temp, "opponentModeAllowed");
 					}
 

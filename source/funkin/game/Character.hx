@@ -533,8 +533,8 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	}
 
 	public static function getIconFromCharName(?character:String, ?defaultIcon:String = null) {
-		if(character == null) return Flags.DEFAULT_HEALTH_ICON;
-		if(defaultIcon == null) defaultIcon = character;
+		if (character == null || !Assets.exists(Paths.xml('characters/$character'))) return Flags.DEFAULT_HEALTH_ICON;
+		if (defaultIcon == null) defaultIcon = character;
 		var icon:String = defaultIcon;
 
 		var xml:Access = getXMLFromCharName(character);

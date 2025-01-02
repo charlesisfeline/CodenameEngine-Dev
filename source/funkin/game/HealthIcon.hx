@@ -65,6 +65,7 @@ class HealthIcon extends FlxSprite
 			if (!Assets.exists(path)) path = Paths.image('icons/' + Flags.DEFAULT_HEALTH_ICON);
 
 			loadGraphic(path, true, width, height);
+			updateHitbox();
 
 			animation.add(char, [for(i in 0...frames.frames.length) i], 0, false, isPlayer);
 			antialiasing = true;

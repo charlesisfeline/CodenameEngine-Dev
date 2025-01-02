@@ -1,5 +1,7 @@
 package funkin.editors.charter;
 
+import funkin.editors.ui.UIAutoCompleteButtonList.UITypedAutoCompleteButtonList;
+import funkin.editors.charter.CharterStrumlineScreen.CharacterButton;
 import flixel.text.FlxText.FlxTextFormat;
 import flixel.text.FlxText.FlxTextFormatMarkerPair;
 import funkin.backend.chart.ChartData;
@@ -177,7 +179,7 @@ class ChartCreationScreen extends UISubstateWindow {
 class StrumLineButton extends UIButton {
 	public var idText:UIText;
 
-	public var charactersList:UIButtonList<CompactCharacterButton>;
+	public var charactersList:UITypedAutoCompleteButtonList<CharacterButton>;
 	public var typeDropdown:UIDropDown;
 	public var stagePositionDropdown:UIDropDown;
 	public var hudScaleStepper:UINumericStepper;
@@ -207,14 +209,14 @@ class StrumLineButton extends UIButton {
 			return uiText;
 		}
 
-		charactersList = new UIButtonList<CompactCharacterButton>(16, 8+26, 210, 160, "", FlxPoint.get(200, 40), null, 5);
+		charactersList = new UITypedAutoCompleteButtonList<CharacterButton>(16, 8+26, 210, 160, "", FlxPoint.get(200, 40), null, 5);
 		charactersList.frames = Paths.getFrames('editors/ui/inputbox');
 		charactersList.cameraSpacing = 0;
 
 		charactersList.addButton.callback = function()
-			charactersList.add(new CompactCharacterButton("New Char", subState.charFileList, charactersList));
+			charactersList.add(new CharacterButton(0, 0, "New Char", subState.charFileList, charactersList, 0.2));
 		for (character in strumLine.characters)
-			charactersList.add(new CompactCharacterButton(character, subState.charFileList, charactersList));
+			charactersList.add(new CharacterButton(0, 0, character, subState.charFileList, charactersList, 0.2));
 
 		members.push(charactersList);
 		idText = addLabelOn(charactersList, 'Strumline - #$id');
@@ -305,60 +307,5 @@ class StrumLineButton extends UIButton {
 		var subState:ChartCreationScreen = cast FlxG.state.subState;
 		var strumLineList:UIButtonList<StrumLineButton> = subState.strumLineList;
 		cameraClipShader.hset("clipRect", [0, (-y-(8+26))+cameras[0].scroll.y, strumLineList.bWidth, strumLineList.bHeight]);
-	}
-}
-
-class CompactCharacterButton extends UIButton {
-	public var charIcon:HealthIcon;
-	public var textBox:UIAutoCompleteTextBox;
-	public var deleteButton:UIButton;
-	public var deleteIcon:FlxSprite;
-
-	public function new(char:String, charsList:Array<String>, parent:UIButtonList<CompactCharacterButton>) {
-		super(0, 0, "", null, 200, 40);
-		autoAlpha = false;
-
-		charIcon = new HealthIcon(funkin.game.Character.getIconFromCharName(char));
-		charIcon.scale.set(0.2, 0.2);
-		charIcon.updateHitbox();
-		charIcon.setPosition(10, bHeight/2 - charIcon.height / 2);
-		charIcon.scrollFactor.set(1,1);
-
-		members.push(charIcon);
-
-		members.push(textBox = new UIAutoCompleteTextBox(charIcon.x + charIcon.width + 16, bHeight/2 - (32/2), char, 115));
-		textBox.suggestItems = charsList;
-		textBox.antialiasing = true;
-		textBox.onChange = function(char:String) {
-			char = funkin.game.Character.getIconFromCharName(char);
-			var image = Paths.image("icons/" + char);
-			if(!Assets.exists(image))
-				image = Paths.image("icons/" + Flags.DEFAULT_HEALTH_ICON);
-			charIcon.loadGraphic(image, true, 150, 150);
-			charIcon.updateHitbox();
-		}
-
-		deleteButton = new UIButton(textBox.x + 115 + 16, bHeight/2 - (32/2), "", function () {
-			parent.remove(this);
-		}, 32);
-		deleteButton.color = 0xFFFF0000;
-		deleteButton.autoAlpha = false;
-		members.push(deleteButton);
-
-		deleteIcon = new FlxSprite(deleteButton.x + (15/2), deleteButton.y + 8).loadGraphic(Paths.image('editors/delete-button'));
-		deleteIcon.antialiasing = false;
-		members.push(deleteIcon);
-	}
-
-	override function update(elapsed) {
-		charIcon.follow(this, 6, bHeight / 2 - charIcon.height / 2);
-		textBox.follow(charIcon, charIcon.width + 6, 0);
-		deleteButton.follow(textBox, 115 + 6, 0);
-		deleteIcon.follow(deleteButton, 15 / 2, 8);
-
-		deleteButton.selectable = selectable;
-		deleteButton.shouldPress = shouldPress;
-
-		super.update(elapsed);
 	}
 }

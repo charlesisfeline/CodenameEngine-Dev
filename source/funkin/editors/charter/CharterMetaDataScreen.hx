@@ -1,5 +1,6 @@
 package funkin.editors.charter;
 
+import funkin.game.HealthIcon;
 import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData.ChartMetaData;
 import funkin.editors.extra.PropertyButton;
@@ -19,7 +20,7 @@ class CharterMetaDataScreen extends UISubstateWindow {
 
 	public var displayNameTextBox:UITextBox;
 	public var iconTextBox:UITextBox;
-	public var iconSprite:FlxSprite;
+	public var iconSprite:HealthIcon;
 	public var excludedGameModesList:UIAutoCompleteButtonList;
 	public var colorWheel:UIColorwheel;
 	public var difficultiesTextBox:UITextBox;
@@ -69,12 +70,16 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		add(displayNameTextBox);
 		addLabelOn(displayNameTextBox, "Display Name");
 
+		add(iconSprite = new HealthIcon(metadata.icon));
+		iconSprite.scale.set(0.5, 0.5);
+		iconSprite.updateHitbox();
+
 		iconTextBox = new UITextBox(displayNameTextBox.x + 320 + 26, displayNameTextBox.y, metadata.icon, 150);
-		iconTextBox.onChange = (newIcon:String) -> {updateIcon(newIcon);}
+		iconTextBox.onChange = (newIcon:String) -> iconSprite.setIcon(newIcon);
 		add(iconTextBox);
 		addLabelOn(iconTextBox, "Icon");
-
-		updateIcon(metadata.icon);
+		iconSprite.setPosition(iconTextBox.x + iconTextBox.bWidth + 8, iconTextBox.y + iconTextBox.bHeight / 2 - iconSprite.height / 2);
+		iconSprite.scrollFactor.set(1, 1);
 
 		add(excludedGameModesList = new UIAutoCompleteButtonList(displayNameTextBox.x, iconTextBox.y + 62, Std.int(displayNameTextBox.bWidth), 100, "", [for (mode in funkin.menus.FreeplayState.FreeplayGameMode.get()) mode.modeID]));
 		excludedGameModesList.frames = Paths.getFrames('editors/ui/inputbox');
@@ -117,25 +122,6 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		//closeButton.y -= closeButton.bHeight;
 		add(closeButton);
 		add(saveButton);
-	}
-
-	function updateIcon(icon:String) {
-		if (iconSprite == null) add(iconSprite = new FlxSprite());
-
-		if (iconSprite.animation.exists(icon)) return;
-		@:privateAccess iconSprite.animation.clearAnimations();
-
-		var path:String = Paths.image('icons/$icon');
-		if (!Assets.exists(path)) path = Paths.image('icons/' + Flags.DEFAULT_HEALTH_ICON);
-
-		iconSprite.loadGraphic(path, true, 150, 150);
-		iconSprite.animation.add(icon, [0], 0, false);
-		iconSprite.antialiasing = true;
-		iconSprite.animation.play(icon);
-
-		iconSprite.scale.set(0.5, 0.5);
-		iconSprite.updateHitbox();
-		iconSprite.setPosition(iconTextBox.x + 150 + 8, (iconTextBox.y + 16) - (iconSprite.height/2));
 	}
 
 	public function saveMeta() {

@@ -1,5 +1,6 @@
 package funkin.editors.charter;
 
+import funkin.game.HealthIcon;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText.FlxTextFormat;
 import flixel.text.FlxText.FlxTextFormatMarkerPair;
@@ -24,7 +25,7 @@ class SongCreationScreen extends UISubstateWindow {
 
 	public var displayNameTextBox:UITextBox;
 	public var iconTextBox:UITextBox;
-	public var iconSprite:FlxSprite;
+	public var iconSprite:HealthIcon;
 	public var excludedGameModesList:UIAutoCompleteButtonList;
 	public var colorWheel:UIColorwheel;
 	public var difficultiesTextBox:UITextBox;
@@ -79,8 +80,6 @@ class SongCreationScreen extends UISubstateWindow {
 		stepsPerBeatStepper = new UINumericStepper(beatsPerMeasureStepper.x + 30 + 24, beatsPerMeasureStepper.y, 4, 1, 0, 1, null, 54);
 		songDataGroup.add(stepsPerBeatStepper);
 
-		var voicesUIText:UIText = null;
-
 		instExplorer = new UIFileExplorer(songNameTextBox.x, songNameTextBox.y + 32 + 36, null, null, Flags.SOUND_EXT, function (res) {
 			var audioPlayer:UIAudioPlayer = new UIAudioPlayer(instExplorer.x + 8, instExplorer.y + 8, res);
 			instExplorer.members.push(audioPlayer);
@@ -106,12 +105,16 @@ class SongCreationScreen extends UISubstateWindow {
 		menuDataGroup.add(displayNameTextBox);
 		addLabelOn(displayNameTextBox, "Display Name");
 
+		add(iconSprite = new HealthIcon("Icon"));
+		iconSprite.scale.set(0.5, 0.5);
+		iconSprite.updateHitbox();
+
 		iconTextBox = new UITextBox(displayNameTextBox.x + 320 + 26, displayNameTextBox.y, "Icon", 150);
-		iconTextBox.onChange = (newIcon:String) -> {updateIcon(newIcon);}
+		iconTextBox.onChange = (newIcon:String) -> iconSprite.setIcon(newIcon);
 		menuDataGroup.add(iconTextBox);
 		addLabelOn(iconTextBox, "Icon");
-
-		updateIcon("Icon");
+		iconSprite.setPosition(iconTextBox.x + iconTextBox.bWidth + 8, iconTextBox.y + iconTextBox.bHeight / 2 - iconSprite.height / 2);
+		iconSprite.scrollFactor.set(1, 1);
 
 		menuDataGroup.add(excludedGameModesList = new UIAutoCompleteButtonList(displayNameTextBox.x, iconTextBox.y + 62, Std.int(displayNameTextBox.bWidth), 100, "", [for (mode in funkin.menus.FreeplayState.FreeplayGameMode.get()) mode.modeID]));
 		excludedGameModesList.frames = Paths.getFrames('editors/ui/inputbox');
@@ -198,25 +201,6 @@ class SongCreationScreen extends UISubstateWindow {
 
 		for (button in [saveButton, backButton, closeButton])
 			button.y = windowSpr.y + windowSpr.bHeight - 16 - 32;
-	}
-
-	function updateIcon(icon:String) {
-		if (iconSprite == null) menuDataGroup.add(iconSprite = new FlxSprite());
-
-		if (iconSprite.animation.exists(icon)) return;
-		@:privateAccess iconSprite.animation.clearAnimations();
-
-		var path:String = Paths.image('icons/$icon');
-		if (!Assets.exists(path)) path = Paths.image('icons/' + Flags.DEFAULT_HEALTH_ICON);
-
-		iconSprite.loadGraphic(path, true, 150, 150);
-		iconSprite.animation.add(icon, [0], 0, false);
-		iconSprite.antialiasing = true;
-		iconSprite.animation.play(icon);
-
-		iconSprite.scale.set(0.5, 0.5);
-		iconSprite.updateHitbox();
-		iconSprite.setPosition(iconTextBox.x + 150 + 8, (iconTextBox.y + 16) - (iconSprite.height/2));
 	}
 
 	function saveSongInfo() {
