@@ -351,7 +351,7 @@ class FreeplayState extends MusicBeatState
 	}
 
 	/**
-	 * Change the current coop mode context.
+	 * Changes the current coop mode context.
 	 * @param change How much to change
 	 * @param force Force the change, even if `change` is equal to 0.
 	 */
@@ -384,7 +384,7 @@ class FreeplayState extends MusicBeatState
 	}
 
 	/**
-	 * Change the current selection.
+	 * Changes the current selection.
 	 * @param change How much to change
 	 * @param force Force the change, even if `change` is equal to 0.
 	 */
@@ -501,24 +501,19 @@ class FreeplayGameMode {
 		return modifiers;
 	}
 
-	public static inline function generateDefault() return new FreeplayGameMode("Solo Mode", "solo");
+	public static inline function generateDefault() return FreeplayGameMode.getSpecific("codename.solo", new FreeplayGameMode("Solo Mode", "codename.solo", ["solo"]));
 
-	public static inline function getGameModesFromSource(source:AssetSource = BOTH, useTxt:Bool = true):Array<FreeplayGameMode> {
-		var path = 'data/gamemodes';
-		var txt = Paths.txt('gamemodes/list');
-		var list = useTxt && Paths.assetsTree.existsSpecific(txt, "TEXT", source) ? CoolUtil.coolTextFile(txt) : Paths.getFolderContent(path, false, source);
-
-		return [for (file in list) {
-			if (useTxt) file += ".json";
-			else if (Path.extension(file) != "json") continue;
-
-			var meta:FreeplayGameMode = null;
-			try {
-				var data = CoolUtil.parseJson(Paths.file(path + "/" + file)); var id = data.modeID;
-				meta = new FreeplayGameMode(CoolUtil.getDefault(data.displayName, id), id, [Path.withoutExtension(file)].concat(CoolUtil.getDefault(data.scripts, [])), data.fields);
-			} catch(e) Logs.trace('Failed to load game mode metadata for $file ($path): ${Std.string(e)}', ERROR);
-			if (meta != null) meta;
-		}];
+	/**
+	 * Gets a specific game mode by its ID.
+	 * @param modeID The ID of the game mode.
+	 * @param defaultMode The default game mode to return if the specified one is not found.
+	 * @param useTxt Whether to search in the text file for the game modes if it exists.
+	 * @param source The source to get the game modes from (by default it's `null` using `get()`, if it's not `null` it uses `getGameModesFromSource()`).
+	 * @return The game mode with the specified ID, or the default one if it's not found.
+	 */
+	public static function getSpecific(modeID:String, ?defaultMode:FreeplayGameMode = null, useTxt:Bool = true, ?source:AssetSource):FreeplayGameMode {
+		for (mode in (source == null ? FreeplayGameMode.get(useTxt) : FreeplayGameMode.getGameModesFromSource(source, useTxt))) if (mode.modeID == modeID) return mode;
+		return defaultMode;
 	}
 
 	public static function get(useTxt:Bool = true):Array<FreeplayGameMode> {
@@ -538,24 +533,30 @@ class FreeplayGameMode {
 
 		return list;
 	}
+
+	public static inline function getGameModesFromSource(source:AssetSource = BOTH, useTxt:Bool = true):Array<FreeplayGameMode> {
+		var path = 'data/gamemodes';
+		var txt = Paths.txt('gamemodes/list');
+		var list = useTxt && Paths.assetsTree.existsSpecific(txt, "TEXT", source) ? CoolUtil.coolTextFile(txt) : Paths.getFolderContent(path, false, source);
+
+		return [for (file in list) {
+			if (useTxt) file += ".json";
+			else if (Path.extension(file) != "json") continue;
+
+			var meta:FreeplayGameMode = null;
+			try {
+				var data = CoolUtil.parseJson(Paths.file(path + "/" + file)); var id = data.modeID;
+				meta = new FreeplayGameMode(CoolUtil.getDefault(data.displayName, id), id, [Path.withoutExtension(file)].concat(CoolUtil.getDefault(data.scripts, [])), data.fields);
+			} catch(e) Logs.trace('Failed to load game mode metadata for $file ($path): ${Std.string(e)}', ERROR);
+			if (meta != null) meta;
+		}];
+	}
 }
 
 class FreeplaySonglist {
 	public var songs:Array<ChartMetaData> = [];
 
 	public function new() {}
-
-	public function getSongsFromSource(source:AssetSource = BOTH, useTxt:Bool = true) {
-		var path:String = Paths.txt('freeplaySonglist');
-		var songsFound:Array<String> = useTxt && Paths.assetsTree.existsSpecific(path, "TEXT", source) ? CoolUtil.coolTextFile(path) : Paths.getFolderDirectories('songs', false, source);
-
-		if (songsFound.length > 0) {
-			for(s in songsFound)
-				songs.push(Chart.loadChartMeta(s, Flags.DEFAULT_DIFFICULTY, source == MODS));
-			return false;
-		}
-		return true;
-	}
 
 	public static function get(useTxt:Bool = true) {
 		var songList = new FreeplaySonglist();
@@ -575,5 +576,17 @@ class FreeplaySonglist {
 		}
 
 		return songList;
+	}
+
+	public function getSongsFromSource(source:AssetSource = BOTH, useTxt:Bool = true) {
+		var path:String = Paths.txt('freeplaySonglist');
+		var songsFound:Array<String> = useTxt && Paths.assetsTree.existsSpecific(path, "TEXT", source) ? CoolUtil.coolTextFile(path) : Paths.getFolderDirectories('songs', false, source);
+
+		if (songsFound.length > 0) {
+			for(s in songsFound)
+				songs.push(Chart.loadChartMeta(s, Flags.DEFAULT_DIFFICULTY, source == MODS));
+			return false;
+		}
+		return true;
 	}
 }

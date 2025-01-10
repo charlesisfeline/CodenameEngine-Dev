@@ -18,9 +18,9 @@ import funkin.backend.chart.EventsData;
 import funkin.backend.scripting.DummyScript;
 import funkin.backend.scripting.Script;
 import funkin.backend.scripting.ScriptPack;
+import funkin.backend.scripting.events.*;
 import funkin.backend.scripting.events.gameplay.*;
 import funkin.backend.scripting.events.note.*;
-import funkin.backend.scripting.events.*;
 import funkin.backend.system.Conductor;
 import funkin.backend.system.RotatingSpriteGroup;
 import funkin.editors.SaveWarning;
@@ -29,6 +29,7 @@ import funkin.editors.charter.CharterSelection;
 import funkin.game.SplashHandler;
 import funkin.game.cutscenes.*;
 import funkin.menus.*;
+import funkin.menus.FreeplayState.FreeplayGameMode;
 import funkin.menus.StoryMenuState.WeekData;
 import funkin.savedata.FunkinSave;
 import haxe.io.Path;
@@ -72,14 +73,23 @@ class PlayState extends MusicBeatState
 	 * Whenever Charting Mode has been enabled for this song.
 	 */
 	public static var chartingMode:Bool = false;
+
 	/**
-	 * Whenever the song has been started with opponent mode on.
+	 * Current game mode (Opponent, Co-Op, Botplay, etc).
 	 */
-	public static var opponentMode:Bool = Flags.DEFAULT_OPPONENT_MODE;
+	public static var gameMode(default, set):FreeplayGameMode = FreeplayGameMode.generateDefault();
 	/**
-	 * Whenever the song has been started with co-op mode on.
+	 * Whenever the current game mode is Opponent or Coop Switched (uses `gameMode`).
 	 */
-	public static var coopMode:Bool = Flags.DEFAULT_COOP_MODE;
+	public static var opponentMode(get, never):Bool;
+	/**
+	 * Whenever the current game mode is Co-Op or Coop Switched (uses `gameMode`).
+	 */
+	public static var coopMode(get, never):Bool;
+	/**
+	 * Whenever the current game mode is Botplay (uses `gameMode`).
+	 */
+	public static var botplayMode(get, never):Bool;
 
 	/**
 	 * Script Pack of all the scripts being ran.
@@ -137,9 +147,6 @@ class PlayState extends MusicBeatState
 	 * Whenever the game is in downscroll or not. (Can be set)
 	 */
 	public var downscroll(get, set):Bool;
-
-	@:dox(hide) private function set_downscroll(v:Bool) {return camHUD.downscroll = v;}
-	@:dox(hide) private function get_downscroll():Bool  {return camHUD.downscroll;}
 
 	/**
 	 * Instrumental sound (Inst.ogg).
@@ -498,15 +505,6 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	var __vocalOffsetViolation:Float = 0;
 
-	private function get_accuracy():Float {
-		if (accuracyPressedNotes <= 0) return -1;
-		return totalAccuracyAmount / accuracyPressedNotes;
-	}
-	private function set_accuracy(v:Float):Float {
-		if (accuracyPressedNotes <= 0)
-			accuracyPressedNotes = 1;
-		return totalAccuracyAmount = v * accuracyPressedNotes;
-	}
 	/**
 	 * All combo ratings.
 	 */
@@ -532,7 +530,7 @@ class PlayState extends MusicBeatState
 	 */
 	public function updateRating() {
 		var rating = null;
-		var acc = get_accuracy();
+		var acc = accuracy;
 
 		for(e in comboRatings)
 			if (e.percent <= acc && (rating == null || rating.percent < e.percent))
@@ -541,23 +539,6 @@ class PlayState extends MusicBeatState
 		var event = gameAndCharsEvent("onRatingUpdate", EventManager.get(RatingUpdateEvent).recycle(rating, curRating));
 		if (!event.cancelled)
 			curRating = event.rating;
-	}
-
-	private inline function get_maxHealth()
-		return this.maxHealth;
-	private function set_maxHealth(v:Float) {
-		if (healthBar != null && healthBar.max == this.maxHealth) {
-			healthBar.setRange(healthBar.min, v);
-		}
-		return this.maxHealth = v;
-	}
-
-	private inline function get_curStage()
-		return stage == null ? "" : stage.stageName;
-
-	private inline function set_curStage(name:String) {
-		if (stage != null) stage.stageName = name;
-		return name;
 	}
 
 	public inline function callOnCharacters(func:String, ?parameters:Array<Dynamic>) {
@@ -1957,6 +1938,41 @@ class PlayState extends MusicBeatState
 		return v;
 	}
 
+	private inline function get_maxHealth()
+		return this.maxHealth;
+	private function set_maxHealth(v:Float) {
+		if (healthBar != null && healthBar.max == this.maxHealth) {
+			healthBar.setRange(healthBar.min, v);
+		}
+		return this.maxHealth = v;
+	}
+
+	private inline function get_curStage()
+		return stage == null ? "" : stage.stageName;
+
+	private inline function set_curStage(name:String) {
+		if (stage != null) stage.stageName = name;
+		return name;
+	}
+
+	private function get_accuracy():Float {
+		if (accuracyPressedNotes <= 0) return -1;
+		return totalAccuracyAmount / accuracyPressedNotes;
+	}
+	private function set_accuracy(v:Float):Float {
+		if (accuracyPressedNotes <= 0)
+			accuracyPressedNotes = 1;
+		return totalAccuracyAmount = v * accuracyPressedNotes;
+	}
+
+	private inline function set_downscroll(v:Bool) return camHUD.downscroll = v;
+	private inline function get_downscroll():Bool return camHUD.downscroll;
+
+	private static inline function set_gameMode(v:FreeplayGameMode) return gameMode = v == null ? FreeplayGameMode.generateDefault() : v;
+	private static inline function get_opponentMode():Bool return gameMode.modeID == "codename.opponent" || gameMode.modeID == "codename.coop-opponent";
+	private static inline function get_coopMode():Bool return gameMode.modeID == "codename.coop" || gameMode.modeID == "codename.coop-opponent";
+	private static inline function get_botplayMode():Bool return gameMode.modeID == "codename.botplay";
+
 	private inline static function get_campaignAccuracy()
 		return campaignAccuracyCount == 0 ? 0 : campaignAccuracyTotal / campaignAccuracyCount;
 	#end
@@ -1976,28 +1992,25 @@ class PlayState extends MusicBeatState
 		campaignAccuracyTotal = 0;
 		campaignAccuracyCount = 0;
 		chartingMode = false;
-		opponentMode = coopMode = false;
+		gameMode = null;
 		__loadSong(storyPlaylist[0], difficulty);
 	}
 
 	/**
-	 * Loads a song into PlayState
-	 * @param name Song name
-	 * @param difficulty Chart difficulty (if invalid, will load an empty chart)
-	 * @param opponentMode Whenever opponent mode is on
-	 * @param coopMode Whenever co-op mode is on.
+	 * Loads a song into PlayState with a specific custom game mode.
+	 * @param _name Song name
+	 * @param _difficulty Chart difficulty (if invalid, will load an empty chart)
+	 * @param _gameMode Game mode
 	 */
-	public static function loadSong(_name:String, ?_difficulty:String, _opponentMode:Bool = false, _coopMode:Bool = false) {
+	public static function advancedLoadSong(_name:String, ?_difficulty:String, ?_gameMode:FreeplayGameMode) {
 		if (_difficulty == null) difficulty = Flags.DEFAULT_DIFFICULTY;
-		isStoryMode = false;
-		opponentMode = _opponentMode;
-		chartingMode = false;
-		coopMode = _coopMode;
+		isStoryMode = chartingMode = false;
+		gameMode = _gameMode;
 		__loadSong(_name, _difficulty);
 	}
 
 	/**
-	 * (INTERNAL) Loads a song without resetting story mode/opponent mode/coop mode values.
+	 * (INTERNAL) Loads a song without resetting story and game mode values.
 	 * @param name Song name
 	 * @param difficulty Song difficulty
 	 */
@@ -2006,6 +2019,28 @@ class PlayState extends MusicBeatState
 
 		SONG = Chart.parse(_name, _difficulty);
 		fromMods = SONG.fromMods;
+	}
+
+	// Backwards Compat
+	@:dox(hide) public static function __oldSetGameMode(_opponentMode:Bool = false, _coopMode:Bool = false) {
+		return gameMode = (_opponentMode && _coopMode) ? FreeplayGameMode.getSpecific("codename.coop-opponent", new FreeplayGameMode("Co-Op Mode (Switched)", "codename.coop-opponent", ["coop-switched", "opponent", "coop"])) :
+			(_opponentMode ? FreeplayGameMode.getSpecific("codename.opponent", new FreeplayGameMode("Opponent Mode", "codename.opponent", ["opponent"])) :
+			(_coopMode ? FreeplayGameMode.getSpecific("codename.coop", new FreeplayGameMode("Co-Op Mode", "codename.coop", ["coop"])) : null));
+	}
+
+	/**
+	 * Loads a song into PlayState.
+	 * @param name Song name
+	 * @param difficulty Chart difficulty (if invalid, will load an empty chart)
+	 * @param opponentMode Whenever opponent mode is on
+	 * @param coopMode Whenever co-op mode is on.
+	 */
+	@:deprecated('PlayState.loadSong() is deprecated. Use PlayState.advancedLoadSong() instead.')
+	public static function loadSong(_name:String, ?_difficulty:String, _opponentMode:Bool = false, _coopMode:Bool = false) {
+		if (_difficulty == null) difficulty = Flags.DEFAULT_DIFFICULTY;
+		isStoryMode = chartingMode = false;
+		__oldSetGameMode(_opponentMode, _coopMode);
+		__loadSong(_name, _difficulty);
 	}
 }
 

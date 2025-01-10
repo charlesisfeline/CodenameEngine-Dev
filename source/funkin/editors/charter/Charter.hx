@@ -1797,7 +1797,7 @@ class Charter extends UIState {
 		buildChart();
 		startHere = here;
 		startTime = Conductor.songPosition;
-		PlayState.opponentMode = opponentMode;
+		PlayState.__oldSetGameMode(opponentMode, PlayState.coopMode);
 		PlayState.chartingMode = true;
 		FlxG.switchState(new PlayState());
 	}

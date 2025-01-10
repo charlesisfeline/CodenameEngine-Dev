@@ -71,11 +71,6 @@ class Flags {
 	 */
 	public static var DEFAULT_COLOR:FlxColor = 0xFF9271FD;
 
-	@:also(funkin.game.PlayState.coopMode)
-	public static var DEFAULT_COOP_MODE:Bool = false; // used in playstate if it doesn't find it
-	@:also(funkin.game.PlayState.opponentMode)
-	public static var DEFAULT_OPPONENT_MODE:Bool = false;
-
 	public static var DEFAULT_NOTE_MS_LIMIT:Float = 1500;
 	public static var DEFAULT_NOTE_SCALE:Float = 0.7;
 
