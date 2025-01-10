@@ -66,6 +66,7 @@ class Options
 	public static var charterMetronomeEnabled:Bool = false;
 	public static var charterShowSections:Bool = true;
 	public static var charterShowBeats:Bool = true;
+	public static var charterShowCameraHighlights:Bool = true;
 	public static var charterEnablePlaytestScripts:Bool = true;
 	public static var charterLowDetailWaveforms:Bool = false;
 	public static var charterAutoSaves:Bool = true;

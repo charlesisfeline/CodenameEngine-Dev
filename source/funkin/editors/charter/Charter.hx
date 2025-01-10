@@ -2,6 +2,7 @@ package funkin.editors.charter;
 // ! FUCK YOU CHUF (your biggest fan -lunar) <3
 
 //import flixel.FlxLayer;
+import flixel.util.FlxSort;
 import funkin.editors.charter.CharterEvent;
 import funkin.editors.extra.CameraHoverDummy;
 import flixel.input.keyboard.FlxKey;
@@ -93,6 +94,8 @@ class Charter extends UIState {
 
 	public static var clipboard:Array<CharterCopyboardObject> = [];
 	public static var waveformHandler:CharterWaveformHandler;
+
+	public var cameraChanges:Array<CameraChange> = [];
 
 	//public var textLayer:FlxLayer;
 
@@ -288,6 +291,11 @@ class Charter extends UIState {
 						label: 'Show Beats Separator',
 						onSelect: _view_showeventBeatSeparator,
 						icon: Options.charterShowBeats ? 1 : 0
+					},
+					{
+						label: 'Show Camera Highlights',
+						onSelect: _view_showeventCameraHighlights,
+						icon: Options.charterShowCameraHighlights ? 1 : 0
 					},
 					null,
 					{
@@ -656,6 +664,7 @@ class Charter extends UIState {
 		localEventsBackdrop.bottomSeparator.y = globalEventsBackdrop.bottomSeparator.y = gridBackdrops.bottomLimitY-2;
 
 		updateWaveforms();
+		updateCameraChanges();
 	}
 
 	inline function isSoundLoaded(sound:FlxSound) {
@@ -708,6 +717,38 @@ class Charter extends UIState {
 			var oldName:String = oldWaveformList[strumLine.selectedWaveform];
 			strumLine.selectedWaveform = waveformHandler.waveformList.indexOf(oldName);
 		}
+	}
+
+	public function updateCameraChanges() {
+		if (!Options.charterShowCameraHighlights) return;
+		cameraChanges = [];
+		for (grp in [localEventsGroup, globalEventsGroup]) {
+			grp.filterEvents();
+			grp.sortEvents();
+
+			for(e in grp.members) {
+				for(event in e.events) {
+					if (event.name == "Camera Movement") {	
+						cameraChanges.push({
+							eventRef: event,
+							step: e.step,
+							endStep: __endStep
+						});
+					}
+				}
+			}
+		}
+		//need to sort again for both local and global events to be used
+		cameraChanges.sort(function(e1, e2) {
+			return FlxSort.byValues(FlxSort.ASCENDING, e1.step, e2.step);
+		});
+
+		//update previous change
+		if (cameraChanges.length > 0) {
+			for (i in 1...cameraChanges.length) {
+				cameraChanges[i-1].endStep = cameraChanges[i].step;
+			}
+		}		
 	}
 
 	public override function beatHit(curBeat:Int) {
@@ -1141,6 +1182,8 @@ class Charter extends UIState {
 		localEventsGroup.sortEvents(); globalEventsGroup.sortEvents();
 		for (e in eventsChanged) e.update(0); // remove little stutter
 
+		updateCameraChanges();
+
 		return CEditEventGroups(eventsChanged);
 	}
 
@@ -1546,6 +1589,12 @@ class Charter extends UIState {
 		selection = sObjects;
 		_edit_copy(_); // to fix stupid bugs
 
+		for (s in selection)
+			if (s is CharterEvent) {
+				updateCameraChanges();
+				break;
+			}
+
 		undos.addToUndo(CCreateSelection(sObjects.copy()));
 	}
 
@@ -1586,6 +1635,12 @@ class Charter extends UIState {
 			case CSelectionDrag(selectionDrags):
 				for (s in selectionDrags)
 					if (s.selectable.draggable) s.selectable.handleDrag(s.change * -1);
+
+				for (s in selection)
+					if (s is CharterEvent) {
+						updateCameraChanges();
+						break;
+					}
 
 				selection = [for (s in selectionDrags) s.selectable];
 			case CEditSustains(changes):
@@ -1773,6 +1828,10 @@ class Charter extends UIState {
 	function _view_showeventBeatSeparator(t) {
 		t.icon = (Options.charterShowBeats = !Options.charterShowBeats) ? 1 : 0;
 		localEventsBackdrop.eventBeatSeparator.visible = globalEventsBackdrop.eventBeatSeparator.visible = gridBackdrops.beatsVisible = Options.charterShowBeats;
+	}
+	function _view_showeventCameraHighlights(t) {
+		t.icon = (Options.charterShowCameraHighlights = !Options.charterShowCameraHighlights) ? 1 : 0;
+		updateCameraChanges();
 	}
 	function _view_switchWaveformDetail(t) {
 		t.icon = (Options.charterLowDetailWaveforms = !Options.charterLowDetailWaveforms) ? 1 : 0;
@@ -2191,3 +2250,10 @@ typedef PlaytestInfo = {
 	var mutedVocals:Array<Bool>;
 	var waveforms:Array<Int>;
 }
+
+typedef CameraChange = {
+	//storing a ref of the event for the strumLineID so that when the strumlines become reordered its updated automatically
+	var eventRef:ChartEvent;
+	var step:Float;
+	var endStep:Float;
+} 

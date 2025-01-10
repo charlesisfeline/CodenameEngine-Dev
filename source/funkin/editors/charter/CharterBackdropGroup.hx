@@ -149,6 +149,8 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 	public var gridShader:CustomShader = new CustomShader("engine/charterGrid");
 	var __lastKeyCount:Int = 4;
 
+	public var cameraHighlight:CameraHighlight;
+
 	public function new() {
 		super();
 
@@ -157,6 +159,10 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 		gridBackDrop.shader = gridShader;
 		add(gridBackDrop);
 		gridShader.hset("segments", 4);
+
+		cameraHighlight = new CameraHighlight(this);
+		cameraHighlight.makeSolid(1, 1, 0xFFFFFFFF);
+		add(cameraHighlight);
 
 		waveformSprite = new FlxSprite().makeSolid(1, 1, 0xFF000000);
 		waveformSprite.scale.set(160, 1);
@@ -227,10 +233,11 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 			x = strumLine.x;
 			alpha = strumLine.strumLine.visible ? 0.9 : 0.4;
 			keyCount = strumLine.keyCount;
+			cameraHighlight.color = strumLine.iconColor;
 		} else alpha = 0.9;
 
 		for (spr in [gridBackDrop, sectionSeparator, beatSeparator, topLimit, bottomLimit, 
-				topSeparator, bottomSeparator, conductorFollowerSpr, waveformSprite]) {
+				topSeparator, bottomSeparator, conductorFollowerSpr, waveformSprite, cameraHighlight]) {
 			spr.x = x; if (spr != waveformSprite) spr.alpha = alpha;
 			spr.cameras = this.cameras;
 		}
@@ -254,6 +261,8 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 			spr.scale.x = keyCount * 40;
 			spr.updateHitbox();
 		}
+		cameraHighlight.scale.x = (keyCount * 40)-2;
+		cameraHighlight.x += 1;
 
 		waveformSprite.visible = waveformSprite.shader != null;
 		if (waveformSprite.shader == null) return;
@@ -273,6 +282,56 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 		waveformSprite.shader.data.pixelOffset.value = [Math.max(conductorFollowerSpr.y - ((FlxG.height * (1/cameras[0].zoom)) * 0.5), 0)];
 		waveformSprite.shader.data.textureRes.value = [waveformSprite.width, waveformSprite.height];
 		waveformSprite.shader.data.playerPosition.value = [conductorFollowerSpr.y];
+	}
+}
+
+class CameraHighlight extends FlxSprite {
+	private var grid:CharterBackdrop;
+	public function new(grid:CharterBackdrop) {
+		this.grid = grid;
+		super();
+	}
+
+	override public function draw() {
+		if (!Options.charterShowCameraHighlights) return;
+
+		var zoomOffset = ((FlxG.height * (1/cameras[0].zoom)) * 0.5);
+		var minStep = (grid.conductorFollowerSpr.y - zoomOffset) / 40;
+		var maxStep = (grid.conductorFollowerSpr.y + zoomOffset) / 40;
+		var strumLineID = Charter.instance.gridBackdrops.members.indexOf(grid);
+		
+		//first default camera change
+		if ((Charter.instance.cameraChanges[0] == null || Charter.instance.cameraChanges[0].step != 0) && strumLineID == 0) {
+			var endStep = Charter.instance.cameraChanges[0] != null ? Charter.instance.cameraChanges[0].step : Charter.instance.__endStep;
+			if (endStep >= minStep) {
+				setupHighlight(0, endStep); super.draw();
+				setupLine(endStep); super.draw();
+			}
+		}
+
+		for (change in Charter.instance.cameraChanges) {
+			if (change.endStep >= minStep) {
+				if (change.eventRef.params[0] == strumLineID) {
+					setupHighlight(change.step, change.endStep); super.draw();
+					setupLine(change.step); super.draw();
+					setupLine(change.endStep); super.draw();
+				}
+			}
+			if (change.endStep > maxStep) break;
+		}
+	}
+
+	private inline function setupHighlight(step:Float, endStep:Float) {
+		y = step * 40;
+		alpha = 0.15;
+		scale.y = (endStep -step) * 40;
+		updateHitbox();
+	}
+	private inline function setupLine(step:Float) {
+		y = (step * 40)-1;
+		alpha = 0.8;
+		scale.y = 2;
+		updateHitbox();
 	}
 }
 
