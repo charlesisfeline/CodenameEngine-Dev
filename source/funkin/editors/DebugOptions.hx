@@ -28,6 +28,14 @@ class DebugOptionsScreen extends OptionsScreen {
 	public override function new() {
 		super("Debug Options", "Use this menu to change debug options.");
 		#if windows
+		add(new Checkbox(
+			"Developer Mode",
+			"If checked, shows the number of warnings and errors from the console into the window title and more, idk for now",
+			"devMode",
+			null,
+			function() {
+				Logs.updateDevModeText();
+			}));
 		add(new TextOption(
 			"Show Console",
 			"Select this to show the debug console, which contains log information about the game.",

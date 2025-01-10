@@ -877,6 +877,19 @@ class CoolUtil
 	}
 
 	/**
+	 * Pluralizes a work based on the count of something
+	 * @param count Count of the "item" work to pluralize
+	 * @param singluar Singular name of the item
+	 * @param plural Plural name of the item or just singular with an added "s" at the end if null
+	 * @return The pluralized or singluar string based on the given count
+	 */
+	 @:noUsing public static inline function pluralize(count:Int, singular:String, ?plural:String) {
+		if(count == 1) return singular;
+		if(plural == null) return singular + "s";
+		return plural;
+	}
+
+	/**
 	 * Converts a string of "1..3,5,7..9,8..5" into an array of numbers like [1,2,3,5,7,8,9,8,7,6,5]
 	 * @param input String to parse
 	 * @return Array of numbers
