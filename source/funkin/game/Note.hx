@@ -1,5 +1,7 @@
 package funkin.game;
 
+import flixel.FlxTypes.ByteInt;
+import flixel.util.typeLimit.OneOfTwo;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import funkin.backend.chart.ChartData;
@@ -7,6 +9,8 @@ import funkin.backend.scripting.events.note.NoteCreationEvent;
 import funkin.backend.system.Conductor;
 
 using StringTools;
+
+typedef NoteObject = OneOfTwo<Note, OptimizedNote>;
 
 @:allow(funkin.game.PlayState)
 class Note extends FlxSprite
@@ -129,37 +133,24 @@ class Note extends FlxSprite
 
 		var customType = Paths.image('game/notes/${this.noteType}');
 		var event = EventManager.get(NoteCreationEvent).recycle(this, strumID, this.noteType, noteTypeID, PlayState.instance.strumLines.members.indexOf(strumLine), mustPress,
-			(this.noteType != null && customTypePathExists(customType)) ? 'game/notes/${this.noteType}' : 'game/notes/default', @:privateAccess strumLine.strumScale * Flags.DEFAULT_NOTE_SCALE, animSuffix);
+			(this.noteType != null && customTypePathExists(customType)) ? 'game/notes/${this.noteType}' : 'game/notes/default', @:privateAccess strumLine.strumScale * Flags.DEFAULT_NOTE_SCALE, "default", animSuffix, null, null, null);
 
 		if (PlayState.instance != null)
 			event = PlayState.instance.gameAndCharsEvent("onNoteCreation", event);
 
 		this.animSuffix = event.animSuffix;
 		if (!event.cancelled) {
+			if (event.noteSplash != "default") splash = event.noteSplash;
+
 			switch (event.noteType)
 			{
 				// case "My Custom Note Type": // hardcoding note types
 				default:
 					frames = Paths.getFrames(event.noteSprite);
 
-					switch(event.strumID % 4) {
-						case 0:
-							animation.addByPrefix('scroll', 'purple0');
-							animation.addByPrefix('hold', 'purple hold piece');
-							animation.addByPrefix('holdend', 'pruple end hold');
-						case 1:
-							animation.addByPrefix('scroll', 'blue0');
-							animation.addByPrefix('hold', 'blue hold piece');
-							animation.addByPrefix('holdend', 'blue hold end');
-						case 2:
-							animation.addByPrefix('scroll', 'green0');
-							animation.addByPrefix('hold', 'green hold piece');
-							animation.addByPrefix('holdend', 'green hold end');
-						case 3:
-							animation.addByPrefix('scroll', 'red0');
-							animation.addByPrefix('hold', 'red hold piece');
-							animation.addByPrefix('holdend', 'red hold end');
-					}
+					animation.addByPrefix('scroll', event.noteAnimPrefix != null ? event.noteAnimPrefix : Flags.DEFAULT_NOTE_ANIM_PREFIXES[event.strumID % 4]);
+					animation.addByPrefix('hold', event.sustainAnimPrefix != null ? event.sustainAnimPrefix : Flags.DEFAULT_NOTE_SUSTAIN_ANIM_PREFIXES[event.strumID % 4]);
+					animation.addByPrefix('holdend', event.sustainEndAnimPrefix != null ? event.sustainEndAnimPrefix : Flags.DEFAULT_NOTE_SUSTAIN_END_ANIM_PREFIXES[event.strumID % 4]);
 
 					scale.set(event.noteScale, event.noteScale);
 					antialiasing = true;
@@ -306,5 +297,143 @@ class Note extends FlxSprite
 
 	public override function destroy() {
 		super.destroy();
+	}
+}
+
+
+
+
+class OptimizedNote {
+	public var strumTime:Float;
+	public var strumID:ByteInt;
+	public var noteTypeID:ByteInt;
+	public var sustainLength:Single;
+
+	public var noteDrawID:ByteInt;
+
+	public var canBeHit:Bool = false;
+	public var tooLate:Bool = false;
+	public var wasGoodHit:Bool = false;
+
+	public function new() {}
+}
+class NoteDrawInfo {
+	public var strumID:ByteInt;
+	public var scale:Float = 0.7;
+	public var sprite:String = 'game/notes/default';
+	public var splash:String = "default"; //maybe move this out of draw info
+
+	public var noteSprite:FlxSprite;
+	public var sustainSprite:FlxSprite;
+	public var sustainEndSprite:FlxSprite;
+
+	public function drawNote(note:OptimizedNote, strumLine:StrumLine) {
+		var strum = strumLine.members[note.strumID];
+		if (strum == null) return;
+
+		noteSprite.setPosition(strum.x + (strum.width - noteSprite.width) / 2, strum.y + (note.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(strum.getScrollSpeed(), 100)));
+		noteSprite.scrollFactor.set(strum.scrollFactor.x, strum.scrollFactor.y);
+		noteSprite.cameras = strumLine.cameras;
+		noteSprite.draw();
+	}
+
+	public function new() {}
+}
+class NoteTypeInfo {
+	public var animSuffix:String = null;
+	public var avoid:Bool = false;
+	public var lateHitWindow:Float = 1.0;
+	public var earlyHitWindow:Float = 0.5;
+}
+
+class OptimizedNoteManager {
+	private static var noteDrawInfos:Array<NoteDrawInfo> = [];
+
+	public static function reset() {
+		for (info in noteDrawInfos) {
+			info.noteSprite.destroy();
+		}
+		noteDrawInfos.splice(0, noteDrawInfos.length);
+	}
+
+	public static inline function getNoteDrawInfo(id:Int) { return OptimizedNoteManager.noteDrawInfos[id];}
+	public static function generateNoteDrawInfoID(event:NoteCreationEvent) {
+		for (i => info in OptimizedNoteManager.noteDrawInfos) {
+			if (event.noteSprite == info.sprite //make turn this into a func on the draw info so you dont have to update this when a new var is added
+				&& event.noteSplash == info.splash
+				&& event.strumID == info.strumID
+			) {
+				return i;
+			}
+		}
+
+		var drawInfo = new NoteDrawInfo();
+		drawInfo.strumID = event.strumID;
+		drawInfo.scale = event.noteScale;
+		drawInfo.sprite = event.noteSprite;
+		drawInfo.splash = event.noteSplash;
+		OptimizedNoteManager.noteDrawInfos.push(drawInfo);
+
+
+		var noteSprite = drawInfo.noteSprite = new FlxSprite();
+		noteSprite.frames = Paths.getFrames(event.noteSprite);
+		noteSprite.animation.addByPrefix('scroll', event.noteAnimPrefix != null ? event.noteAnimPrefix : Flags.DEFAULT_NOTE_ANIM_PREFIXES[event.strumID % 4]);
+		noteSprite.animation.play("scroll");
+		noteSprite.scale.set(event.noteScale, event.noteScale);
+		noteSprite.antialiasing = true;
+		noteSprite.updateHitbox();
+
+		//preload sprites
+		if (PlayState.instance != null) {
+			PlayState.instance.splashHandler.getSplashGroup(drawInfo.splash);
+		}
+
+		trace(noteDrawInfos.length-1);
+		return OptimizedNoteManager.noteDrawInfos.length-1;
+	}
+	
+	private static inline function getNoteType(id:Int) {
+		if (PlayState.instance == null) return null;
+		return PlayState.instance.getNoteType(id);
+	}
+
+
+
+	public static function createNote(strumLine:StrumLine, noteData:ChartNote) {
+		var note = new OptimizedNote();
+
+		note.strumTime = noteData.time.getDefault(0);
+		note.strumID = noteData.id.getDefault(0);
+		note.noteTypeID = noteData.type.getDefault(0);
+		note.sustainLength = noteData.sLen.getDefault(0);
+		note.noteDrawID = 0;
+		
+		var customType = Paths.image('game/notes/${getNoteType(note.noteTypeID)}');
+		var event = EventManager.get(NoteCreationEvent).recycle(null,
+			note.strumID,
+			getNoteType(note.noteTypeID), 
+			note.noteTypeID, 
+			PlayState.instance.strumLines.members.indexOf(strumLine), 
+			false,
+			(getNoteType(note.noteTypeID) != null && @:privateAccess Note.customTypePathExists(customType)) ? 'game/notes/${getNoteType(note.noteTypeID)}' : 'game/notes/default', 
+			@:privateAccess strumLine.strumScale * Flags.DEFAULT_NOTE_SCALE, 
+			"default",
+			"",
+			null, null, null
+		);
+
+		if (PlayState.instance != null)
+			event = PlayState.instance.gameAndCharsEvent("onNoteCreation", event);
+
+		//this.animSuffix = event.animSuffix;
+		if (!event.cancelled) {
+			note.noteDrawID = OptimizedNoteManager.generateNoteDrawInfoID(event);
+		}
+
+		if (PlayState.instance != null) {
+			PlayState.instance.gameAndCharsEvent("onPostNoteCreation", event);
+		}
+
+		return note;
 	}
 }

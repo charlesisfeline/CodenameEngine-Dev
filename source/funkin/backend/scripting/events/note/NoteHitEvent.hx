@@ -40,7 +40,7 @@ final class NoteHitEvent extends CancellableEvent {
 	/**
 	 * Note that has been pressed
 	 */
-	public var note:Note;
+	public var note:NoteObject;
 	/**
 	 * Character that pressed the note.
 	 */

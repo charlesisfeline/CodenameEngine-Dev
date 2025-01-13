@@ -6,5 +6,5 @@ final class SimpleNoteEvent extends CancellableEvent {
 	/**
 		Note that is affected.
 	**/
-	public var note:Note;
+	public var note:NoteObject;
 }

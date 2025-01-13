@@ -10,7 +10,7 @@ final class NoteUpdateEvent extends CancellableEvent {
 	/**
 	 * Note that is being updated
 	 */
-	public var note:Note;
+	public var note:NoteObject;
 
 	/**
 	 * Time elapsed since last frame

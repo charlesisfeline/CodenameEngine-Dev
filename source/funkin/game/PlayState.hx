@@ -1,5 +1,8 @@
 package funkin.game;
 
+import funkin.game.Note.OptimizedNoteManager;
+import funkin.game.Note.NoteObject;
+import funkin.game.Note.OptimizedNote;
 import flixel.FlxState;
 import flixel.FlxSubState;
 import flixel.graphics.FlxGraphic;
@@ -1027,6 +1030,7 @@ class PlayState extends MusicBeatState
 		instance = null;
 
 		Note.__customNoteTypeExists = [];
+		OptimizedNoteManager.reset();
 	}
 
 	public static function resetSongInfos() {
@@ -1620,13 +1624,19 @@ class PlayState extends MusicBeatState
 	 * @param direction Specify a custom direction in case note is null.
 	 * @param player Specify a custom player in case note is null.
 	 */
-	public function noteMiss(strumLine:StrumLine, note:Note, ?direction:Int, ?player:Int):Void
+	public function noteMiss(strumLine:StrumLine, noteObject:NoteObject, ?direction:Int, ?player:Int):Void
 	{
-		var playerID:Null<Int> = note == null ? player : strumLines.members.indexOf(strumLine);
-		var directionID:Null<Int> = note == null ? direction : note.strumID;
+		final note:Note = Flags.OPTIMIZED_NOTES ? null : noteObject;
+		final optimizedNote:OptimizedNote = !Flags.OPTIMIZED_NOTES ? null : noteObject;
+
+		final strumID:Int = noteObject != null ? (Flags.OPTIMIZED_NOTES ? optimizedNote.strumID : note.strumID) : 0;
+		final noteType:String = noteObject != null ? (Flags.OPTIMIZED_NOTES ? getNoteType(optimizedNote.noteTypeID) : note.noteType) : null;
+
+		var playerID:Null<Int> = noteObject == null ? player : strumLines.members.indexOf(strumLine);
+		var directionID:Null<Int> = noteObject == null ? direction : strumID;
 		if (playerID == null || directionID == null || playerID == -1) return;
 
-		var event:NoteMissEvent = gameAndCharsEvent("onPlayerMiss", EventManager.get(NoteMissEvent).recycle(note, -10, 1, muteVocalsOnMiss, note != null ? -0.0475 : -0.04, Paths.soundRandom('missnote', 1, 3), FlxG.random.float(0.1, 0.2), note == null, combo > 5, "sad", true, true, "miss", strumLines.members[playerID].characters, playerID, note != null ? note.noteType : null, directionID, 0));
+		var event:NoteMissEvent = gameAndCharsEvent("onPlayerMiss", EventManager.get(NoteMissEvent).recycle(noteObject, -10, 1, muteVocalsOnMiss, noteObject != null ? -0.0475 : -0.04, Paths.soundRandom('missnote', 1, 3), FlxG.random.float(0.1, 0.2), noteObject == null, combo > 5, "sad", true, true, "miss", strumLines.members[playerID].characters, playerID, noteObject != null ? noteType : null, directionID, 0));
 		strumLine.onMiss.dispatch(event);
 		if (event.cancelled) return;
 
@@ -1662,8 +1672,8 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		if (event.deleteNote && strumLine != null && note != null)
-			strumLine.deleteNote(note);
+		if (event.deleteNote && strumLine != null && noteObject != null)
+			strumLine.deleteNote(noteObject);
 	}
 
 	@:dox(hide)
@@ -1675,16 +1685,26 @@ class PlayState extends MusicBeatState
 	 * Hits a note
 	 * @param note Note to hit.
 	 */
-	public function goodNoteHit(strumLine:StrumLine, note:Note):Void
+	public function goodNoteHit(strumLine:StrumLine, noteObject:NoteObject):Void
 	{
-		if(note == null || note.wasGoodHit) return;
+		final note:Note = Flags.OPTIMIZED_NOTES ? null : noteObject;
+		final optimizedNote:OptimizedNote = !Flags.OPTIMIZED_NOTES ? null : noteObject;
 
-		note.wasGoodHit = true;
+		final strumTime:Float = Flags.OPTIMIZED_NOTES ? optimizedNote.strumTime : note.strumTime;
+		final wasGoodHit:Bool = Flags.OPTIMIZED_NOTES ? optimizedNote.wasGoodHit : note.wasGoodHit;
+		final isSustainNote:Bool = Flags.OPTIMIZED_NOTES ? false : note.isSustainNote;
+		final noteType:String = Flags.OPTIMIZED_NOTES ? getNoteType(optimizedNote.noteTypeID) : note.noteType;
+		final strumID:Int = Flags.OPTIMIZED_NOTES ? optimizedNote.strumID : note.strumID;
+		final animSuffix:Null<String> = Flags.OPTIMIZED_NOTES ? null : note.animSuffix; //fix this later
+
+		if(noteObject == null || wasGoodHit) return;
+
+		Flags.OPTIMIZED_NOTES ? optimizedNote.wasGoodHit = true : note.wasGoodHit = true;
 
 		/**
 		 * CALCULATES RATING
 		 */
-		var noteDiff = Math.abs(Conductor.songPosition - note.strumTime);
+		var noteDiff = Math.abs(Conductor.songPosition - strumTime);
 		var daRating:String = "sick";
 		var score:Int = 300;
 		var accuracy:Float = 1;
@@ -1710,16 +1730,16 @@ class PlayState extends MusicBeatState
 
 		var event:NoteHitEvent;
 		if (strumLine != null && !strumLine.cpu)
-			event = EventManager.get(NoteHitEvent).recycle(false, !note.isSustainNote, !note.isSustainNote, null, defaultDisplayRating, defaultDisplayCombo, note, strumLine.characters, true, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, score, note.isSustainNote ? null : accuracy, 0.023, daRating, Options.splashesEnabled && !note.isSustainNote && daRating == "sick");
+			event = EventManager.get(NoteHitEvent).recycle(false, !isSustainNote, !isSustainNote, null, defaultDisplayRating, defaultDisplayCombo, noteObject, strumLine.characters, true, noteType, animSuffix.getDefault(strumID < strumLine.members.length ? strumLine.members[strumID].animSuffix : strumLine.animSuffix), "game/score/", "", strumID, score, isSustainNote ? null : accuracy, 0.023, daRating, Options.splashesEnabled && !isSustainNote && daRating == "sick");
 		else
-			event = EventManager.get(NoteHitEvent).recycle(false, false, false, null, defaultDisplayRating, defaultDisplayCombo, note, strumLine.characters, false, note.noteType, note.animSuffix.getDefault(note.strumID < strumLine.members.length ? strumLine.members[note.strumID].animSuffix : strumLine.animSuffix), "game/score/", "", note.strumID, 0, null, 0, daRating, false);
-		event.deleteNote = !note.isSustainNote; // work around, to allow sustain notes to be deleted
+			event = EventManager.get(NoteHitEvent).recycle(false, false, false, null, defaultDisplayRating, defaultDisplayCombo, noteObject, strumLine.characters, false, noteType, animSuffix.getDefault(strumID < strumLine.members.length ? strumLine.members[strumID].animSuffix : strumLine.animSuffix), "game/score/", "", strumID, 0, null, 0, daRating, false);
+		event.deleteNote = !isSustainNote; // work around, to allow sustain notes to be deleted
 		event = scripts.event(strumLine != null && !strumLine.cpu ? "onPlayerHit" : "onDadHit", event);
 		strumLine.onHit.dispatch(event);
 		gameAndCharsEvent("onNoteHit", event);
 
 		if (!event.cancelled) {
-			if (!note.isSustainNote) {
+			if (!isSustainNote) {
 				if (event.countScore) songScore += event.score;
 				if (event.accuracy != null) {
 					accuracyPressedNotes++;
@@ -1744,9 +1764,19 @@ class PlayState extends MusicBeatState
 					if (char != null)
 						char.playSingAnim(event.direction, event.animSuffix, SING, event.forceAnim);
 
-			if (event.note.__strum != null) {
-				if (!event.strumGlowCancelled) event.note.__strum.press(event.note.strumTime);
-				if (event.showSplash) splashHandler.showSplash(event.note.splash, event.note.__strum);
+			if (!Flags.OPTIMIZED_NOTES) {
+				var eventNote:Note = event.note;
+				if (eventNote.__strum != null) {
+					if (!event.strumGlowCancelled) eventNote.__strum.press(eventNote.strumTime);
+					if (event.showSplash) splashHandler.showSplash(eventNote.splash, eventNote.__strum);
+				}
+			} else {
+				var eventNote:OptimizedNote = event.note;
+				var strum = strumLine.members[eventNote.strumID];
+				if (strum != null) {
+					if (!event.strumGlowCancelled) strum.press(eventNote.strumTime);
+					if (event.showSplash) splashHandler.showSplash(OptimizedNoteManager.getNoteDrawInfo(eventNote.noteDrawID).splash, strum);
+				}
 			}
 		}
 
@@ -1755,14 +1785,14 @@ class PlayState extends MusicBeatState
 			strumLine.vocals.volume = 1;
 		}
 		if (event.enableCamZooming) camZooming = true;
-		if (event.autoHitLastSustain) {
+		if (event.autoHitLastSustain && !Flags.OPTIMIZED_NOTES) {
 			if (note.nextSustain != null && note.nextSustain.nextSustain == null) {
 				// its a tail!!
 				note.wasGoodHit = true;
 			}
 		}
-
-		if (event.deleteNote) strumLine.deleteNote(note);
+		
+		if (event.deleteNote) strumLine.deleteNote(noteObject);
 	}
 
 	public function displayRating(myRating:String, ?evt:NoteHitEvent = null):Void {

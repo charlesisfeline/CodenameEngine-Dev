@@ -142,6 +142,13 @@ class Flags {
 	public static var DEFAULT_PAUSE_SCRIPT:String = "";
 	@:also(funkin.game.GameOverSubstate.script)
 	public static var DEFAULT_GAMEOVER_SCRIPT:String = "";
+
+	public static var DEFAULT_NOTE_ANIM_PREFIXES:Array<String> = ['purple0', 'blue0', 'green0', 'red0'];
+	public static var DEFAULT_NOTE_SUSTAIN_ANIM_PREFIXES:Array<String> = ['purple hold piece', 'blue hold piece', 'green hold piece', 'red hold piece'];
+	public static var DEFAULT_NOTE_SUSTAIN_END_ANIM_PREFIXES:Array<String> = ['pruple end hold', 'blue hold end', 'green hold end', 'red hold end'];
+	public static var OPTIMIZED_NOTES:Bool = true;
+	public static var AUTO_DESTROY_NOTEDATA:Bool = false;
+
 	// -- End of Codename's Default Flags --
 
 	/**

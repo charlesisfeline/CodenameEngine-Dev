@@ -13,7 +13,7 @@ final class NoteMissEvent extends CancellableEvent {
 	/**
 	 * Note that has been missed
 	 */
-	public var note:Note;
+	public var note:NoteObject;
 	public var score:Int;
 	public var misses:Int;
 	public var muteVocals:Bool;

@@ -1,5 +1,9 @@
 package funkin.game;
 
+import funkin.game.Note.NoteObject;
+import funkin.game.Note.OptimizedNote;
+import funkin.game.Note.OptimizedNoteManager;
+import funkin.game.NoteGroup.OptimizedNoteGroup;
 import flixel.math.FlxPoint;
 import flixel.sound.FlxSound;
 import flixel.tweens.FlxTween;
@@ -67,6 +71,11 @@ class StrumLine extends FlxTypedGroup<Strum> {
 	 */
 	public var notes:NoteGroup;
 	/**
+	 * Group of all of the optimzied notes in this strumline. Using `forEach` on this group will only loop through the first notes for performance reasons.
+	 * Only used when `Flags.OPTIMIZED_NOTES` is true.
+	 */
+	public var optimizedNotes:OptimizedNoteGroup;
+	/**
 	 * Whenever alt animation is enabled on this strumline.
 	 */
 	public var altAnim(get, set):Bool;
@@ -113,7 +122,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		this.cpu = cpu;
 		this.opponentSide = opponentSide;
 		this.controls = controls;
-		this.notes = new NoteGroup();
+		!Flags.OPTIMIZED_NOTES ? this.notes = new NoteGroup() : this.optimizedNotes = new OptimizedNoteGroup(this);
 		vocals = vocalPrefix != "" ? FlxG.sound.load(Paths.voices(PlayState.SONG.meta.name, PlayState.difficulty, vocalPrefix)) : new FlxSound();
 		vocals.persist = false;
 	}
@@ -131,16 +140,19 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 			total++;
 
-			if (note.sLen > Conductor.stepCrochet * 0.75) {
-				var len:Float = note.sLen;
-				while(len > 10) {
-					total++;
-					len -= Math.min(len, Conductor.stepCrochet);
+			if (!Flags.OPTIMIZED_NOTES) {
+				if (note.sLen > Conductor.stepCrochet * 0.75) {
+					var len:Float = note.sLen;
+					while(len > 10) {
+						total++;
+						len -= Math.min(len, Conductor.stepCrochet);
+					}
 				}
 			}
+
 		}
 
-		notes.preallocate(total);
+		!Flags.OPTIMIZED_NOTES ? notes.preallocate(total) : optimizedNotes.preallocate(total);
 
 		var il = 0;
 
@@ -150,20 +162,24 @@ class StrumLine extends FlxTypedGroup<Strum> {
 			if (startTime != null && startTime > note.time)
 				continue;
 
-			notes.members[total-(il++)-1] = prev = new Note(this, note, false, prev);
-
-			if (note.sLen > Conductor.stepCrochet * 0.75) {
-				var len:Float = note.sLen;
-				var curLen:Float = 0;
-				while(len > 10) {
-					curLen = Math.min(len, Conductor.stepCrochet);
-					notes.members[total-(il++)-1] = prev = new Note(this, note, true, curLen, note.sLen - len, prev);
-					len -= curLen;
+			if (!Flags.OPTIMIZED_NOTES) {
+				notes.members[total-(il++)-1] = prev = new Note(this, note, false, prev);
+				if (note.sLen > Conductor.stepCrochet * 0.75) {
+					var len:Float = note.sLen;
+					var curLen:Float = 0;
+					while(len > 10) {
+						curLen = Math.min(len, Conductor.stepCrochet);
+						notes.members[total-(il++)-1] = prev = new Note(this, note, true, curLen, note.sLen - len, prev);
+						len -= curLen;
+					}
 				}
+			} else {
+				optimizedNotes.members[total-(il++)-1] = OptimizedNoteManager.createNote(this, note);
 			}
-		}
-		notes.sortNotes();
 
+		}
+		!Flags.OPTIMIZED_NOTES ? notes.sortNotes() : optimizedNotes.draw();
+		
 		var scrollSpeed = strumLine.scrollSpeed;
 		if(scrollSpeed == null) if (PlayState.instance != null) scrollSpeed = PlayState.instance.scrollSpeed;
 		if(scrollSpeed == null) scrollSpeed = 1;
@@ -173,17 +189,18 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		notes.limit = limit / scrollSpeed;
 			OR
 		notes.limit = Flags.DEFAULT_NOTE_MS_LIMIT / scrollSpeed;*/
+
+		if (Flags.AUTO_DESTROY_NOTEDATA) strumLine.notes = null;
 	}
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
-		notes.update(elapsed);
+		!Flags.OPTIMIZED_NOTES ? notes.update(elapsed) : optimizedNotes.update(elapsed);
 	}
 
 	public override function draw() {
 		super.draw();
-		notes.cameras = cameras;
-		notes.draw();
+		!Flags.OPTIMIZED_NOTES ? {notes.cameras = cameras; notes.draw();} : optimizedNotes.draw();
 	}
 
 	/**
@@ -192,7 +209,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 	public inline function updateNotes() {
 		__updateNote_songPos = Conductor.songPosition;
 		if(__updateNote_event == null) __updateNote_event = PlayState.instance.__updateNote_event;
-		notes.forEach(updateNote);
+		!Flags.OPTIMIZED_NOTES ? notes.forEach(updateNote) : optimizedNotes.forEach(updateNote);
 	}
 
 	var __updateNote_strum:Strum;
@@ -202,49 +219,69 @@ class StrumLine extends FlxTypedGroup<Strum> {
 	 * Updates a note.
 	 * This updates the position, state, and handles the input.
 	**/
-	public function updateNote(daNote:Note) {
-		__updateNote_strum = members[daNote.noteData];
+	public function updateNote(noteObject:NoteObject) {
+
+		var note:Note = Flags.OPTIMIZED_NOTES ? null : noteObject;
+		var optimizedNote:OptimizedNote = !Flags.OPTIMIZED_NOTES ? null : noteObject;
+
+		final strumID:Int = Flags.OPTIMIZED_NOTES ? optimizedNote.strumID : note.strumID;
+		final strumTime:Float = Flags.OPTIMIZED_NOTES ? optimizedNote.strumTime : note.strumTime;
+		final isSustainNote:Bool = Flags.OPTIMIZED_NOTES ? false : note.isSustainNote;
+		final wasGoodHit:Bool = Flags.OPTIMIZED_NOTES ? optimizedNote.wasGoodHit : note.wasGoodHit;
+		final avoid:Bool = Flags.OPTIMIZED_NOTES ? false : note.avoid;
+		final latePressWindow:Float = Flags.OPTIMIZED_NOTES ? 1 : note.latePressWindow;
+		final earlyPressWindow:Float = Flags.OPTIMIZED_NOTES ? 0.5 : note.earlyPressWindow;
+
+		__updateNote_strum = members[strumID];
 		if (__updateNote_strum == null) return;
 
-		__updateNote_event.recycle(daNote, FlxG.elapsed, __updateNote_strum);
+		__updateNote_event.recycle(noteObject, FlxG.elapsed, __updateNote_strum);
 		onNoteUpdate.dispatch(__updateNote_event);
 		if (__updateNote_event.cancelled) return;
 
 		if (__updateNote_event.__updateHitWindow) {
 			var hitWindow = PlayState.instance.hitWindow;
-			daNote.canBeHit = (daNote.strumTime > __updateNote_songPos - (hitWindow * daNote.latePressWindow)
-				&& daNote.strumTime < __updateNote_songPos + (hitWindow * daNote.earlyPressWindow));
+			var canBeHit = (strumTime > __updateNote_songPos - (hitWindow * latePressWindow)
+				&& strumTime < __updateNote_songPos + (hitWindow * earlyPressWindow));
 
-			if (daNote.strumTime < __updateNote_songPos - hitWindow && !daNote.wasGoodHit)
-				daNote.tooLate = true;
+			!Flags.OPTIMIZED_NOTES ? note.canBeHit = canBeHit : optimizedNote.canBeHit = canBeHit;
+
+			if (strumTime < __updateNote_songPos - hitWindow && !wasGoodHit)
+				!Flags.OPTIMIZED_NOTES ? note.tooLate = true : optimizedNote.tooLate = true;
 		}
 
-		if (cpu && __updateNote_event.__autoCPUHit && !daNote.avoid && !daNote.wasGoodHit && daNote.strumTime < __updateNote_songPos) PlayState.instance.goodNoteHit(this, daNote);
+		if (cpu && __updateNote_event.__autoCPUHit && !avoid && !wasGoodHit && strumTime < __updateNote_songPos) PlayState.instance.goodNoteHit(this, noteObject);
 
-		if (daNote.wasGoodHit && daNote.isSustainNote && daNote.strumTime + (daNote.sustainLength) < __updateNote_songPos) {
-			deleteNote(daNote);
+		if (!Flags.OPTIMIZED_NOTES) {
+			if (note.wasGoodHit && isSustainNote && strumTime + (note.sustainLength) < __updateNote_songPos) {
+				deleteNote(note);
+				return;
+			}
+		}
+
+
+		if (!Flags.OPTIMIZED_NOTES ? note.tooLate : optimizedNote.tooLate) {
+			if (!cpu) PlayState.instance.noteMiss(this, noteObject);
+			else deleteNote(noteObject);
 			return;
 		}
 
-		if (daNote.tooLate) {
-			if (!cpu) PlayState.instance.noteMiss(this, daNote);
-			else deleteNote(daNote);
-			return;
+
+		if (!Flags.OPTIMIZED_NOTES) {
+			if (__updateNote_event.strum == null) return;
+
+			if (__updateNote_event.__reposNote) __updateNote_event.strum.updateNotePosition(note);
+			if (isSustainNote) note.updateSustain(__updateNote_event.strum);
 		}
-
-
-		if (__updateNote_event.strum == null) return;
-
-		if (__updateNote_event.__reposNote) __updateNote_event.strum.updateNotePosition(daNote);
-		if (daNote.isSustainNote)
-			daNote.updateSustain(__updateNote_event.strum);
 	}
 
 	var __funcsToExec:Array<Note->Void> = [];
+	var __optimizedNotefuncsToExec:Array<OptimizedNote->Void> = [];
 	var __pressed:Array<Bool> = [];
 	var __justPressed:Array<Bool> = [];
 	var __justReleased:Array<Bool> = [];
 	var __notePerStrum:Array<Note> = [];
+	var __optimizedNotePerStrum:Array<OptimizedNote> = [];
 
 	function __inputProcessPressed(note:Note) {
 		if (__pressed[note.strumID] && note.isSustainNote && note.canBeHit && !note.wasGoodHit) {
@@ -259,6 +296,21 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		}
 	}
 
+	//duplicate to prevent casting
+	function __inputProcessPressedOptimizedNote(note:OptimizedNote) {
+		if (__pressed[note.strumID] /*&& note.isSustainNote*/ && note.canBeHit && !note.wasGoodHit) {
+			//PlayState.instance.goodNoteHit(this, note);
+		}
+	}
+	function __inputProcessJustPressedOptimizedNote(note:OptimizedNote) {
+		if (__justPressed[note.strumID] && !note.wasGoodHit && note.canBeHit) {
+			if (__optimizedNotePerStrum[note.strumID] == null) 											__optimizedNotePerStrum[note.strumID] = note;
+			else if (Math.abs(__optimizedNotePerStrum[note.strumID].strumTime - note.strumTime) <= 2)  	deleteNote(note);
+			else if (note.strumTime < __optimizedNotePerStrum[note.strumID].strumTime)					__optimizedNotePerStrum[note.strumID] = note;
+		}
+	}
+
+
 	/**
 	 * Updates the input for the strumline, and handles the input.
 	 * @param id The ID of the strum
@@ -268,7 +320,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 		if (cpu) return;
 
-		__funcsToExec.clear();
+		!Flags.OPTIMIZED_NOTES ? __funcsToExec.clear() : __optimizedNotefuncsToExec.clear();
 		__pressed.clear();
 		__justPressed.clear();
 		__justReleased.clear();
@@ -287,7 +339,8 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		__justPressed = CoolUtil.getDefault(event.justPressed, []);
 		__justReleased = CoolUtil.getDefault(event.justReleased, []);
 
-		__notePerStrum = cast new haxe.ds.Vector(members.length);//[for(_ in 0...members.length) null];
+
+		!Flags.OPTIMIZED_NOTES ? __notePerStrum = cast new haxe.ds.Vector(members.length) : __optimizedNotePerStrum = cast new haxe.ds.Vector(members.length); //[for(_ in 0...members.length) null];
 
 
 		if (__pressed.contains(true)) {
@@ -295,22 +348,35 @@ class StrumLine extends FlxTypedGroup<Strum> {
 				if (c.lastAnimContext != DANCE)
 					c.__lockAnimThisFrame = true;
 
-			__funcsToExec.push(__inputProcessPressed);
+			if (!Flags.OPTIMIZED_NOTES) __funcsToExec.push(__inputProcessPressed);
+			else __optimizedNotefuncsToExec.push( __inputProcessPressedOptimizedNote);
 		}
-		if (__justPressed.contains(true))
-			__funcsToExec.push(__inputProcessJustPressed);
-
-		if (__funcsToExec.length > 0) {
-			notes.forEachAlive(function(note:Note) {
-				for(e in __funcsToExec) if (e != null) e(note);
-			});
+		if (__justPressed.contains(true)) {
+			if (!Flags.OPTIMIZED_NOTES) __funcsToExec.push(__inputProcessJustPressed);
+			else __optimizedNotefuncsToExec.push( __inputProcessJustPressedOptimizedNote);
 		}
 
-		if (!ghostTapping) for(k=>pr in __justPressed) if (pr && __notePerStrum[k] == null) {
+		if (__funcsToExec.length > 0 || __optimizedNotefuncsToExec.length > 0) {
+			if (!Flags.OPTIMIZED_NOTES) {
+				notes.forEachAlive(function(note:Note) {
+					for(e in __funcsToExec) if (e != null) e(note);
+				});
+			} else {
+				optimizedNotes.forEach(function(note:OptimizedNote) {
+					for(e in __optimizedNotefuncsToExec) if (e != null) e(note);
+				});
+			}
+		}
+
+		if (!ghostTapping) for(k=>pr in __justPressed) if (pr && (!Flags.OPTIMIZED_NOTES ? __notePerStrum[k] == null : __optimizedNotePerStrum[k] == null)) {
 			// FUCK YOU
 			PlayState.instance.noteMiss(this, null, k, ID);
 		}
-		for(e in __notePerStrum) if (e != null) PlayState.instance.goodNoteHit(this, e);
+		if (!Flags.OPTIMIZED_NOTES) {
+			for(e in __notePerStrum) if (e != null) PlayState.instance.goodNoteHit(this, e);
+		} else {
+			for(e in __optimizedNotePerStrum) if (e != null) PlayState.instance.goodNoteHit(this, e);
+		}
 
 		forEach(function(str:Strum) {
 			str.updatePlayerInput(str.__getPressed(this), str.__getJustPressed(this), str.__getJustReleased(this));
@@ -338,6 +404,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 	override function destroy() {
 		super.destroy();
+		!Flags.OPTIMIZED_NOTES ? notes.destroy() : optimizedNotes.destroy();
 		if(startingPos != null)
 			startingPos.put();
 	}
@@ -399,14 +466,20 @@ class StrumLine extends FlxTypedGroup<Strum> {
 	 * Deletes a note from this strumline.
 	 * @param note Note to delete
 	 */
-	public function deleteNote(note:Note) {
+	public function deleteNote(note:NoteObject) {
 		if (note == null) return;
 		var event:SimpleNoteEvent = EventManager.get(SimpleNoteEvent).recycle(note);
 		onNoteDelete.dispatch(event);
 		if (!event.cancelled) {
-			note.kill();
-			notes.remove(note, true);
-			note.destroy();
+			if (!Flags.OPTIMIZED_NOTES) {
+				var n:Note = note;
+				n.kill();
+				notes.remove(n, true);
+				n.destroy();
+			} else {
+				optimizedNotes.remove(note, true);
+			}
+
 		}
 	}
 
