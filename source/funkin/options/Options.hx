@@ -16,6 +16,10 @@ class Options
 	@:dox(hide) @:doNotSave
 	public static var __save:CodenameSave;
 	@:dox(hide) @:doNotSave
+	public static var __contributorsSave:CodenameSave;
+	@:dox(hide) @:doNotSave
+	public static var __controlsSave:CodenameSave;
+	@:dox(hide) @:doNotSave
 	private static var __eventAdded = false;
 
 	/**
@@ -57,9 +61,13 @@ class Options
 	 */
 	public static var freeplayLastSong:String = null;
 	public static var freeplayLastDifficulty:String = "normal";
-	public static var contributors:Array<funkin.backend.system.github.GitHubContributor.CreditsGitHubContributor> = [];
-	public static var mainDevs:Array<Int> = [];  // IDs
-	public static var lastUpdated:Null<Float>;
+
+	/**
+	 * CONTRIBUTORS
+	**/
+	@:saveField(__contributorsSave) public static var contributors:Array<funkin.backend.system.github.GitHubContributor.CreditsGitHubContributor> = [];
+	@:saveField(__contributorsSave) public static var mainDevs:Array<Int> = [];  // IDs
+	@:saveField(__contributorsSave) public static var lastUpdated:Null<Float>;
 
 	/**
 	 * CHARTER
@@ -77,57 +85,64 @@ class Options
 	/**
 	 * PLAYER 1 CONTROLS
 	 */
-	public static var P1_NOTE_LEFT:Array<FlxKey> = [A];
-	public static var P1_NOTE_DOWN:Array<FlxKey> = [S];
-	public static var P1_NOTE_UP:Array<FlxKey> = [W];
-	public static var P1_NOTE_RIGHT:Array<FlxKey> = [D];
-	public static var P1_LEFT:Array<FlxKey> = [A];
-	public static var P1_DOWN:Array<FlxKey> = [S];
-	public static var P1_UP:Array<FlxKey> = [W];
-	public static var P1_RIGHT:Array<FlxKey> = [D];
-	public static var P1_ACCEPT:Array<FlxKey> = [ENTER];
-	public static var P1_BACK:Array<FlxKey> = [BACKSPACE];
-	public static var P1_PAUSE:Array<FlxKey> = [ENTER];
-	public static var P1_RESET:Array<FlxKey> = [R];
-	public static var P1_SWITCHMOD:Array<FlxKey> = [TAB];
+	@:saveField(__controlsSave) public static var P1_NOTE_LEFT:Array<FlxKey> = [A];
+	@:saveField(__controlsSave) public static var P1_NOTE_DOWN:Array<FlxKey> = [S];
+	@:saveField(__controlsSave) public static var P1_NOTE_UP:Array<FlxKey> = [W];
+	@:saveField(__controlsSave) public static var P1_NOTE_RIGHT:Array<FlxKey> = [D];
+	@:saveField(__controlsSave) public static var P1_LEFT:Array<FlxKey> = [A];
+	@:saveField(__controlsSave) public static var P1_DOWN:Array<FlxKey> = [S];
+	@:saveField(__controlsSave) public static var P1_UP:Array<FlxKey> = [W];
+	@:saveField(__controlsSave) public static var P1_RIGHT:Array<FlxKey> = [D];
+	@:saveField(__controlsSave) public static var P1_ACCEPT:Array<FlxKey> = [ENTER];
+	@:saveField(__controlsSave) public static var P1_BACK:Array<FlxKey> = [BACKSPACE];
+	@:saveField(__controlsSave) public static var P1_PAUSE:Array<FlxKey> = [ENTER];
+	@:saveField(__controlsSave) public static var P1_RESET:Array<FlxKey> = [R];
+	@:saveField(__controlsSave) public static var P1_SWITCHMOD:Array<FlxKey> = [TAB];
 
 	/**
 	 * PLAYER 2 CONTROLS (ALT)
 	 */
-	public static var P2_NOTE_LEFT:Array<FlxKey> = [LEFT];
-	public static var P2_NOTE_DOWN:Array<FlxKey> = [DOWN];
-	public static var P2_NOTE_UP:Array<FlxKey> = [UP];
-	public static var P2_NOTE_RIGHT:Array<FlxKey> = [RIGHT];
-	public static var P2_LEFT:Array<FlxKey> = [LEFT];
-	public static var P2_DOWN:Array<FlxKey> = [DOWN];
-	public static var P2_UP:Array<FlxKey> = [UP];
-	public static var P2_RIGHT:Array<FlxKey> = [RIGHT];
-	public static var P2_ACCEPT:Array<FlxKey> = [SPACE];
-	public static var P2_BACK:Array<FlxKey> = [ESCAPE];
-	public static var P2_PAUSE:Array<FlxKey> = [ESCAPE];
-	public static var P2_RESET:Array<FlxKey> = [];
-	public static var P2_SWITCHMOD:Array<FlxKey> = [];
+	@:saveField(__controlsSave) public static var P2_NOTE_LEFT:Array<FlxKey> = [LEFT];
+	@:saveField(__controlsSave) public static var P2_NOTE_DOWN:Array<FlxKey> = [DOWN];
+	@:saveField(__controlsSave) public static var P2_NOTE_UP:Array<FlxKey> = [UP];
+	@:saveField(__controlsSave) public static var P2_NOTE_RIGHT:Array<FlxKey> = [RIGHT];
+	@:saveField(__controlsSave) public static var P2_LEFT:Array<FlxKey> = [LEFT];
+	@:saveField(__controlsSave) public static var P2_DOWN:Array<FlxKey> = [DOWN];
+	@:saveField(__controlsSave) public static var P2_UP:Array<FlxKey> = [UP];
+	@:saveField(__controlsSave) public static var P2_RIGHT:Array<FlxKey> = [RIGHT];
+	@:saveField(__controlsSave) public static var P2_ACCEPT:Array<FlxKey> = [SPACE];
+	@:saveField(__controlsSave) public static var P2_BACK:Array<FlxKey> = [ESCAPE];
+	@:saveField(__controlsSave) public static var P2_PAUSE:Array<FlxKey> = [ESCAPE];
+	@:saveField(__controlsSave) public static var P2_RESET:Array<FlxKey> = [];
+	@:saveField(__controlsSave) public static var P2_SWITCHMOD:Array<FlxKey> = [];
 
 	/**
-	 * SOLO GETTERS
+	 * SOLO GETTERS, these are auto-generated and not saved.
 	 */
-	public static var SOLO_NOTE_LEFT(get, null):Array<FlxKey>;
-	public static var SOLO_NOTE_DOWN(get, null):Array<FlxKey>;
-	public static var SOLO_NOTE_UP(get, null):Array<FlxKey>;
-	public static var SOLO_NOTE_RIGHT(get, null):Array<FlxKey>;
-	public static var SOLO_LEFT(get, null):Array<FlxKey>;
-	public static var SOLO_DOWN(get, null):Array<FlxKey>;
-	public static var SOLO_UP(get, null):Array<FlxKey>;
-	public static var SOLO_RIGHT(get, null):Array<FlxKey>;
-	public static var SOLO_ACCEPT(get, null):Array<FlxKey>;
-	public static var SOLO_BACK(get, null):Array<FlxKey>;
-	public static var SOLO_PAUSE(get, null):Array<FlxKey>;
-	public static var SOLO_RESET(get, null):Array<FlxKey>;
-	public static var SOLO_SWITCHMOD(get, null):Array<FlxKey>;
+	public static var SOLO_NOTE_LEFT(get, never):Array<FlxKey>;
+	public static var SOLO_NOTE_DOWN(get, never):Array<FlxKey>;
+	public static var SOLO_NOTE_UP(get, never):Array<FlxKey>;
+	public static var SOLO_NOTE_RIGHT(get, never):Array<FlxKey>;
+	public static var SOLO_LEFT(get, never):Array<FlxKey>;
+	public static var SOLO_DOWN(get, never):Array<FlxKey>;
+	public static var SOLO_UP(get, never):Array<FlxKey>;
+	public static var SOLO_RIGHT(get, never):Array<FlxKey>;
+	public static var SOLO_ACCEPT(get, never):Array<FlxKey>;
+	public static var SOLO_BACK(get, never):Array<FlxKey>;
+	public static var SOLO_PAUSE(get, never):Array<FlxKey>;
+	public static var SOLO_RESET(get, never):Array<FlxKey>;
+	public static var SOLO_SWITCHMOD(get, never):Array<FlxKey>;
+
+	private static function bindSave(save:CodenameSave, name:String) {
+		if(save == null) save = new CodenameSave();
+		save.bindGlobal(name);
+		return save;
+	}
 
 	public static function load() {
-		if (__save == null) __save = new CodenameSave();
-		__save.bindGlobal("options");
+		__save = bindSave(__save, "options");
+		__contributorsSave = bindSave(__contributorsSave, "contributors");
+		__controlsSave = bindSave(__controlsSave, "controls");
 		__load();
 
 		if (!__eventAdded) {
@@ -138,6 +153,7 @@ class Options
 			__eventAdded = true;
 		}
 		FlxG.sound.volume = volume;
+		FlxG.sound.muted = mute;
 		applySettings();
 	}
 
@@ -156,6 +172,7 @@ class Options
 
 	public static function save() {
 		volume = FlxG.sound.volume;
+		mute = FlxG.sound.muted;
 		__flush();
 	}
 }

@@ -16,7 +16,7 @@ class OptionsMacro {
 		for(f in fields) {
 			switch(f.kind) {
 				case FProp(get, set, t, e):
-					if (f.name.startsWith('SOLO_') && get == "get" && set == "null") {
+					if (f.name.startsWith('SOLO_') && get == "get" && set == "never") {
 						// Auto-create getters for solo (P1/P2) keybinds
 						var name = f.name.substr(5);
 						var getterName = 'get_SOLO_$name';

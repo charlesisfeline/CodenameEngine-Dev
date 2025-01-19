@@ -169,9 +169,6 @@ class Main extends Sprite
 		funkin.savedata.FunkinSave.init();
 		Options.load();
 
-		FlxG.sound.volume = Options.volume;
-		FlxG.sound.muted = Options.mute;
-
 		FlxG.fixedTimestep = false;
 
 		FlxG.scaleMode = scaleMode = new FunkinRatioScaleMode();
