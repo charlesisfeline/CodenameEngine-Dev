@@ -21,7 +21,10 @@ class GithubIconOption extends TextOption
 	}
 
 	public function new(user:CreditsGitHubContributor, desc:String, ?callback:Void->Void, ?customName:String, size:Int = 96, usePortrait:Bool = true, waitUntilLoad:Float = 0.25) {
-		super(customName == null ? user.login : customName, desc, callback == null ? function() CoolUtil.openURL(user.html_url) : callback);
+		super(customName == null ? user.login : customName, desc, callback == null ? function() {
+			var url = GithubUserIcon.addUrl(user.html_url, 'https://github.com/');
+			CoolUtil.openURL(url);
+		 } : callback);
 		this.user = user;
 		this.icon = new GithubUserIcon(user, size, waitUntilLoad);
 		this.usePortrait = usePortrait;
@@ -49,6 +52,12 @@ class GithubUserIcon extends FlxSprite
 		super.update(elapsed);
 	}
 
+	public static function addUrl(url:String, toAdd:String) {
+		if(!url.startsWith("http://") && !url.startsWith("https://"))
+			url = toAdd + url;
+		return url;
+	}
+
 	final mutex = new sys.thread.Mutex();
 	override function drawComplex(camera:FlxCamera):Void {  // Making the image download only if the player actually sees it on the screen  - Nex
 		if(waitUntilLoad <= 0) {
@@ -59,12 +68,13 @@ class GithubUserIcon extends FlxSprite
 
 				if(bmap == null) {
 					trace('Downloading avatar: ${user.login}');
-					var unfLink:Bool = StringTools.endsWith(user.avatar_url, '.png');
+					var avatarUrl = addUrl(user.avatar_url, 'https://avatars.githubusercontent.com/u/');
+					var unfLink:Bool = StringTools.endsWith(avatarUrl, '.png');
 					var planB:Bool = true;
 
 					var bytes = null;
 					if(unfLink) {
-						try bytes = HttpUtil.requestBytes('${user.avatar_url}?size=$size')
+						try bytes = HttpUtil.requestBytes('${avatarUrl}?size=$size')
 						catch(e) Logs.traceColored([Logs.logText('Failed to download github pfp for ${user.login}: ${CoolUtil.removeIP(e.message)} - (Retrying using the api..)', RED)], ERROR);
 
 						if(bytes != null) {
@@ -75,7 +85,7 @@ class GithubUserIcon extends FlxSprite
 
 					if(planB) {
 						if(unfLink) user = cast GitHub.getUser(user.login, function(e) Logs.traceColored([Logs.logText('Failed to download github user info for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR));  // Api part - Nex
-						try bytes = HttpUtil.requestBytes('${user.avatar_url}&size=$size')
+						try bytes = HttpUtil.requestBytes('${avatarUrl}&size=$size')
 						catch(e) Logs.traceColored([Logs.logText('Failed to download github pfp for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR);
 
 						if(bytes != null) bmap = BitmapData.fromBytes(bytes);

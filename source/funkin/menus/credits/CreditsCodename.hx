@@ -85,8 +85,8 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 			var contributors:Array<CreditsGitHubContributor> = [];
 			for(e in idk) contributors.push({
 				login: e.login,
-				avatar_url: e.avatar_url,
-				html_url: e.html_url,
+				avatar_url: e.avatar_url.replace("https://avatars.githubusercontent.com/u/", ""),
+				html_url: e.html_url.replace("https://github.com/", ""),
 				id: e.id,
 				contributions: e.contributions
 			});

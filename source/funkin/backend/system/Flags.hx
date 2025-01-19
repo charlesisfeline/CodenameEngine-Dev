@@ -133,6 +133,18 @@ class Flags {
 	public static var DEFAULT_PAUSE_SCRIPT:String = "";
 	@:also(funkin.game.GameOverSubstate.script)
 	public static var DEFAULT_GAMEOVER_SCRIPT:String = "";
+
+	/**
+	 * What name the "Disable Mods" mod is saved to
+	 * Not recommended to change this unless you know what you're doing
+	**/
+	public static var DEFAULT_MODS_SAVE_FOLDER:String = "base-game";
+	/**
+	 * Where the save files are saved to
+	 * Not recommended to change this unless you know what you're doing
+	**/
+	public static var SAVEDATA_FOLDER:String = "CodenameCrew/CodenameEngine";
+
 	// -- End of Codename's Default Flags --
 
 	/**

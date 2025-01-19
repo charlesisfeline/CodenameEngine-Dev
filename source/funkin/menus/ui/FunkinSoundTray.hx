@@ -85,7 +85,10 @@ class FunkinSoundTray extends FlxSoundTray
 		script.call("saveSoundPreferences", [event]);
 		if (event.cancelled) return;
 
-		super.saveSoundPreferences();
+		Options.mute = FlxG.sound.muted;
+		Options.volume = FlxG.sound.volume;
+
+		//super.saveSoundPreferences();
 		script.call("postSaveSoundPreferences");
 	}
 

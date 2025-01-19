@@ -77,7 +77,7 @@ class PlayState extends MusicBeatState
 	/**
 	 * Current game mode (Opponent, Co-Op, Botplay, etc).
 	 */
-	public static var gameMode(default, set):FreeplayGameMode = FreeplayGameMode.generateDefault();
+	public static var gameMode(get, default):FreeplayGameMode;
 	/**
 	 * Whenever the current game mode is Opponent or Coop Switched (uses `gameMode`).
 	 */
@@ -275,7 +275,7 @@ class PlayState extends MusicBeatState
 	/**
 	 * Maximum health the player can have. Defaults to 2.
 	 */
-	@:isVar public var maxHealth(get, set):Float = Flags.DEFAULT_MAX_HEALTH;
+	public var maxHealth(default, set):Float = Flags.DEFAULT_MAX_HEALTH;
 	/**
 	 * Current combo.
 	 */
@@ -1938,8 +1938,6 @@ class PlayState extends MusicBeatState
 		return v;
 	}
 
-	private inline function get_maxHealth()
-		return this.maxHealth;
 	private function set_maxHealth(v:Float) {
 		if (healthBar != null && healthBar.max == this.maxHealth) {
 			healthBar.setRange(healthBar.min, v);
@@ -1968,7 +1966,10 @@ class PlayState extends MusicBeatState
 	private inline function set_downscroll(v:Bool) return camHUD.downscroll = v;
 	private inline function get_downscroll():Bool return camHUD.downscroll;
 
-	private static inline function set_gameMode(v:FreeplayGameMode) return gameMode = v == null ? FreeplayGameMode.generateDefault() : v;
+	private static inline function get_gameMode():FreeplayGameMode {
+		if (gameMode == null) gameMode = FreeplayGameMode.generateDefault();
+		return gameMode;
+	}
 	private static inline function get_opponentMode():Bool return gameMode.modeID == "codename.opponent" || gameMode.modeID == "codename.coop-opponent";
 	private static inline function get_coopMode():Bool return gameMode.modeID == "codename.coop" || gameMode.modeID == "codename.coop-opponent";
 	private static inline function get_botplayMode():Bool return gameMode.modeID == "codename.botplay";

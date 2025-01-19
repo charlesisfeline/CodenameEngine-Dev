@@ -5,14 +5,15 @@ import lime.app.Application;
 import openfl.Lib;
 
 /**
+ * The stuff here is saved in the mod save folder.
+ *
  * Class used for saves WITHOUT going through the struggle of type checks
  * Just add your save variables the way you would do in the Options.hx file.
  * The macro will automatically generate the `flush` and `load` functions.
  */
 @:build(funkin.backend.system.macros.FunkinSaveMacro.build("save", "flush", "load"))
 class FunkinSave {
-	public static var highscores:Map<HighscoreEntry, SongScore> = [];
-
+	@:saveField(highscoreSave) public static var highscores:Map<HighscoreEntry, SongScore> = [];
 
 	/**
 	 * ONLY OPEN IF YOU WANT TO EDIT FUNCTIONS RELATED TO SAVING, LOADING OR HIGHSCORES.
@@ -21,18 +22,24 @@ class FunkinSave {
 	@:dox(hide) @:doNotSave
 	private static var __eventAdded = false;
 	@:doNotSave
-	public static var save:FlxSave;
+	public static var save:CodenameSave;
+	@:doNotSave
+	public static var highscoreSave:CodenameSave;
+
+	// mod/data.cns
+	// mod/highscores.cns
 
 	public static function init() {
-		//trace(Application.current.meta.get('save-path'));
-		//trace(Application.current.meta.get('save-name'));
-		save = new FlxSave();
-		save.bind('save-default', #if sys 'YoshiCrafter29/CodenameEngine' #else 'CodenameEngine' #end);
+		save = new CodenameSave();
+		save.bind('generic');
+
+		highscoreSave = new CodenameSave();
+		highscoreSave.bind('highscores');
 		load();
 
 		if (!__eventAdded) {
 			Lib.application.onExit.add(function(i:Int) {
-				trace("Saving save data...");
+				trace('Saving mod save data...');
 				flush();
 			});
 			__eventAdded = true;

@@ -12,6 +12,7 @@ import funkin.backend.assets.ModsFolder;
 import funkin.backend.system.framerate.SystemInfo;
 import funkin.backend.system.modules.*;
 import funkin.editors.SaveWarning;
+import funkin.savedata.CodenameSave;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Sprite;
@@ -58,6 +59,23 @@ class Main extends Sprite
 	public static var gameThreads:Array<Thread> = [];
 	#end
 
+	public static function reloadSave() {
+		#if FLX_DEBUG
+		if (flixel.system.debug.FlxDebugger.save == null)
+			flixel.system.debug.FlxDebugger.save = {
+				var save = new CodenameSave();
+				save.bindGlobal("debug");
+				save;
+			}
+		#end
+
+		if(FlxG.save.isBound)
+			FlxG.save.close(); // calls flush
+		@:privateAccess
+		FlxG.save = new CodenameSave();
+		FlxG.save.bind("data");
+	}
+
 	public function new()
 	{
 		super();
@@ -65,6 +83,8 @@ class Main extends Sprite
 		instance = this;
 
 		CrashHandler.init();
+
+		reloadSave();
 
 		addChild(game = new FunkinGame(gameWidth, gameHeight, MainState, Options.framerate, Options.framerate, skipSplash, startFullscreen));
 
@@ -149,6 +169,9 @@ class Main extends Sprite
 		funkin.savedata.FunkinSave.init();
 		Options.load();
 
+		FlxG.sound.volume = Options.volume;
+		FlxG.sound.muted = Options.mute;
+
 		FlxG.fixedTimestep = false;
 
 		FlxG.scaleMode = scaleMode = new FunkinRatioScaleMode();
@@ -180,10 +203,10 @@ class Main extends Sprite
 		var daSndTray = Type.createInstance(game._customSoundTray = funkin.menus.ui.FunkinSoundTray, []);
 		var index:Int = game.numChildren - 1;
 
-		if(game.soundTray != null)
+		if (game.soundTray != null)
 		{
 			var newIndex:Int = game.getChildIndex(game.soundTray);
-			if(newIndex != -1) index = newIndex;
+			if (newIndex != -1) index = newIndex;
 			game.removeChild(game.soundTray);
 			game.soundTray.__cleanup();
 		}

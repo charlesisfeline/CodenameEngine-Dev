@@ -2,6 +2,7 @@ package funkin.options;
 
 import flixel.input.keyboard.FlxKey;
 import flixel.util.FlxSave;
+import funkin.savedata.CodenameSave;
 import openfl.Lib;
 
 /**
@@ -13,7 +14,7 @@ import openfl.Lib;
 class Options
 {
 	@:dox(hide) @:doNotSave
-	public static var __save:FlxSave;
+	public static var __save:CodenameSave;
 	@:dox(hide) @:doNotSave
 	private static var __eventAdded = false;
 
@@ -29,6 +30,7 @@ class Options
 	public static var autoPause:Bool = true;
 	public static var antialiasing:Bool = true;
 	public static var volume:Float = 1;
+	public static var mute:Bool = false;
 	public static var week6PixelPerfect:Bool = true;
 	public static var gameplayShaders:Bool = true;
 	public static var colorHealthBar:Bool = true;
@@ -124,8 +126,8 @@ class Options
 	public static var SOLO_SWITCHMOD(get, null):Array<FlxKey>;
 
 	public static function load() {
-		if (__save == null) __save = new FlxSave();
-		__save.bind("options", "CodenameEngine");
+		if (__save == null) __save = new CodenameSave();
+		__save.bindGlobal("options");
 		__load();
 
 		if (!__eventAdded) {

@@ -19,6 +19,7 @@ class Compiler {
 		arg.insert(0, "run");
 		for(a in args)
 			arg.push(a);
+		Sys.println("Running: " + "haxelib " + arg.join(" "));
 		Sys.command("haxelib", arg);
 	}
 

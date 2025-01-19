@@ -4,10 +4,23 @@ package funkin.backend.system.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+class FieldName
+{
+	public var name:String;
+	public var saveField:String;
+
+	public function new(name:String, saveField:String)
+	{
+		this.name = name;
+		this.saveField = saveField;
+	}
+}
+
 /**
  * Macro that automatically generates flush and load functions.
  */
-class FunkinSaveMacro {
+class FunkinSaveMacro
+{
 	/**
 	 * Generates flush and load functions.
 	 * @param saveFieldName Name of the save field (`save`)
@@ -15,36 +28,57 @@ class FunkinSaveMacro {
 	 * @param loadFuncName Name of the load func (`load`)
 	 * @return Array<Field>
 	 */
-	public static function build(saveFieldName:String = "save", saveFuncName:String = "flush", loadFuncName:String = "load"):Array<Field> {
+	public static function build(saveFieldName:String = "save", saveFuncName:String = "flush", loadFuncName:String = "load"):Array<Field>
+	{
 		var fields:Array<Field> = Context.getBuildFields();
 
-		var fieldNames:Array<String> = [];
-		for(field in fields) {
-			if (!field.access.contains(AStatic)) continue;
+		var fieldNames:Array<FieldName> = [];
+		for (field in fields)
+		{
+			if (!field.access.contains(AStatic))
+				continue;
 
-			switch(field.kind) {
+			switch (field.kind)
+			{
 				case FVar(type, expr):
-					if (field.name == saveFieldName) continue;
+					if (field.name == saveFieldName)
+						continue;
 					var valid:Bool = true;
+					var customSaveFieldName:String = saveFieldName;
 					if (field.meta != null)
-						for(m in field.meta)
-							if (m.name == ":doNotSave") {
+					{
+						for (m in field.meta)
+						{
+							if (m.name == ":doNotSave")
 								valid = false;
-								break;
-							}
+							if (m.name == ":saveField")
+								customSaveFieldName = meta_extractIdent(m);
+						}
+					}
 					if (valid)
-						fieldNames.push(field.name);
+						fieldNames.push(new FieldName(field.name, customSaveFieldName));
 				default:
 					continue;
 			}
 		}
 
+		var _allSaveFields:Array<String> = [for (f in fieldNames) f.saveField];
+		_allSaveFields.push(saveFieldName);
+		var __allSaveFields:Map<String, Bool> = [];
+		for (f in _allSaveFields) __allSaveFields.set(f, true);
+		var allSaveFields:Array<String> = [];
+		for (f in __allSaveFields.keys()) allSaveFields.push(f);
+
 		/**
 		 * SAVE FUNCTION
 		 */
-		var saveFuncBlocks:Array<Expr> = [for(f in fieldNames) macro $i{saveFieldName}.data.$f = $i{f}];
+		var saveFuncBlocks:Array<Expr> = [for (f in fieldNames) {
+			var name:String = f.name;
+			macro $i{f.saveField}.data.$name = $i{name};
+		}];
 
-		saveFuncBlocks.push(macro $i{saveFieldName}.flush());
+		for (f in allSaveFields)
+			saveFuncBlocks.push(macro $i{f}.flush());
 
 		fields.push({
 			pos: Context.currentPos(),
@@ -69,9 +103,11 @@ class FunkinSaveMacro {
 				args: [],
 				expr: {
 					pos: Context.currentPos(),
-					expr: EBlock([for(f in fieldNames)
-						macro if ($i{saveFieldName}.data.$f != null)
-							$i{f} = $i{saveFieldName}.data.$f
+					expr: EBlock([
+						for (f in fieldNames) {
+							var name:String = f.name;
+							macro if ($i{f.saveField}.data.$name != null) $i{f.name} = $i{f.saveField}.data.$name;
+						}
 					])
 				}
 			}),
@@ -79,6 +115,17 @@ class FunkinSaveMacro {
 		});
 
 		return fields;
+	}
+
+	public static function meta_extractIdent(meta:MetadataEntry):Null<String> {
+		if (meta == null || meta.params == null || meta.params.length == 0)
+			throw "Expected an identifier";
+		switch (meta.params[0].expr) {
+			case EConst(CIdent(s)):
+				return s;
+			default:
+		}
+		throw "Expected an identifier";
 	}
 }
 #end
