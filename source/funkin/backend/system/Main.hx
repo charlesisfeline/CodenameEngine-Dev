@@ -61,6 +61,7 @@ class Main extends Sprite
 
 	public static function reloadSave() {
 		#if FLX_DEBUG
+		@:privateAccess
 		if (flixel.system.debug.FlxDebugger.save == null)
 			flixel.system.debug.FlxDebugger.save = {
 				var save = new CodenameSave();
