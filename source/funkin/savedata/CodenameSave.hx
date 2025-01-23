@@ -159,6 +159,17 @@ class CodenameSharedObject extends SharedObject implements IDisposable
 
 	var allId:String;
 
+	public static function getSaves():Map<String, CodenameSharedObject>
+	{
+		var allSaves:Map<String, CodenameSharedObject> = new Map();
+		for (id => saveObject in all) {
+			if (!["/controls", "/contributors", "/options"].contains(id)) {
+				allSaves.set(id, saveObject);
+			}
+		}
+		return allSaves;
+	}
+
 	static function init()
 	{
 		if (all == null)

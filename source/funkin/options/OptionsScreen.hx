@@ -6,6 +6,10 @@ class OptionsScreen extends FlxTypedSpriteGroup<OptionType> {
 	public static var optionHeight:Float = 120;
 
 	public var parent:OptionsTree;
+	public var treeParent(get, never):TreeMenu;
+	public function get_treeParent():TreeMenu {
+		return parent.treeParent;
+	}
 
 	public var curSelected:Int = 0;
 	public var id:Int = 0;

@@ -1,6 +1,5 @@
 package funkin.options.categories;
 
-
 class MiscOptions extends OptionsScreen {
 	public override function new() {
 		super("Miscellaneous", "Use this menu to reset save data or engine settings.");
@@ -23,9 +22,10 @@ class MiscOptions extends OptionsScreen {
 		}));,
 		#end
 		add(new TextOption(
-			"Reset Save Data",
-			"Select this option to reset save data. This will remove all of your highscores.",
+			"Reset Save Data >",
+			"Use this menu to reset mod data.",
 			function() {
+				treeParent.optionsTree.add(new SaveDataOption());
 				// TODO: SAVE DATA RESETTING
 		}));
 	}
