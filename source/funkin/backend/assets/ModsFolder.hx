@@ -73,6 +73,7 @@ class ModsFolder {
 	 */
 	public static function loadModLib(path:String, force:Bool = false, ?modName:String) {
 		#if MOD_SUPPORT
+		// Should folders have higher priority than zips? - Neo
 		if (FileSystem.exists('$path.zip'))
 			return loadLibraryFromZip('$path'.toLowerCase(), '$path.zip', force, modName);
 		else
