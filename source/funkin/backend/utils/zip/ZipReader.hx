@@ -369,7 +369,7 @@ class FileHeader {
 }
 
 // see http://www.pkware.com/documents/casestudies/APPNOTE.TXT
-class SysZipReader {
+class ZipReader {
 	var i:InputAdapter;
 	var len:Int;
 	public var eocd:EndOfCentralDirectory;
@@ -528,7 +528,7 @@ class SysZipReader {
 	}
 
 	public static function readZip(i:haxe.io.Input) {
-		var r = new SysZipReader(i);
+		var r = new ZipReader(i);
 		return r.read();
 	}
 

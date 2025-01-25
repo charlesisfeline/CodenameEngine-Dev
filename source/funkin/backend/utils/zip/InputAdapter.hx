@@ -17,13 +17,15 @@ class InputAdapter {
 	}
 
 	public static function fromInput(i:haxe.io.Input) {
-		return switch(Type.getClass(i)) {
-			#if sys
-			case sys.io.FileInput: new FileInputAdapter(cast i);
-			#end
-			case haxe.io.BytesInput: new BytesInputAdapter(cast i);
-			default: throw "Unsupported input type " + Type.getClass(i);
+		#if sys
+		if((i is sys.io.FileInput)) {
+			return new FileInputAdapter(cast i);
 		}
+		#end
+		if((i is haxe.io.BytesInput)) {
+			return new BytesInputAdapter(cast i);
+		}
+		throw "Unsupported input type " + Type.getClass(i);
 	}
 
 	public function close() {}
