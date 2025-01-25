@@ -20,9 +20,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package funkin.backend.utils.zip;
+package funkin.backend.utils.zip.methods;
 
-import funkin.backend.utils.zip.Huffman;
+import funkin.backend.utils.zip.methods.Huffman;
 import haxe.crypto.Adler32;
 
 private class Window {

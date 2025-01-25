@@ -1,98 +1,10 @@
 package funkin.backend.utils.zip;
 
+import funkin.backend.utils.zip.methods.BZip2;
+import funkin.backend.utils.zip.methods.Huffman;
+import funkin.backend.utils.zip.methods.InflateImpl;
 import haxe.ds.List;
 import haxe.io.Input;
-
-enum ZipFileSeek {
-	SeekBegin;
-	SeekCur;
-	SeekEnd;
-}
-
-@:dox(hide)
-private class InputAdapter {
-	public var length:Int;
-	public var i:haxe.io.Input;
-
-	public function new(i:haxe.io.Input) {
-		this.i = i;
-	}
-
-	public function close() {}
-
-	public function tell() {
-		return 0;
-	}
-
-	public function seek(p:Int, pos:ZipFileSeek) {
-
-	}
-
-	public inline function read(len:Int) return i.read(len);
-	public inline function readByte() return i.readByte();
-	public inline function readInt32() return i.readInt32();
-	public inline function readUInt16() return i.readUInt16();
-	public inline function readString(len:Int) return i.readString(len);
-}
-
-#if sys
-@:dox(hide)
-private class FileInputAdapter extends InputAdapter {
-	var f:sys.io.FileInput;
-	public function new(f:sys.io.FileInput) {
-		super(f);
-		this.f = f;
-
-		var old = f.tell();
-		f.seek(0, SeekEnd);
-		length = f.tell();
-		f.seek(old, SeekBegin);
-	}
-
-	public override function close() {
-		f.close();
-	}
-
-	override public function tell() {
-		return f.tell();
-	}
-
-	override public function seek(p:Int, pos:ZipFileSeek) {
-		f.seek(p, switch(pos) {
-			case SeekBegin: sys.io.FileSeek.SeekBegin;
-			case SeekCur: sys.io.FileSeek.SeekCur;
-			case SeekEnd: sys.io.FileSeek.SeekEnd;
-		});
-	}
-}
-#end
-
-@:dox(hide)
-private class BytesInputAdapter extends InputAdapter{
-	var b:haxe.io.BytesInput;
-	public function new(b:haxe.io.BytesInput) {
-		super(b);
-		this.b = b;
-
-		this.length = b.length;
-	}
-
-	public override function close() {
-		b.close();
-	}
-
-	override public function tell() {
-		return b.position;
-	}
-
-	override public function seek(p:Int, pos:ZipFileSeek) {
-		switch(pos) {
-			case SeekBegin: b.position = p;
-			case SeekCur: b.position += p;
-			case SeekEnd: b.position = b.length - p;
-		}
-	}
-}
 
 class EndOfCentralDirectory {
 	public var address:Int;
@@ -175,32 +87,59 @@ class GeneralPurposeBitFlags {
 
 enum abstract CompressionMethod(Int) from Int to Int {
 	var None = 0;
-    var Shrunk = 1;
-    var Factor1 = 2;
-    var Factor2 = 3;
-    var Factor3 = 4;
-    var Factor4 = 5;
-    var Implode = 6;
-    // var ? = 7;  // Reserved for Tokenizing compression algorithm
-    var Deflate = 8;
-    var Deflate64 = 9;
-    var PKWARE = 10;
-    // var ? = 11;  // Reserved by PKWARE
-    var BZIP2 = 12;
-    // var ? = 13;  // Reserved by PKWARE
-    var LZMA = 14;
-    // var ? = 15;  // Reserved by PKWARE
-    var CMPSC = 16;
-    // var ? = 17;  // Reserved by PKWARE
-    var IBMTERSE = 18;
-    var LZ77 = 19;
-    var ZSTD = 93;
-    var MP3 = 94;
-    var XZ = 95;
-    var JPEG = 96;
-    var WavPack = 97;
-    var PPMd = 98;
-    var AE_x = 99;
+	var Shrunk = 1;
+	var Factor1 = 2;
+	var Factor2 = 3;
+	var Factor3 = 4;
+	var Factor4 = 5;
+	var Implode = 6;
+	// var ? = 7;  // Reserved for Tokenizing compression algorithm
+	var Deflate = 8;
+	var Deflate64 = 9;
+	var PKWARE = 10;
+	// var ? = 11;  // Reserved by PKWARE
+	var BZIP2 = 12;
+	// var ? = 13;  // Reserved by PKWARE
+	var LZMA = 14;
+	// var ? = 15;  // Reserved by PKWARE
+	var CMPSC = 16;
+	// var ? = 17;  // Reserved by PKWARE
+	var IBMTERSE = 18;
+	var LZ77 = 19;
+	var ZSTD = 93;
+	var MP3 = 94;
+	var XZ = 95;
+	var JPEG = 96;
+	var WavPack = 97;
+	var PPMd = 98;
+	var AE_x = 99;
+
+	public static function toReadable(i:CompressionMethod):String {
+		return switch(i) {
+			case CompressionMethod.None: "None";
+			case CompressionMethod.Shrunk: "Shrunk";
+			case CompressionMethod.Factor1: "Factor1";
+			case CompressionMethod.Factor2: "Factor2";
+			case CompressionMethod.Factor3: "Factor3";
+			case CompressionMethod.Factor4: "Factor4";
+			case CompressionMethod.Implode: "Implode";
+			case CompressionMethod.Deflate: "Deflate";
+			case CompressionMethod.Deflate64: "Deflate64";
+			case CompressionMethod.PKWARE: "PKWARE";
+			case CompressionMethod.BZIP2: "BZIP2";
+			case CompressionMethod.LZMA: "LZMA";
+			case CompressionMethod.CMPSC: "CMPSC";
+			case CompressionMethod.IBMTERSE: "IBMTERSE";
+			case CompressionMethod.LZ77: "LZ77";
+			case CompressionMethod.ZSTD: "ZSTD";
+			case CompressionMethod.MP3: "MP3";
+			case CompressionMethod.XZ: "XZ";
+			case CompressionMethod.JPEG: "JPEG";
+			case CompressionMethod.WavPack: "WavPack";
+			case CompressionMethod.PPMd: "PPMd";
+			case CompressionMethod.AE_x: "AE_x";
+		}
+	}
 }
 
 class ExtraFieldData {
@@ -277,10 +216,10 @@ class LocalFileHeader {
 		var old = i.tell();
 		i.seek(dataPos, SeekBegin);
 		trace("Seek: " + dataPos);
-		trace("Compression: " + compressionMethod + " (" + compressedSize + " bytes)");
+		trace("Compression: " + CompressionMethod.toReadable(compressionMethod) + " (" + compressedSize + " bytes)");
 		var res = switch(compressionMethod) {
-			case None: i.read(compressedSize);
-			case Deflate: {
+			case CompressionMethod.None: i.read(compressedSize);
+			case CompressionMethod.Deflate: {
 				final bufSize = 65536;
 				var tmp = haxe.io.Bytes.alloc(bufSize);
 				var out = new haxe.io.BytesBuffer();
@@ -293,7 +232,10 @@ class LocalFileHeader {
 				}
 				out.getBytes();
 			}
-			default: throw "Unsupported compression method: " + compressionMethod;
+			case BZIP2: BZip2.decompress(i);
+			// TODO: support lzma
+			// TODO: support zstd
+			default: throw "Unsupported compression method: " + CompressionMethod.toReadable(compressionMethod);
 		}
 		i.seek(old, SeekBegin);
 		return res;
@@ -433,13 +375,7 @@ class SysZipReader {
 	public var eocd:EndOfCentralDirectory;
 
 	public function new(i:haxe.io.Input) {
-		switch(Type.getClass(i)) {
-			#if sys
-			case sys.io.FileInput: this.i = new FileInputAdapter(cast i);
-			#end
-			case haxe.io.BytesInput: this.i = new BytesInputAdapter(cast i);
-			default: throw "Unsupported input type " + Type.getClass(i);
-		}
+		this.i = InputAdapter.fromInput(i);
 
 		this.len = this.i.length;
 	}

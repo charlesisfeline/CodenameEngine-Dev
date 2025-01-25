@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package funkin.backend.utils.zip;
+package funkin.backend.utils.zip.methods;
 
 enum Huffman {
 	Found(i:Int);
