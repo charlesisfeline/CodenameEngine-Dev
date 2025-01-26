@@ -37,6 +37,8 @@ class Checkbox extends TextOption {
 		checkbox.antialiasing = true;
 		checkbox.scale.set(0.75, 0.75);
 		checkbox.updateHitbox();
+		var lastLetter = __text.members[__text.members.length - 1];
+		checkbox.x = lastLetter.x + lastLetter.width + 10;
 		add(checkbox);
 
 		this.optionName = optionName;
