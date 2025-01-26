@@ -2,6 +2,7 @@ package funkin.options.categories;
 
 import flixel.util.FlxTimer;
 import funkin.backend.system.Conductor;
+import funkin.options.categories.*;
 
 class GameplayOptions extends OptionsScreen {
 	var __metronome = FlxG.sound.load(Paths.sound('editors/charter/metronome'));
@@ -27,13 +28,15 @@ class GameplayOptions extends OptionsScreen {
 			"songOffset", // save name or smth
 			__changeOffset)); // callback
 		add(new Checkbox(
-			getName("naughtyness"),
-			getDesc("naughtyness"),
-			"naughtyness"));
-		add(new Checkbox(
-			getName("camZoomOnBeat"),
-			getDesc("camZoomOnBeat"),
-			"camZoomOnBeat"));
+			"Auto Pause",
+			"If checked, switching windows will pause the game.",
+			"autoPause"));
+		add(new Separator());
+		add(new TextOption(
+			"Advanced",
+			"Options for advanced preferences.",
+			function() parent.add(new GameplayAdvancedOptions())
+		));
 	}
 
 	private function __changeOffset(offset)

@@ -12,6 +12,7 @@ class OptionType extends FlxSpriteGroup {
 	public var selected:Bool = false;
 	public var desc:String;
 	public var rawDesc(default, set):String;
+	public var optionHeight:Float = 120;
 
 	public function new(desc:String) {
 		super();
