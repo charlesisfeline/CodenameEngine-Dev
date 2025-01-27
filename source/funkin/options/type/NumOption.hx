@@ -43,7 +43,8 @@ class NumOption extends OptionType {
 		this.optionName = optionName;
 
 		add(__text = new Alphabet(100, 20, text, "bold"));
-		add(__number = new Alphabet(__text.width + 120, 20, ': $currentSelection', "normal"));
+		add(__number = new Alphabet(__text.width + 120, 20, ': $currentSelection', "bold"));
+		@:privateAccess __number.defaultAdvance = 30;
 
 		rawText = text;
 	}

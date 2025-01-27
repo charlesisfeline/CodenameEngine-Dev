@@ -28,7 +28,7 @@ class Checkbox extends TextOption {
 
 		this.parent = parent;
 
-		checkbox = new FlxSprite(10, -40);
+		checkbox = new FlxSprite(10, -30);
 		checkbox.frames = Paths.getFrames('menus/options/checkboxThingie');
 		checkbox.animation.addByPrefix("unchecked", "Check Box unselected0", 24);
 		checkbox.animation.addByPrefix("checked", "Check Box Selected Static0", 24);
@@ -37,8 +37,7 @@ class Checkbox extends TextOption {
 		checkbox.antialiasing = true;
 		checkbox.scale.set(0.75, 0.75);
 		checkbox.updateHitbox();
-		var lastLetter = __text.members[__text.members.length - 1];
-		checkbox.x = lastLetter.x + lastLetter.width + 10;
+		checkbox.x = __text.x + __text.width + 20;
 		add(checkbox);
 
 		this.optionName = optionName;

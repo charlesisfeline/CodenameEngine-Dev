@@ -41,7 +41,8 @@ class ArrayOption extends OptionType {
 		this.optionName = optionName;
 
 		add(__text = new Alphabet(100, 20, text, "bold"));
-		add(__selectiontext = new Alphabet(__text.width + 120, 20, formatTextOption(), "normal"));
+		add(__selectiontext = new Alphabet(__text.width + 120, 20, formatTextOption(), "bold"));
+		@:privateAccess __selectiontext.defaultAdvance = 30;
 
 		rawText = text;
 	}
@@ -72,7 +73,7 @@ class ArrayOption extends OptionType {
 	}
 
 	private function formatTextOption() {
-		var currentOptionString = ": ";
+		var currentOptionString = "";
 		if((currentSelection > 0))
 			currentOptionString += "< ";
 		else

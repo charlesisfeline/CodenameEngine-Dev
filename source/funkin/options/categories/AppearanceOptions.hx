@@ -42,7 +42,7 @@ class AppearanceOptions extends OptionsScreen {
 			"week6PixelPerfect"));
 		add(new Separator());
 		add(new TextOption(
-			"Advanced",
+			"Advanced >",
 			"Options for advanced preferences.",
 			function() parent.add(new AppearanceAdvancedOptions())
 		));

@@ -38,7 +38,7 @@ class RadioButton extends TextOption {
 			}
 		}
 
-		radio = new FlxSprite(10, -40);
+		radio = new FlxSprite(60, -30);
 		radio.frames = Paths.getFrames('menus/options/radioCrank');
 		radio.animation.addByPrefix("unchecked", "Radio unselected0", 24);
 		radio.animation.addByPrefix("checked", "Radio Selected Static0", 24);
@@ -48,6 +48,8 @@ class RadioButton extends TextOption {
 		radio.scale.set(0.75, 0.75);
 		radio.updateHitbox();
 		add(radio);
+
+		__text.x += 60;
 
 		this.value = value;
 

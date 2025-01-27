@@ -33,7 +33,7 @@ class GameplayOptions extends OptionsScreen {
 			"autoPause"));
 		add(new Separator());
 		add(new TextOption(
-			"Advanced",
+			"Advanced >",
 			"Options for advanced preferences.",
 			function() parent.add(new GameplayAdvancedOptions())
 		));
