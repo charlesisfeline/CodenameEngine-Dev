@@ -77,19 +77,20 @@ class PlayState extends MusicBeatState
 	/**
 	 * Current game mode (Opponent, Co-Op, Botplay, etc).
 	 */
-	public static var gameMode(get, default):FreeplayGameMode;
+	@:isVar
+	public static var gameMode(get, set):FreeplayGameMode;
 	/**
 	 * Whenever the current game mode is Opponent or Coop Switched (uses `gameMode`).
 	 */
-	public static var opponentMode(get, never):Bool;
+	public static var opponentMode(get, set):Bool;
 	/**
 	 * Whenever the current game mode is Co-Op or Coop Switched (uses `gameMode`).
 	 */
-	public static var coopMode(get, never):Bool;
+	public static var coopMode(get, set):Bool;
 	/**
 	 * Whenever the current game mode is Botplay (uses `gameMode`).
 	 */
-	public static var botplayMode(get, never):Bool;
+	public static var botplayMode(get, set):Bool;
 
 	/**
 	 * Script Pack of all the scripts being ran.
@@ -542,7 +543,7 @@ class PlayState extends MusicBeatState
 	}
 
 	public inline function callOnCharacters(func:String, ?parameters:Array<Dynamic>) {
-		if(strumLines != null) strumLines.forEachAlive(function (strLine:StrumLine) {
+		if (strumLines != null) strumLines.forEachAlive(function (strLine:StrumLine) {
 			if (strLine.characters != null) for (character in strLine.characters)
 				if (character != null) character.script.call(func, parameters);
 		});
@@ -714,6 +715,7 @@ class PlayState extends MusicBeatState
 		add(splashHandler);
 
 		scripts.set("SONG", SONG);
+		changeGameModeScript(gameMode.scripts);
 		scripts.load();
 		scripts.call("create");
 		#end
@@ -1865,10 +1867,52 @@ class PlayState extends MusicBeatState
 		scripts.call("beatHit", [curBeat]);
 	}
 
-	public function addScript(file:String) {
-		var ext = Path.extension(file).toLowerCase();
-		if (Script.scriptExtensions.contains(ext))
-			scripts.add(Script.create(file));
+	public function changeGameModeScript(modeScripts:Array<String>) {
+		Logs.verbose("Changing game mode script:");
+		Logs.verbose("Loaded: " + this.scripts.scripts.filter(s -> s.path.startsWith("data/gamemodes/")).map(s -> s.fileName));
+		Logs.verbose("Modes: " + modeScripts);
+		var createExclude:Array<String> = [];
+
+		for (script in this.scripts.scripts) if (script.path.startsWith("data/gamemodes/")) {
+			var scriptAlreadyLoaded = modeScripts.contains(Path.withoutExtension(script.fileName));
+			if (scriptAlreadyLoaded) {
+				createExclude.push(script.fileName);
+				if(!script.active) {  // reactivate script
+					script.active = true;
+					Logs.verbose("Reactivating game mode script: " + script.fileName);
+					script.call("changedGameModeScript", [true]);
+				} else
+					Logs.verbose("Game mode script already loaded: " + script.fileName);
+			} else if (script.active) {  // deactivate script
+				script.call("changedGameModeScript", [false]);
+				script.active = false;
+				Logs.verbose("Deactivating game mode script: " + script.fileName);
+			}
+		}
+
+		for (script in modeScripts) {
+			final name = "data/gamemodes/" + script;
+			for (ext in Script.scriptExtensions) {
+				final path = name + "." + ext;
+				final fileName = script + "." + ext;
+				if (!createExclude.contains(fileName) && Assets.exists(path)) {  // created
+					var script = addScript(path);
+					if (script != null) {
+						Logs.verbose("Creating game mode script: " + fileName);
+						script.set("SONG", SONG);  // since this loading can happen after create()  - Nex
+						script.load();
+						script.call("changedGameModeScript", [true]);
+					}
+				}
+			}
+		}
+	}
+
+	public function addScript(file:String):Script {
+		var script:Script = null;
+		if (Script.scriptExtensions.contains(Path.extension(file).toLowerCase()))
+			scripts.add(script = Script.create(file));
+		return script;
 	}
 
 	// GETTERS & SETTERS
@@ -1971,9 +2015,21 @@ class PlayState extends MusicBeatState
 		if (gameMode == null) gameMode = FreeplayGameMode.generateDefault();
 		return gameMode;
 	}
+	private static inline function set_gameMode(val:FreeplayGameMode):FreeplayGameMode {
+		if (instance != null && instance.scripts != null) {
+			var scriptsToUse:Array<String> = [];
+			if (val != null) scriptsToUse = val.scripts;
+			instance.changeGameModeScript(scriptsToUse);
+		}
+
+		return gameMode = val;
+	}
 	private static inline function get_opponentMode():Bool return gameMode.modeID == "codename.opponent" || gameMode.modeID == "codename.coop-opponent";
+	private static inline function set_opponentMode(val:Bool):Bool { __oldSetGameMode(val, coopMode); return opponentMode; };
 	private static inline function get_coopMode():Bool return gameMode.modeID == "codename.coop" || gameMode.modeID == "codename.coop-opponent";
+	private static inline function set_coopMode(val:Bool):Bool { __oldSetGameMode(opponentMode, val); return coopMode; };
 	private static inline function get_botplayMode():Bool return gameMode.modeID == "codename.botplay";
+	private static inline function set_botplayMode(val:Bool):Bool { gameMode = FreeplayGameMode.getSpecific("codename.botplay", new FreeplayGameMode("Botplay Mode", "codename.botplay", ["botplay"])); return botplayMode; };
 
 	private inline static function get_campaignAccuracy()
 		return campaignAccuracyCount == 0 ? 0 : campaignAccuracyTotal / campaignAccuracyCount;
@@ -2018,7 +2074,6 @@ class PlayState extends MusicBeatState
 	 */
 	public static function __loadSong(_name:String, _difficulty:String) {
 		difficulty = _difficulty;
-
 		SONG = Chart.parse(_name, _difficulty);
 		fromMods = SONG.fromMods;
 	}
