@@ -19,12 +19,12 @@ class UpdateUtil {
 	}
 
 	public static function checkForUpdates():UpdateCheckCallback {
-		var curTag = 'v${Application.current.meta.get('version')}';
+		var curTag = 'v${Flags.VERSION}';
 		trace(curTag);
 
 		var error = false;
 
-		var newUpdates = __doReleaseFiltering(GitHub.getReleases(Flag.REPO_OWNER, Flag.REPO_NAME, function(e) {
+		var newUpdates = __doReleaseFiltering(GitHub.getReleases(Flags.REPO_NAME, Flags.REPO_OWNER, function(e) {
 			error = true;
 		}), curTag);
 
