@@ -305,7 +305,7 @@ class FreeplayState extends MusicBeatState
 		Options.freeplayLastSong = songs[curSelected].name;
 		Options.freeplayLastDifficulty = songs[curSelected].difficulties[curDifficulty];
 
-		PlayState.loadSong(event.song, event.difficulty, event.opponentMode, event.coopMode);
+		PlayState.advancedLoadSong(event.song, event.difficulty, event.gameMode);
 		FlxG.switchState(new PlayState());
 	}
 

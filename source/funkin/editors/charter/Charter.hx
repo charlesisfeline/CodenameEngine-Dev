@@ -537,7 +537,7 @@ class Charter extends UIState {
 	public function loadSong() {
 		if (__reload) {
 			EventsData.reloadEvents();
-			PlayState.loadSong(__song, __diff, false, false);
+			PlayState.advancedLoadSong(__song, __diff);
 			__resetStatics();
 		}
 		Conductor.setupSong(PlayState.SONG);
@@ -1802,7 +1802,7 @@ class Charter extends UIState {
 		buildChart();
 		startHere = here;
 		startTime = Conductor.songPosition;
-		PlayState.__oldSetGameMode(opponentMode, PlayState.coopMode);
+		PlayState.opponentMode = opponentMode;
 		PlayState.chartingMode = true;
 		FlxG.switchState(new PlayState());
 	}

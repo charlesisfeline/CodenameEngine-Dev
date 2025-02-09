@@ -650,9 +650,8 @@ class PlayState extends MusicBeatState
 		for(content in Paths.getFolderContent('images/game/score/', true, BOTH))
 			graphicCache.cache(Paths.getPath(content));
 
-		for(i in 1...4) {
+		for(i in 1...4)
 			FlxG.sound.load(Paths.sound('missnote' + Std.string(i)));
-		}
 		#end
 
 		// STRUMS & NOTES INITIALIZATION
@@ -1895,7 +1894,7 @@ class PlayState extends MusicBeatState
 			for (ext in Script.scriptExtensions) {
 				final path = name + "." + ext;
 				final fileName = script + "." + ext;
-				if (!createExclude.contains(fileName) && Assets.exists(path)) {  // created
+				if (!createExclude.contains(fileName) && Assets.exists(path)) {  // created script
 					var script = addScript(path);
 					if (script != null) {
 						Logs.verbose("Creating game mode script: " + fileName);
@@ -2016,13 +2015,9 @@ class PlayState extends MusicBeatState
 		return gameMode;
 	}
 	private static inline function set_gameMode(val:FreeplayGameMode):FreeplayGameMode {
-		if (instance != null && instance.scripts != null) {
-			var scriptsToUse:Array<String> = [];
-			if (val != null) scriptsToUse = val.scripts;
-			instance.changeGameModeScript(scriptsToUse);
-		}
-
-		return gameMode = val;
+		gameMode = val;
+		if (instance != null && instance.scripts != null) instance.changeGameModeScript(gameMode.scripts);
+		return gameMode;
 	}
 	private static inline function get_opponentMode():Bool return gameMode.modeID == "codename.opponent" || gameMode.modeID == "codename.coop-opponent";
 	private static inline function set_opponentMode(val:Bool):Bool { __oldSetGameMode(val, coopMode); return opponentMode; };
@@ -2055,6 +2050,23 @@ class PlayState extends MusicBeatState
 	}
 
 	/**
+	 * Loads a song into PlayState.
+	 *
+	 * **NOTE**: IT'LL CHANGE THE GAME MODE TOO!! If you'd like to set a specific custom game mode besides opponent, coop and coop-switched (which is both opponent and coop modes) modes use `advancedLoadSong`.
+	 * @param name Song name
+	 * @param difficulty Chart difficulty (if invalid, will load an empty chart)
+	 * @param opponentMode Whenever opponent mode is on.
+	 * @param coopMode Whenever co-op mode is on.
+	 */
+	public static function loadSong(_name:String, ?_difficulty:String, _opponentMode:Bool = false, _coopMode:Bool = false) {
+		if (_difficulty == null) difficulty = Flags.DEFAULT_DIFFICULTY;
+		isStoryMode = chartingMode = false;
+		opponentMode = _opponentMode;
+		coopMode = _coopMode;
+		__loadSong(_name, _difficulty);
+	}
+
+	/**
 	 * Loads a song into PlayState with a specific custom game mode.
 	 * @param _name Song name
 	 * @param _difficulty Chart difficulty (if invalid, will load an empty chart)
@@ -2083,21 +2095,6 @@ class PlayState extends MusicBeatState
 		return gameMode = (_opponentMode && _coopMode) ? FreeplayGameMode.getSpecific("codename.coop-opponent", new FreeplayGameMode("Co-Op Mode (Switched)", "codename.coop-opponent", ["coop-switched", "opponent", "coop"])) :
 			(_opponentMode ? FreeplayGameMode.getSpecific("codename.opponent", new FreeplayGameMode("Opponent Mode", "codename.opponent", ["opponent"])) :
 			(_coopMode ? FreeplayGameMode.getSpecific("codename.coop", new FreeplayGameMode("Co-Op Mode", "codename.coop", ["coop"])) : null));
-	}
-
-	/**
-	 * Loads a song into PlayState.
-	 * @param name Song name
-	 * @param difficulty Chart difficulty (if invalid, will load an empty chart)
-	 * @param opponentMode Whenever opponent mode is on
-	 * @param coopMode Whenever co-op mode is on.
-	 */
-	@:deprecated('PlayState.loadSong() is deprecated. Use PlayState.advancedLoadSong() instead.')
-	public static function loadSong(_name:String, ?_difficulty:String, _opponentMode:Bool = false, _coopMode:Bool = false) {
-		if (_difficulty == null) difficulty = Flags.DEFAULT_DIFFICULTY;
-		isStoryMode = chartingMode = false;
-		__oldSetGameMode(_opponentMode, _coopMode);
-		__loadSong(_name, _difficulty);
 	}
 }
 
