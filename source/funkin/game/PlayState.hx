@@ -2061,8 +2061,8 @@ class PlayState extends MusicBeatState
 	public static function loadSong(_name:String, ?_difficulty:String, _opponentMode:Bool = false, _coopMode:Bool = false) {
 		if (_difficulty == null) difficulty = Flags.DEFAULT_DIFFICULTY;
 		isStoryMode = chartingMode = false;
-		opponentMode = _opponentMode;
-		coopMode = _coopMode;
+		PlayState.opponentMode = _opponentMode;
+		PlayState.coopMode = _coopMode;
 		__loadSong(_name, _difficulty);
 	}
 

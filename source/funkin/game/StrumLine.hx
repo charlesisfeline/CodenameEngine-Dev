@@ -281,41 +281,42 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 		var event = EventManager.get(InputSystemEvent).recycle(__pressed, __justPressed, __justReleased, this, id);
 		if (PlayState.instance != null) PlayState.instance.gameAndCharsEvent("onInputUpdate", event);
-		if (event.cancelled) return;
 
-		__pressed = CoolUtil.getDefault(event.pressed, []);
-		__justPressed = CoolUtil.getDefault(event.justPressed, []);
-		__justReleased = CoolUtil.getDefault(event.justReleased, []);
+		if (!event.cancelled) {
+			__pressed = CoolUtil.getDefault(event.pressed, []);
+			__justPressed = CoolUtil.getDefault(event.justPressed, []);
+			__justReleased = CoolUtil.getDefault(event.justReleased, []);
 
-		__notePerStrum = cast new haxe.ds.Vector(members.length);//[for(_ in 0...members.length) null];
+			__notePerStrum = cast new haxe.ds.Vector(members.length);//[for(_ in 0...members.length) null];
 
 
-		if (__pressed.contains(true)) {
-			for(c in characters)
-				if (c.lastAnimContext != DANCE)
-					c.__lockAnimThisFrame = true;
+			if (__pressed.contains(true)) {
+				for(c in characters)
+					if (c.lastAnimContext != DANCE)
+						c.__lockAnimThisFrame = true;
 
-			__funcsToExec.push(__inputProcessPressed);
+				__funcsToExec.push(__inputProcessPressed);
+			}
+			if (__justPressed.contains(true))
+				__funcsToExec.push(__inputProcessJustPressed);
+
+			if (__funcsToExec.length > 0) {
+				notes.forEachAlive(function(note:Note) {
+					for(e in __funcsToExec) if (e != null) e(note);
+				});
+			}
+
+			if (!ghostTapping) for(k=>pr in __justPressed) if (pr && __notePerStrum[k] == null) {
+				// FUCK YOU
+				PlayState.instance.noteMiss(this, null, k, ID);
+			}
+			for(e in __notePerStrum) if (e != null) PlayState.instance.goodNoteHit(this, e);
+
+			forEach(function(str:Strum) str.updatePlayerInput(str.__getPressed(this), str.__getJustPressed(this), str.__getJustReleased(this)));
+
+			PlayState.instance.gameAndCharsCall("onPostInputUpdate", event);
 		}
-		if (__justPressed.contains(true))
-			__funcsToExec.push(__inputProcessJustPressed);
-
-		if (__funcsToExec.length > 0) {
-			notes.forEachAlive(function(note:Note) {
-				for(e in __funcsToExec) if (e != null) e(note);
-			});
-		}
-
-		if (!ghostTapping) for(k=>pr in __justPressed) if (pr && __notePerStrum[k] == null) {
-			// FUCK YOU
-			PlayState.instance.noteMiss(this, null, k, ID);
-		}
-		for(e in __notePerStrum) if (e != null) PlayState.instance.goodNoteHit(this, e);
-
-		forEach(function(str:Strum) {
-			str.updatePlayerInput(str.__getPressed(this), str.__getJustPressed(this), str.__getJustReleased(this));
-		});
-		PlayState.instance.gameAndCharsCall("onPostInputUpdate");
+		else forEach(function(str:Strum) str.updatePlayerInput(false, false, false));  // making the strums animation not block  - Nex
 	}
 
 	/**
@@ -416,15 +417,11 @@ class StrumLine extends FlxTypedGroup<Strum> {
 	 */
 	#if REGION
 	private inline function set_cpu(b:Bool):Bool {
-		for(s in members)
-			if (s != null)
-				s.cpu = b;
+		for (s in members) if (s != null) s.cpu = b;
 		return cpu = b;
 	}
 	private inline function set_animSuffix(str:String):String {
-		for(s in members)
-			if (s != null)
-				s.animSuffix = str;
+		for (s in members) if (s != null) s.animSuffix = str;
 		return animSuffix = str;
 	}
 	private inline function set_altAnim(b:Bool):Bool {

@@ -2,13 +2,9 @@ package funkin.game;
 
 import flixel.math.FlxPoint;
 import funkin.backend.system.Conductor;
+import funkin.backend.scripting.events.sprite.PlayAnimContext;
 
-class Strum extends FlxSprite {
-	/**
-	 * Extra data that can be added to the strum.
-	**/
-	public var extra:Map<String, Dynamic> = [];
-
+class Strum extends FunkinSprite {
 	/**
 	 * Which animation suffix on characters that should be used when hitting notes.
 	 */
@@ -16,9 +12,10 @@ class Strum extends FlxSprite {
 
 	/**
 	 * Whenever the strum should act as a CPU strum.
-	 * WARNING: Unused.
+	 *
+	 * _WARNING_: Unused mostly in this class besides for animations.
 	**/
-	@:dox(hide) public var cpu:Bool = false; // Unused
+	public var cpu(default, set):Bool = false;
 	/**
 	 * The last time the note/confirm animation was hit.
 	**/
@@ -108,11 +105,9 @@ class Strum extends FlxSprite {
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
-		if (cpu) {
-			if (lastHit + (Conductor.crochet / 2) < Conductor.songPosition && getAnim() == "confirm") {
-				playAnim("static");
-			}
-		}
+
+		if (cpu && lastHit + (Conductor.crochet / 2) < Conductor.songPosition && getAnimName() == "confirm")
+			playAnim("static");
 	}
 
 	public override function draw() {
@@ -190,7 +185,7 @@ class Strum extends FlxSprite {
 	 * @param justReleased Whenever the player just released the button
 	**/
 	public function updatePlayerInput(pressed:Bool, justPressed:Bool, justReleased:Bool) {
-		switch(getAnim()) {
+		switch(getAnimName()) {
 			case "confirm":
 				if (justReleased || !pressed)
 					playAnim("static");
@@ -214,21 +209,14 @@ class Strum extends FlxSprite {
 		playAnim("confirm");
 	}
 
-	/**
-	 * Plays an animation.
-	 * @param anim The animation name
-	 * @param force Whenever the animation should be forced to play
-	**/
-	public function playAnim(anim:String, force:Bool = true) {
-		animation.play(anim, force);
+	@:dox(hide) override public function playAnim(AnimName:String, ?Force:Bool, Context:PlayAnimContext = NONE, Reversed:Bool = false, Frame:Int = 0) {
+		super.playAnim(AnimName, Force, Context, Reversed, Frame);
 		centerOffsets();
 		centerOrigin();
 	}
 
-	/**
-	 * Gets the current animation name.
-	**/
-	public inline function getAnim() {
-		return animation.name;
+	private function set_cpu(val:Bool) {
+		if (val && getAnimName() == "pressed") playAnim("static");
+		return cpu = val;
 	}
 }

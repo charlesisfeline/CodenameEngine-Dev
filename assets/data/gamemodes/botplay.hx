@@ -20,7 +20,7 @@ function initBotplayShits() {
 	storeShits();
 	for (strum in nonCpuStrums) strum.cpu = true;
 
-	botplayTxt?.destroy();  // something bad happens if i dont destroy it first everytime, brah  - Nex
+	botplayTxt?.destroy();  // something bad happens if i dont destroy it first everytime, i would have checked if null, whatever brah  - Nex
 	botplayTxt = new FunkinText(0, 0, 0, "Botplay Mode Enabled");
 	for (txt in [accuracyTxt, missesTxt]) txt?.visible = false;
 	if (scoreTxt != null) {
