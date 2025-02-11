@@ -4,7 +4,12 @@ import flixel.math.FlxPoint;
 import funkin.backend.system.Conductor;
 import funkin.backend.scripting.events.sprite.PlayAnimContext;
 
-class Strum extends FunkinSprite {
+class Strum extends FlxSprite {
+	/**
+	 * Extra data that can be added to the strum.
+	**/
+	public var extra:Map<String, Dynamic> = [];
+
 	/**
 	 * Which animation suffix on characters that should be used when hitting notes.
 	 */
@@ -106,7 +111,7 @@ class Strum extends FunkinSprite {
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if (cpu && lastHit + (Conductor.crochet / 2) < Conductor.songPosition && getAnimName() == "confirm")
+		if (cpu && lastHit + (Conductor.crochet / 2) < Conductor.songPosition && getAnim() == "confirm")
 			playAnim("static");
 	}
 
@@ -185,7 +190,7 @@ class Strum extends FunkinSprite {
 	 * @param justReleased Whenever the player just released the button
 	**/
 	public function updatePlayerInput(pressed:Bool, justPressed:Bool, justReleased:Bool) {
-		switch(getAnimName()) {
+		switch(getAnim()) {
 			case "confirm":
 				if (justReleased || !pressed)
 					playAnim("static");
@@ -209,14 +214,25 @@ class Strum extends FunkinSprite {
 		playAnim("confirm");
 	}
 
-	@:dox(hide) override public function playAnim(AnimName:String, ?Force:Bool, Context:PlayAnimContext = NONE, Reversed:Bool = false, Frame:Int = 0) {
-		super.playAnim(AnimName, Force, Context, Reversed, Frame);
+	/**
+	 * Plays an animation.
+	 * @param anim The animation name
+	 * @param force Whenever the animation should be forced to play
+	**/
+	public function playAnim(anim:String, force:Bool = true) {
+		animation.play(anim, force);
 		centerOffsets();
 		centerOrigin();
 	}
 
+	/**
+	 * Gets the current animation name.
+	**/
+	public inline function getAnim()
+		return animation.name;
+
 	private function set_cpu(val:Bool) {
-		if (val && getAnimName() == "pressed") playAnim("static");
+		if (val && getAnim() == "pressed") playAnim("static");
 		return cpu = val;
 	}
 }

@@ -314,7 +314,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 			forEach(function(str:Strum) str.updatePlayerInput(str.__getPressed(this), str.__getJustPressed(this), str.__getJustReleased(this)));
 
-			PlayState.instance.gameAndCharsCall("onPostInputUpdate", event);
+			PlayState.instance.gameAndCharsEvent("onPostInputUpdate", event);
 		}
 		else forEach(function(str:Strum) str.updatePlayerInput(false, false, false));  // making the strums animation not block  - Nex
 	}
