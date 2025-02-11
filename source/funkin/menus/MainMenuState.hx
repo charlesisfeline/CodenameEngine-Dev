@@ -29,6 +29,7 @@ class MainMenuState extends MusicBeatState
 
 	override function create()
 	{
+		if (Options.mainmenuLastMenu != null) for (k => m in optionShit) if (m == Options.mainmenuLastMenu) curSelected = k;
 		super.create();
 
 		DiscordUtil.call("onMenuLoaded", ["Main Menu"]);
@@ -144,6 +145,11 @@ class MainMenuState extends MusicBeatState
 			});
 		}
 		return super.switchTo(nextState);
+	}
+
+	override public function destroy() {
+		Options.mainmenuLastMenu = optionShit[curSelected];
+		super.destroy();
 	}
 
 	function selectItem() {

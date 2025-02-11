@@ -24,8 +24,8 @@ class StoryMenuState extends MusicBeatState {
 	public var tracklist:FlxText;
 	public var weekTitle:FlxText;
 
-	public var curDifficulty:Int = 0;
 	public var curWeek:Int = 0;
+	public var curDifficulty:Int = 0;
 
 	public var difficultySprites:Map<String, FlxSprite> = [];
 	public var leftArrow:FlxSprite;
@@ -47,8 +47,17 @@ class StoryMenuState extends MusicBeatState {
 	//public var charFrames:Map<String, FlxFramesCollection> = [];
 
 	public override function create() {
-		super.create();
 		loadXMLs();
+
+		if (Options.storymodeLastWeek != null) for (k => w in weeks) if (w.id == Options.storymodeLastWeek) curWeek = k;
+		var firstWeek = weeks[0];
+		if (firstWeek != null) {
+			curDifficulty = Math.floor(firstWeek.difficulties.length * 0.5);  // default difficulty should be the middle difficulty in the array to be consistent with base game and whatnot, you know the drill
+			Logs.verbose('Middle Difficulty for the first week is ${firstWeek.difficulties[curDifficulty]} (ID: $curDifficulty)');  // debug stuff lol
+		}
+		if (Options.storymodeLastDifficulty != null && weeks[curWeek] != null) for (k => diff in weeks[curWeek].difficulties) if (diff == Options.storymodeLastDifficulty) curDifficulty = k;
+
+		super.create();
 		persistentUpdate = persistentDraw = true;
 
 		// WEEK INFO
@@ -121,16 +130,19 @@ class StoryMenuState extends MusicBeatState {
 
 		interpColor = new FlxInterpolateColor(weekBG.color);
 
-		// default difficulty should be the middle difficulty in the array
-		// to be consistent with base game and whatnot, you know the drill
-		curDifficulty = Math.floor(weeks[0].difficulties.length * 0.5);
-		// debug stuff lol
-		Logs.trace('Middle Difficulty for Week 1 is ${weeks[0].difficulties[curDifficulty]} (ID: $curDifficulty)');
-
 		changeWeek(0, true);
 
 		DiscordUtil.call("onMenuLoaded", ["Story Menu"]);
 		CoolUtil.playMenuSong();
+	}
+
+	public override function destroy() {
+		var curWeek = weeks[curWeek];
+		if (curWeek != null) {
+			Options.storymodeLastWeek = curWeek.id;
+			Options.storymodeLastDifficulty = curWeek.difficulties[curDifficulty];
+		}
+		super.destroy();
 	}
 
 	var __lastDifficultyTween:FlxTween;
@@ -177,14 +189,14 @@ class StoryMenuState extends MusicBeatState {
 		curWeek = event.value;
 
 		if (!force) CoolUtil.playMenuSFX();
-		for(k=>e in weekSprites.members) {
+		for (k=>e in weekSprites.members) {
 			e.targetY = k - curWeek;
 			e.alpha = k == curWeek ? 1.0 : 0.6;
 		}
 		tracklist.text = 'TRACKS\n\n${[for(e in weeks[curWeek].songs) if (!e.hide) e.name].join('\n')}';
 		weekTitle.text = weeks[curWeek].name.getDefault("");
 
-		if(characterSprites != null) for(i in 0...3) {
+		if (characterSprites != null) for(i in 0...3) {
 			var curChar:FunkinSprite; var newChar:Access = characters[weeks[curWeek].chars[i]];
 			if(newChar == null) modifyCharacterAt(i);
 			else if((curChar = characterSprites.members[i]) == null || newChar.getAtt("name") != curChar.name) modifyCharacterAt(i, newChar);
@@ -197,23 +209,23 @@ class StoryMenuState extends MusicBeatState {
 
 	public function modifyCharacterAt(i:Int, ?node:Access):FunkinSprite {
 		var old = characterSprites.members[i];
-		if(old != null) {
+		if (old != null) {
 			characterSprites.remove(old);
 			old.destroy();
 		}
 
-		if(node == null) return null;
+		if (node == null) return null;
 		var curChar:FunkinSprite = XMLUtil.createSpriteFromXML(node, "", BEAT);
 		curChar.offset.x += curChar.x; curChar.offset.y += curChar.y;
 		curChar.setPosition((FlxG.width * 0.25) * (1 + i) - 150, 70);
-		if(characterSprites != null) characterSprites.insert(i, curChar);  // Making so many null checks abt this group just in case if mods destroy it  - Nex
+		if (characterSprites != null) characterSprites.insert(i, curChar);  // Making so many null checks abt this group just in case if mods destroy it  - Nex
 		curChar.playAnim("idle", true, DANCE);
 		return curChar;
 	}
 
 	public override function beatHit(curBeat:Int) {
 		super.beatHit(curBeat);
-		if(characterSprites != null) characterSprites.forEachAlive(function(spr) spr.beatHit(curBeat));
+		if (characterSprites != null) characterSprites.forEachAlive(function(spr) spr.beatHit(curBeat));
 	}
 
 	var __oldDiffName = null;

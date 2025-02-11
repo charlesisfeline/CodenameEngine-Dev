@@ -106,27 +106,21 @@ class FreeplayState extends MusicBeatState
 	override function create()
 	{
 		CoolUtil.playMenuSong();
-		songList = FreeplaySonglist.get();
-		songs = songList.songs;
-
-		for(k=>s in songs) {
-			if (s.name == Options.freeplayLastSong) {
-				curSelected = k;
-			}
-		}
-		if (songs[curSelected] != null) {
-			for(k=>diff in songs[curSelected].difficulties) {
-				if (diff == Options.freeplayLastDifficulty) {
-					curDifficulty = k;
-				}
-			}
-		}
-
+		songs = (songList = FreeplaySonglist.get()).songs;
 		gameModeLabels = FreeplayGameMode.get();
 
-		DiscordUtil.call("onMenuLoaded", ["Freeplay"]);
+		if (Options.freeplayLastSong != null) for (k => s in songs) if (s.name == Options.freeplayLastSong) curSelected = k;
+		var firstSong = songs[0];  // like in storymode  - Nex
+		if (firstSong != null) {
+			curDifficulty = Math.floor(songs[0].difficulties.length * 0.5);
+			Logs.verbose('Middle Difficulty for the first song is ${firstSong.difficulties[curDifficulty]} (ID: $curDifficulty)');
+		}
+		if (Options.freeplayLastDifficulty != null && songs[curSelected] != null) for (k => diff in songs[curSelected].difficulties) if (diff == Options.freeplayLastDifficulty) curDifficulty = k;
+		if (Options.freeplayLastGameMode != null) for (k => g in gameModeLabels) if (g.modeID == Options.freeplayLastGameMode) curGameMode = k;  // changeGameMode() will handle the blacklisted ones  - Nex
 
 		super.create();
+
+		DiscordUtil.call("onMenuLoaded", ["Freeplay"]);
 
 		// LOAD CHARACTERS
 
@@ -302,11 +296,21 @@ class FreeplayState extends MusicBeatState
 		autoplayShouldPlay = false;
 		#end
 
-		Options.freeplayLastSong = songs[curSelected].name;
-		Options.freeplayLastDifficulty = songs[curSelected].difficulties[curDifficulty];
-
 		PlayState.advancedLoadSong(event.song, event.difficulty, event.gameMode);
 		FlxG.switchState(new PlayState());
+	}
+
+	override public function destroy() {
+		var curSong = songs[curSelected];
+		if (curSong != null) {
+			Options.freeplayLastSong = curSong.name;
+			Options.freeplayLastDifficulty = curSong.difficulties[curDifficulty];
+		}
+
+		var curGameMode = gameModeLabels[curGameMode];
+		if (curGameMode != null) Options.freeplayLastGameMode = curGameMode.modeID;
+
+		super.destroy();
 	}
 
 	public function convertChart() {
@@ -450,13 +454,13 @@ class FreeplayState extends MusicBeatState
 		gameModeLabels = [for(name in names) {
 			if (name.startsWith("[TAB] ")) name = name.substr("[TAB] ".length);
 			new FreeplayGameMode(name, switch(name) {
-				case "Solo": "codename.solo";
+				case "Solo Mode": "codename.solo";
 				case "Opponent Mode": "codename.opponent";
 				case "Co-Op Mode": "codename.coop";
 				case "Co-Op Mode (Switched)": "codename.coop-opponent";
 				default: name.toLowerCase().replace(" ", "-");
 			}, switch(name) {
-				case "Solo": ["solo"];
+				case "Solo Mode": ["solo"];
 				case "Opponent Mode": ["opponent"];
 				case "Co-Op Mode": ["coop"];
 				case "Co-Op Mode (Switched)": ["coop-switched", "opponent", "coop"];

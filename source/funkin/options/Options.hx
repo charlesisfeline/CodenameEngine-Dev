@@ -59,8 +59,12 @@ class Options
 	/**
 	 * QOL FEATURES
 	 */
+	public static var mainmenuLastMenu:String = null;
+	public static var storymodeLastWeek:String = null;
+	public static var storymodeLastDifficulty:String = null;
 	public static var freeplayLastSong:String = null;
-	public static var freeplayLastDifficulty:String = "normal";
+	public static var freeplayLastDifficulty:String = null;
+	public static var freeplayLastGameMode:String = null;
 
 	/**
 	 * CONTRIBUTORS
