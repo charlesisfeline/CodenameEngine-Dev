@@ -61,9 +61,13 @@ class HttpUtil
 	{
 		switch (status)
 		{
-			// 301: Moved Permanently, 302: Found (Moved Temporarily), 307: Temporary Redirect, 308: Permanent Redirect  - Nex
+			// Table of redirection codes  - Nex
+			// 301: Moved Permanently
+			// 302: Found (Moved Temporarily)
+			// 307: Temporary Redirect
+			// 308: Permanent Redirect
 			case 301 | 302 | 307 | 308:
-				Logs.traceColored([Logs.logText('[Connection Status] ', BLUE), Logs.logText('Redirected with status code: ', YELLOW), Logs.logText('$status', GREEN)], WARNING);
+				Logs.traceColored([Logs.getPrefix('Connection Status'), Logs.logText('Redirected with status code: ', YELLOW), Logs.logText('$status', GREEN)], WARNING);
 				return true;
 		}
 		return false;

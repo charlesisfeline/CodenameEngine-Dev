@@ -31,7 +31,7 @@ class FlagMacro {
 		var resetExprs:Array<Expr> = [];
 		var parserExprs:Array<Expr> = [];
 
-		for (field in fields) {
+		for (field in fields.copy()) {
 			var skip = field.meta.hasMeta(":bypass");
 			var hasLazy = field.meta.hasMeta(":lazy");
 
@@ -47,19 +47,22 @@ class FlagMacro {
 						default:
 					}
 
-					var alsos:Array<Expr> = [];
+					var aliases:Array<Expr> = [];
 					for(meta in field.meta) {
-						if(meta.name == ":also") {
+						if(meta.name == ":alias" || meta.name == ":also") { // dont use :also
 							for(param in meta.params) {
 								switch(param.expr) {
 									case EField(_, _):
-										alsos.push(param);
+										aliases.push(param);
 									default:
-										Context.error("Invalid :also parameter", param.pos);
+										Context.error("Invalid :alias parameter", param.pos);
 								}
 							}
 						}
 					}
+
+					if(aliases.length > 0 && hasLazy)
+						Context.error("Flag " + field.name + " cannot have both :alias and :lazy", field.pos);
 
 					if(expr == null)
 						Context.error('Flag ' + field.name + ' must have a default value', field.pos);
@@ -208,26 +211,49 @@ class FlagMacro {
 					if(customCheck != null) {
 						parserExprs.push(customCheck);
 					} else {
-						var alsoExpr = alsos.length > 0 ? macro @:mergeBlock $b{alsos.map((e) -> return macro $e = val)} : macro {};
-
 						if(isNullable) {
 							parserExprs.push(macro @:mergeBlock {
 								if(name == $v{field.name}) {
-									var val = value == "NULL" ? null : $parser;
-									$i{field.name} = val;
-									$alsoExpr;
+									$i{field.name} = value == "NULL" ? null : $parser;
 									return true;
 								}
 							});
 						} else {
 							parserExprs.push(macro @:mergeBlock {
 								if(name == $v{field.name}) {
-									var val = $parser;
-									$i{field.name} = val;
-									$alsoExpr;
+									$i{field.name} = $parser;
 									return true;
 								}
 							});
+						}
+					}
+
+					if(aliases.length > 0) {
+						var aliasExpr = macro @:mergeBlock $b{aliases.map((e) -> return macro $e = val)};
+
+						var setter = macro {
+							$i{field.name} = val;
+							$aliasExpr;
+							return val;
+						};
+
+						switch(field.kind) {
+							case FVar(t, expr):
+								field.kind = FProp("default", "set", t, expr);
+								fields.push({
+									name: "set_" + field.name,
+									access: [APublic, AStatic, AInline],
+									kind: FFun({
+										args: [{name: "val", type: t}],
+										expr: setter,
+										ret: t
+									}),
+									pos: Context.currentPos(),
+									doc: null,
+									meta: []
+								});
+							default:
+								Context.error("Flag " + field.name + " must be a variable, or something else happened", field.pos);
 						}
 					}
 				default:

@@ -42,12 +42,12 @@ class Flags {
 	public static var DEFAULT_DISCORD_CLIENT_ID:String = "1027994136193810442";
 	public static var DEFAULT_DISCORD_LOGO_TEXT:String = "Codename Engine";
 
-	@:also(funkin.game.Character.FALLBACK_CHARACTER)
+	@:alias(funkin.game.Character.FALLBACK_CHARACTER)
 	public static var DEFAULT_CHARACTER:String = "bf";
 	public static var DEFAULT_GIRLFRIEND:String = "gf";
 	public static var DEFAULT_OPPONENT:String = "dad";
 
-	@:also(funkin.game.PlayState.difficulty)
+	@:alias(funkin.game.PlayState.difficulty)
 	public static var DEFAULT_DIFFICULTY:String = "normal";
 	public static var DEFAULT_STAGE:String = "stage";
 	public static var DEFAULT_SCROLL_SPEED:Float = 2.0;
@@ -79,7 +79,7 @@ class Flags {
 	public static var DEFAULT_NOTE_MS_LIMIT:Float = 1500;
 	public static var DEFAULT_NOTE_SCALE:Float = 0.7;
 
-	@:also(funkin.game.Character.FALLBACK_DEAD_CHARACTER)
+	@:alias(funkin.game.Character.FALLBACK_DEAD_CHARACTER)
 	public static var DEFAULT_GAMEOVER_CHARACTER:String = "bf-dead";
 	public static var DEFAULT_GAMEOVER_SONG:String = "gameOver";
 	public static var DEFAULT_GAMEOVER_LOSS_SFX:String = "gameOverSFX";
@@ -111,7 +111,7 @@ class Flags {
 	public static var MAX_SPLASHES:Int = 8;
 	public static var STUNNED_TIME:Float = 5 / 60;
 
-	@:also(funkin.game.PlayState.daPixelZoom)
+	@:alias(funkin.game.PlayState.daPixelZoom)
 	public static var PIXEL_ART_SCALE:Float = 6.0;
 
 	public static var DEFAULT_COMBO_GROUP_MAX_SIZE:Int = 25;
@@ -132,11 +132,11 @@ class Flags {
 	public static var DISABLE_BETA_WARNING_SCREEN:Bool = false;
 	public static var DISABLE_TRANSITIONS:Bool = false;
 
-	@:also(funkin.backend.MusicBeatTransition.script)
+	@:alias(funkin.backend.MusicBeatTransition.script)
 	public static var DEFAULT_TRANSITION_SCRIPT:String = "";
-	@:also(funkin.menus.PauseSubState.script)
+	@:alias(funkin.menus.PauseSubState.script)
 	public static var DEFAULT_PAUSE_SCRIPT:String = "";
-	@:also(funkin.game.GameOverSubstate.script)
+	@:alias(funkin.game.GameOverSubstate.script)
 	public static var DEFAULT_GAMEOVER_SCRIPT:String = "";
 
 	public static var URL_WIKI:String = "https://codename-engine.com/";
@@ -144,7 +144,7 @@ class Flags {
 	public static var URL_FNF_ITCH:String = "https://ninja-muffin24.itch.io/funkin";
 
 	public static var DEFAULT_GLSL_VERSION:String = "120";
-	@:also(funkin.backend.utils.HttpUtil.userAgent)
+	@:alias(funkin.backend.utils.HttpUtil.userAgent)
 	public static var USER_AGENT:String = 'request';
 
 	/**
@@ -161,17 +161,17 @@ class Flags {
 	/**
 	 * QOL FEATURES
 	 */
-	@:also(funkin.menus.MainMenuState.lastSelectedMenu)
+	@:alias(funkin.menus.MainMenuState.lastSelectedMenu)
 	public static var MAINMENU_LAST_MENU:String = null;
-	@:also(funkin.menus.StoryMenuState.lastSelectedWeek)
+	@:alias(funkin.menus.StoryMenuState.lastSelectedWeek)
 	public static var STORYMODE_LAST_WEEK:String = null;
-	@:also(funkin.menus.StoryMenuState.lastSelectedDifficulty)
+	@:alias(funkin.menus.StoryMenuState.lastSelectedDifficulty)
 	public static var STORYMODE_LAST_DIFFICULTY:String = null;
-	@:also(funkin.menus.FreeplayState.lastSelectedSong)
+	@:alias(funkin.menus.FreeplayState.lastSelectedSong)
 	public static var FREEPLAY_LAST_SONG:String = null;
-	@:also(funkin.menus.FreeplayState.lastSelectedDifficulty)
+	@:alias(funkin.menus.FreeplayState.lastSelectedDifficulty)
 	public static var FREEPLAY_LAST_DIFFICULTY:String = null;
-	@:also(funkin.menus.FreeplayState.lastSelectedGameMode)
+	@:alias(funkin.menus.FreeplayState.lastSelectedGameMode)
 	public static var FREEPLAY_LAST_GAME_MODE:String = null;
 	// -- End of Codename's Default Flags --
 

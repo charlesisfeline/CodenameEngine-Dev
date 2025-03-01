@@ -459,8 +459,10 @@ class CodenameSharedObject extends SharedObject implements IDisposable
 			if (!sys.FileSystem.exists(directory))
 				SharedObject.__mkdir(directory);
 
-			trace('Writing to ${path}...');
-			trace("Size: " + encodedData.length);
+			if (Main.verbose) {
+				Logs.verbose('Writing to ${path}...', "CodenameSave");
+				Logs.verbose("Size: " + encodedData.length, "CodenameSave");
+			}
 			var output = sys.io.File.write(path, true);
 			output.writeString("CNESAVEv1:");
 			output.write(encodedData);
