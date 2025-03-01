@@ -16,7 +16,7 @@ class InputAdapter {
 		this.i = i;
 	}
 
-	public static function fromInput(i:haxe.io.Input) {
+	public static function fromInput(i:haxe.io.Input):InputAdapter {
 		#if sys
 		if((i is sys.io.FileInput)) {
 			return new FileInputAdapter(cast i);

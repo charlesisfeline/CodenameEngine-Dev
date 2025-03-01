@@ -145,7 +145,7 @@ enum abstract CompressionMethod(Int) from Int to Int {
 class ExtraFieldData {
 }
 
-class ExtraFieldPadding extends ExtraFieldData{
+class ExtraFieldPadding extends ExtraFieldData {
 	public var bytes:haxe.io.Bytes;
 	public function new(i:InputAdapter, size:Int) {
 		this.bytes = i.read(size);
@@ -176,8 +176,7 @@ class LocalFileHeader {
 	public var version:Int;
 	public var generalPurposeBitFlags:GeneralPurposeBitFlags;
 	public var compressionMethod:CompressionMethod;
-	public var lastModifyTime:Int;
-	public var lastModifyDate:Int;
+	public var lastModifyDate:Date;
 	public var crc32:Int;
 	public var compressedSize:Int;
 	public var uncompressedSize:Int;
@@ -194,8 +193,7 @@ class LocalFileHeader {
 		this.version = i.readUInt16();
 		this.generalPurposeBitFlags = new GeneralPurposeBitFlags(i.readUInt16());
 		this.compressionMethod = i.readUInt16();
-		this.lastModifyTime = i.readUInt16();
-		this.lastModifyDate = i.readUInt16();
+		this.lastModifyDate = ZipReader.readZipDate(i);
 		this.crc32 = i.readInt32();
 		this.compressedSize = i.readInt32();
 		this.uncompressedSize = i.readInt32();
@@ -215,8 +213,8 @@ class LocalFileHeader {
 	inline function get_data() {
 		var old = i.tell();
 		i.seek(dataPos, SeekBegin);
-		trace("Seek: " + dataPos);
-		trace("Compression: " + CompressionMethod.toReadable(compressionMethod) + " (" + compressedSize + " bytes)");
+		//trace("Seek: " + dataPos);
+		//trace("Compression: " + CompressionMethod.toReadable(compressionMethod) + " (" + compressedSize + " bytes)");
 		var res = switch(compressionMethod) {
 			case CompressionMethod.None: i.read(compressedSize);
 			case CompressionMethod.Deflate: {
@@ -292,11 +290,7 @@ class FileHeader {
 	/**
 	 * File last modification time
 	**/
-	public var fileLastModifyTime:Int; // Size: 2
-	/**
-	 * File last modification date
-	**/
-	public var fileLastModifyDate:Int; // Size: 2
+	public var fileLastModifyDate:Date; // Size: 4 (2 bytes + 2 bytes)
 	/**
 	 * CRC-32 of uncompressed data
 	**/
@@ -346,8 +340,7 @@ class FileHeader {
 		this.versionExtract = i.readUInt16();
 		this.generalPurposeBitFlags = new GeneralPurposeBitFlags(i.readUInt16());
 		this.compressionMethod = i.readUInt16();
-		this.fileLastModifyTime = i.readUInt16();
-		this.fileLastModifyDate = i.readUInt16();
+		this.fileLastModifyDate = ZipReader.readZipDate(i);
 		this.crc32 = i.readInt32();
 		this.compressedSize = i.readInt32();
 		this.uncompressedSize = i.readInt32();
@@ -494,7 +487,7 @@ class ZipReader {
 
 	public function readEOCD() {
 		var eocd = findEOCD();
-		trace("EOCD: " + haxe.Json.parse(haxe.Json.stringify(eocd))); // to print as json
+		//trace("EOCD: " + haxe.Json.parse(haxe.Json.stringify(eocd))); // to print as json
 		this.eocd = eocd;
 	}
 
@@ -519,7 +512,7 @@ class ZipReader {
 		var totalRead = 0;
 		while (totalRead < total) {
 			var e = readFileHeader();
-			trace("File: " + haxe.Json.parse(haxe.Json.stringify(e))); // to print as json
+			//trace("File: " + haxe.Json.parse(haxe.Json.stringify(e))); // to print as json
 
 			l.add(e);
 			totalRead++;
@@ -546,4 +539,16 @@ class ZipReader {
 		f.data = s;
 		return f.data;
 	}*/
+
+	public static function readZipDate(i:InputAdapter):Date {
+		var t = i.readUInt16();
+		var hour = (t >> 11) & 31;
+		var min = (t >> 5) & 63;
+		var sec = t & 31;
+		var d = i.readUInt16();
+		var year = d >> 9;
+		var month = (d >> 5) & 15;
+		var day = d & 31;
+		return new Date(year + 1980, month - 1, day, hour, min, sec << 1);
+	}
 }
