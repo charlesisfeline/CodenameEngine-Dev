@@ -157,6 +157,22 @@ class Flags {
 	 * Not recommended to change this unless you know what you're doing
 	**/
 	public static var SAVEDATA_FOLDER:String = "CodenameCrew/CodenameEngine";
+
+	/**
+	 * QOL FEATURES
+	 */
+	@:also(funkin.menus.MainMenuState.lastSelectedMenu)
+	public static var MAINMENU_LAST_MENU:String = null;
+	@:also(funkin.menus.StoryMenuState.lastSelectedWeek)
+	public static var STORYMODE_LAST_WEEK:String = null;
+	@:also(funkin.menus.StoryMenuState.lastSelectedDifficulty)
+	public static var STORYMODE_LAST_DIFFICULTY:String = null;
+	@:also(funkin.menus.FreeplayState.lastSelectedSong)
+	public static var FREEPLAY_LAST_SONG:String = null;
+	@:also(funkin.menus.FreeplayState.lastSelectedDifficulty)
+	public static var FREEPLAY_LAST_DIFFICULTY:String = null;
+	@:also(funkin.menus.FreeplayState.lastSelectedGameMode)
+	public static var FREEPLAY_LAST_GAME_MODE:String = null;
 	// -- End of Codename's Default Flags --
 
 	/**

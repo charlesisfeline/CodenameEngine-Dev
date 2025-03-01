@@ -57,16 +57,6 @@ class Options
 	public static var maxUndos:Int = 120;
 
 	/**
-	 * QOL FEATURES
-	 */
-	public static var mainmenuLastMenu:String = null;
-	public static var storymodeLastWeek:String = null;
-	public static var storymodeLastDifficulty:String = null;
-	public static var freeplayLastSong:String = null;
-	public static var freeplayLastDifficulty:String = null;
-	public static var freeplayLastGameMode:String = null;
-
-	/**
 	 * CONTRIBUTORS
 	**/
 	@:saveField(__contributorsSave) public static var contributors:Array<funkin.backend.system.github.GitHubContributor.CreditsGitHubContributor> = [];

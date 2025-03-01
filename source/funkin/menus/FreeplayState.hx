@@ -27,6 +27,19 @@ class FreeplayState extends MusicBeatState
 	public var gameModeLabels:Array<FreeplayGameMode> = [];
 
 	/**
+	 * Last selected song (Session Based)
+	 */
+	static public var lastSelectedSong:String = null;
+	/**
+	 * Last selected difficulty (Session Based)
+	 */
+	static public var lastSelectedDifficulty:String = null;
+	/**
+	 * Last selected game mode (Session Based)
+	 */
+	static public var lastSelectedGameMode:String = null;
+
+	/**
 	 * Currently selected song
 	 */
 	public var curSelected:Int = 0;
@@ -109,14 +122,14 @@ class FreeplayState extends MusicBeatState
 		songs = (songList = FreeplaySonglist.get()).songs;
 		gameModeLabels = FreeplayGameMode.get();
 
-		if (Options.freeplayLastSong != null) for (k => s in songs) if (s.name == Options.freeplayLastSong) curSelected = k;
-		var firstSong = songs[0];  // like in storymode  - Nex
-		if (firstSong != null) {
-			curDifficulty = Math.floor(songs[0].difficulties.length * 0.5);
-			Logs.verbose('Middle Difficulty for the first song is ${firstSong.difficulties[curDifficulty]} (ID: $curDifficulty)');
+		if (lastSelectedSong != null) for (k => s in songs) if (s.name == lastSelectedSong) curSelected = k;
+		if (lastSelectedGameMode != null) for (k => g in gameModeLabels) if (g.modeID == lastSelectedGameMode) curGameMode = k;  // changeGameMode() will handle the blacklisted ones  - Nex
+		var checkSong = songs[curSelected];
+		if (lastSelectedDifficulty != null && checkSong != null && checkSong.difficulties.contains(lastSelectedDifficulty)) curDifficulty = checkSong.difficulties.indexOf(lastSelectedDifficulty);
+		else if ((checkSong = songs[0]) != null) {  // like in storymode, on base cne its gonna be odd because of the test song  - Nex
+			curDifficulty = Math.floor(checkSong.difficulties.length * 0.5);
+			Logs.verbose('Middle Difficulty for the first song is ${checkSong.difficulties[curDifficulty]} (ID: $curDifficulty)');
 		}
-		if (Options.freeplayLastDifficulty != null && songs[curSelected] != null) for (k => diff in songs[curSelected].difficulties) if (diff == Options.freeplayLastDifficulty) curDifficulty = k;
-		if (Options.freeplayLastGameMode != null) for (k => g in gameModeLabels) if (g.modeID == Options.freeplayLastGameMode) curGameMode = k;  // changeGameMode() will handle the blacklisted ones  - Nex
 
 		super.create();
 
@@ -289,7 +302,6 @@ class FreeplayState extends MusicBeatState
 		if (songs[curSelected].difficulties.length <= 0) return;
 
 		var event = event("onSelect", EventManager.get(FreeplaySongSelectEvent).recycle(songs[curSelected].name, songs[curSelected].difficulties[curDifficulty], gameModeLabels[curGameMode]));
-
 		if (event.cancelled) return;
 
 		#if PRELOAD_ALL
@@ -298,19 +310,6 @@ class FreeplayState extends MusicBeatState
 
 		PlayState.advancedLoadSong(event.song, event.difficulty, event.gameMode);
 		FlxG.switchState(new PlayState());
-	}
-
-	override public function destroy() {
-		var curSong = songs[curSelected];
-		if (curSong != null) {
-			Options.freeplayLastSong = curSong.name;
-			Options.freeplayLastDifficulty = curSong.difficulties[curDifficulty];
-		}
-
-		var curGameMode = gameModeLabels[curGameMode];
-		if (curGameMode != null) Options.freeplayLastGameMode = curGameMode.modeID;
-
-		super.destroy();
 	}
 
 	public function convertChart() {
@@ -324,21 +323,19 @@ class FreeplayState extends MusicBeatState
 	 * @param change How much to change.
 	 * @param force Force the change if `change` is equal to 0
 	 */
-	public function changeDiff(change:Int = 0, force:Bool = false)
-	{
+	public function changeDiff(change:Int = 0, force:Bool = false) {
 		if (change == 0 && !force) return;
 
 		var curSong = songs[curSelected];
 		var validDifficulties = curSong.difficulties.length > 0;
 		var event = event("onChangeDiff", EventManager.get(MenuChangeEvent).recycle(curDifficulty, validDifficulties ? FlxMath.wrap(curDifficulty + change, 0, curSong.difficulties.length-1) : 0, change));
-
 		if (event.cancelled) return;
 
-		curDifficulty = event.value;
-
+		lastSelectedDifficulty = curSong.difficulties[curDifficulty = event.value];
 		updateScore();
 
-		diffText.text = curSong.difficulties.length > 1 ? '< ${curSong.difficulties[curDifficulty]} >' : validDifficulties ? curSong.difficulties[curDifficulty] : "-";
+		validDifficulties = (curSong = songs[curSelected]).difficulties.length > 0;  // in case scripts changed it again  - Nex
+		diffText.text = curSong.difficulties.length > 1 ? '< ${lastSelectedDifficulty} >' : validDifficulties ? lastSelectedDifficulty : "-";
 	}
 
 	function updateScore() {
@@ -377,8 +374,10 @@ class FreeplayState extends MusicBeatState
 		event("onChangeCoopMode", e);  // Backwards compat  - Nex
 		if (event("onChangeGameMode", e).cancelled) return;
 
-		// Getting from scratch the allowed game modes just in case they changed when the event got called  - Nex
-		if (gameModeText.visible = getAllowedGameModesID().length > 0) gameModeText.text = "[TAB] " + gameModeLabels[curGameMode = e.value].modeName;
+		var cur = gameModeLabels[curGameMode = e.value];
+		lastSelectedGameMode = cur.modeID;
+		gameModeText.text = "[TAB] " + cur.modeName;
+		gameModeText.visible = getAllowedGameModesID().length > 0;  // Getting from scratch the allowed game modes just in case they changed when the event got called  - Nex
 		updateScore();
 	}
 
@@ -392,14 +391,13 @@ class FreeplayState extends MusicBeatState
 	 * @param change How much to change
 	 * @param force Force the change, even if `change` is equal to 0.
 	 */
-	public function changeSelection(change:Int = 0, force:Bool = false)
-	{
+	public function changeSelection(change:Int = 0, force:Bool = false) {
 		if (change == 0 && !force) return;
 
 		var event = event("onChangeSelection", EventManager.get(MenuChangeEvent).recycle(curSelected, FlxMath.wrap(curSelected + change, 0, songs.length-1), change));
 		if (event.cancelled) return;
 
-		curSelected = event.value;
+		lastSelectedSong = songs[curSelected = event.value].name;
 		if (event.playMenuSFX) CoolUtil.playMenuSFX(SCROLL, 0.7);
 
 		changeDiff(0, true);

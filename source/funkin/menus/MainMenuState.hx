@@ -14,7 +14,8 @@ using StringTools;
 
 class MainMenuState extends MusicBeatState
 {
-	var curSelected:Int = 0;
+	static public var lastSelectedMenu:String = null;
+	public var curSelected:Int = 0;
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
 
@@ -29,7 +30,7 @@ class MainMenuState extends MusicBeatState
 
 	override function create()
 	{
-		if (Options.mainmenuLastMenu != null) for (k => m in optionShit) if (m == Options.mainmenuLastMenu) curSelected = k;
+		curSelected = CoolUtil.maxInt(0, optionShit.indexOf(lastSelectedMenu));
 		super.create();
 
 		DiscordUtil.call("onMenuLoaded", ["Main Menu"]);
@@ -131,25 +132,12 @@ class MainMenuState extends MusicBeatState
 
 		super.update(elapsed);
 
-		if (forceCenterX)
-		menuItems.forEach(function(spr:FlxSprite)
-		{
-			spr.screenCenter(X);
-		});
+		if (forceCenterX) menuItems.forEach(function(spr:FlxSprite) spr.screenCenter(X));
 	}
 
 	public override function switchTo(nextState:FlxState):Bool {
-		try {
-			menuItems.forEach(function(spr:FlxSprite) {
-				FlxTween.tween(spr, {alpha: 0}, 0.5, {ease: FlxEase.quintOut});
-			});
-		}
+		if (menuItems != null) menuItems.forEach(function(spr:FlxSprite) FlxTween.tween(spr, {alpha: 0}, 0.5, {ease: FlxEase.quintOut}));
 		return super.switchTo(nextState);
-	}
-
-	override public function destroy() {
-		Options.mainmenuLastMenu = optionShit[curSelected];
-		super.destroy();
 	}
 
 	function selectItem() {
@@ -160,11 +148,10 @@ class MainMenuState extends MusicBeatState
 
 		FlxFlicker.flicker(menuItems.members[curSelected], 1, Options.flashingMenu ? 0.06 : 0.15, false, false, function(flick:FlxFlicker)
 		{
-			var daChoice:String = optionShit[curSelected];
-
-			var event = event("onSelectItem", EventManager.get(NameEvent).recycle(daChoice));
+			var event = event("onSelectItem", EventManager.get(NameEvent).recycle(optionShit[curSelected]));
 			if (event.cancelled) return;
-			switch (event.name)
+
+			switch(event.name)
 			{
 				case 'story mode': FlxG.switchState(new StoryMenuState());
 				case 'freeplay': FlxG.switchState(new FreeplayState());
@@ -178,15 +165,11 @@ class MainMenuState extends MusicBeatState
 		var event = event("onChangeItem", EventManager.get(MenuChangeEvent).recycle(curSelected, FlxMath.wrap(curSelected + huh, 0, menuItems.length-1), huh, huh != 0));
 		if (event.cancelled) return;
 
-		curSelected = event.value;
-
-		if (event.playMenuSFX)
-			CoolUtil.playMenuSFX(SCROLL, 0.7);
+		lastSelectedMenu = optionShit[curSelected = event.value];
+		if (event.playMenuSFX) CoolUtil.playMenuSFX(SCROLL, 0.7);
 
 		menuItems.forEach(function(spr:FlxSprite)
 		{
-			spr.animation.play('idle');
-
 			if (spr.ID == curSelected)
 			{
 				spr.animation.play('selected');
@@ -194,6 +177,7 @@ class MainMenuState extends MusicBeatState
 				camFollow.setPosition(mid.x, mid.y);
 				mid.put();
 			}
+			else spr.animation.play('idle');
 
 			spr.updateHitbox();
 			spr.centerOffsets();

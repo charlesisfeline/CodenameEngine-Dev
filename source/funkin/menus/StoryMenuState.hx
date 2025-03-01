@@ -24,6 +24,9 @@ class StoryMenuState extends MusicBeatState {
 	public var tracklist:FlxText;
 	public var weekTitle:FlxText;
 
+	public static var lastSelectedWeek:String = null;
+	public static var lastSelectedDifficulty:String = null;
+
 	public var curWeek:Int = 0;
 	public var curDifficulty:Int = 0;
 
@@ -49,13 +52,13 @@ class StoryMenuState extends MusicBeatState {
 	public override function create() {
 		loadXMLs();
 
-		if (Options.storymodeLastWeek != null) for (k => w in weeks) if (w.id == Options.storymodeLastWeek) curWeek = k;
-		var firstWeek = weeks[0];
-		if (firstWeek != null) {
-			curDifficulty = Math.floor(firstWeek.difficulties.length * 0.5);  // default difficulty should be the middle difficulty in the array to be consistent with base game and whatnot, you know the drill
-			Logs.verbose('Middle Difficulty for the first week is ${firstWeek.difficulties[curDifficulty]} (ID: $curDifficulty)');  // debug stuff lol
+		if (lastSelectedWeek != null) for (k => w in weeks) if (w.id == lastSelectedWeek) curWeek = k;
+		var checkWeek = weeks[curWeek];
+		if (lastSelectedDifficulty != null && checkWeek != null && checkWeek.difficulties.contains(lastSelectedDifficulty)) curDifficulty = checkWeek.difficulties.indexOf(lastSelectedDifficulty);
+		else if ((checkWeek = weeks[0]) != null) {
+			curDifficulty = Math.floor(checkWeek.difficulties.length * 0.5);  // default difficulty should be the middle difficulty in the array to be consistent with base game and whatnot, you know the drill
+			Logs.verbose('Middle Difficulty for the first week is ${checkWeek.difficulties[curDifficulty]} (ID: $curDifficulty)');  // debug stuff lol
 		}
-		if (Options.storymodeLastDifficulty != null && weeks[curWeek] != null) for (k => diff in weeks[curWeek].difficulties) if (diff == Options.storymodeLastDifficulty) curDifficulty = k;
 
 		super.create();
 		persistentUpdate = persistentDraw = true;
@@ -136,15 +139,6 @@ class StoryMenuState extends MusicBeatState {
 		CoolUtil.playMenuSong();
 	}
 
-	public override function destroy() {
-		var curWeek = weeks[curWeek];
-		if (curWeek != null) {
-			Options.storymodeLastWeek = curWeek.id;
-			Options.storymodeLastDifficulty = curWeek.difficulties[curDifficulty];
-		}
-		super.destroy();
-	}
-
 	var __lastDifficultyTween:FlxTween;
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
@@ -156,20 +150,13 @@ class StoryMenuState extends MusicBeatState {
 			if (leftArrow != null && leftArrow.exists) leftArrow.animation.play(controls.LEFT ? 'press' : 'idle');
 			if (rightArrow != null && rightArrow.exists) rightArrow.animation.play(controls.RIGHT ? 'press' : 'idle');
 
-			if (controls.BACK) {
-				goBack();
-			}
-
 			changeDifficulty((controls.LEFT_P ? -1 : 0) + (controls.RIGHT_P ? 1 : 0));
 			changeWeek((controls.UP_P ? -1 : 0) + (controls.DOWN_P ? 1 : 0) - FlxG.mouse.wheel);
 
-			if (controls.ACCEPT)
-				selectWeek();
-		} else {
-			for(e in [leftArrow, rightArrow])
-				if (e != null && e.exists)
-					e.animation.play('idle');
+			if (controls.BACK) goBack();
+			if (controls.ACCEPT) selectWeek();
 		}
+		else for(e in [leftArrow, rightArrow]) if (e != null && e.exists) e.animation.play('idle');
 
 		interpColor.fpsLerpTo(weeks[curWeek].bgColor, 0.0625);
 		weekBG.color = interpColor.color;
@@ -186,20 +173,22 @@ class StoryMenuState extends MusicBeatState {
 
 		var event = event("onChangeWeek", EventManager.get(MenuChangeEvent).recycle(curWeek, FlxMath.wrap(curWeek + change, 0, weeks.length-1), change));
 		if (event.cancelled) return;
-		curWeek = event.value;
+
+		var curWeekData = weeks[curWeek = event.value];
+		lastSelectedWeek = curWeekData.id;
 
 		if (!force) CoolUtil.playMenuSFX();
 		for (k=>e in weekSprites.members) {
 			e.targetY = k - curWeek;
 			e.alpha = k == curWeek ? 1.0 : 0.6;
 		}
-		tracklist.text = 'TRACKS\n\n${[for(e in weeks[curWeek].songs) if (!e.hide) e.name].join('\n')}';
-		weekTitle.text = weeks[curWeek].name.getDefault("");
+		tracklist.text = 'TRACKS\n\n${[for(e in curWeekData.songs) if (!e.hide) e.name].join('\n')}';
+		weekTitle.text = curWeekData.name.getDefault("");
 
 		if (characterSprites != null) for(i in 0...3) {
-			var curChar:FunkinSprite; var newChar:Access = characters[weeks[curWeek].chars[i]];
-			if(newChar == null) modifyCharacterAt(i);
-			else if((curChar = characterSprites.members[i]) == null || newChar.getAtt("name") != curChar.name) modifyCharacterAt(i, newChar);
+			var curChar:FunkinSprite; var newChar:Access = characters[curWeekData.chars[i]];
+			if (newChar == null) modifyCharacterAt(i);
+			else if ((curChar = characterSprites.members[i]) == null || newChar.getAtt("name") != curChar.name) modifyCharacterAt(i, newChar);
 		}
 
 		changeDifficulty(0, true);
@@ -234,9 +223,10 @@ class StoryMenuState extends MusicBeatState {
 
 		var event = event("onChangeDifficulty", EventManager.get(MenuChangeEvent).recycle(curDifficulty, FlxMath.wrap(curDifficulty + change, 0, weeks[curWeek].difficulties.length-1), change));
 		if (event.cancelled) return;
-		curDifficulty = event.value;
 
-		if (__oldDiffName != (__oldDiffName = weeks[curWeek].difficulties[curDifficulty].toLowerCase())) {
+		lastSelectedDifficulty = weeks[curWeek].difficulties[curDifficulty = event.value];
+
+		if (__oldDiffName != (__oldDiffName = lastSelectedDifficulty.toLowerCase())) {
 			for(e in difficultySprites) e.visible = false;
 
 			var diffSprite = difficultySprites[__oldDiffName];
@@ -252,7 +242,7 @@ class StoryMenuState extends MusicBeatState {
 			}
 		}
 
-		intendedScore = FunkinSave.getWeekHighscore(weeks[curWeek].id, weeks[curWeek].difficulties[curDifficulty]).score;
+		intendedScore = FunkinSave.getWeekHighscore(weeks[curWeek].id, lastSelectedDifficulty).score;
 	}
 
 	public function loadXMLs() {
