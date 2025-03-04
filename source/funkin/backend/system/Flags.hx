@@ -53,8 +53,9 @@ class Flags {
 	public static var DEFAULT_SCROLL_SPEED:Float = 2.0;
 	public static var DEFAULT_HEALTH_ICON:String = "face";
 
+	// GAME_MODES_LIST_MOD_MODE is the only one different cause its better to leave override by default on things that are mainly scripts  - Nex
+	public static var GAME_MODES_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "override";
 	public static var SONGS_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "oneOFtwo";
-	public static var GAME_MODES_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "oneOFtwo";
 	public static var WEEKS_LIST_MOD_MODE:Allow<"prepend", "oneOFtwo", "override", "append"> = "oneOFtwo";
 
 	public static var DEFAULT_BPM:Float = 100.0;

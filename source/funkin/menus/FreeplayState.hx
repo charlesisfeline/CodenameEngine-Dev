@@ -2,6 +2,7 @@ package funkin.menus;
 
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import flixel.util.typeLimit.OneOfTwo;
 import funkin.backend.assets.AssetsLibraryList.AssetSource;
 import funkin.backend.chart.Chart;
 import funkin.backend.chart.ChartData.ChartMetaData;
@@ -447,23 +448,26 @@ class FreeplayState extends MusicBeatState
 	@:noCompletion private function set_curCoopMode(val:Int) return curGameMode = val;
 
 	@:noCompletion var coopLabels(get, set):Array<String>;
-	@:noCompletion private function get_coopLabels() return [for(mode in gameModeLabels) mode.modeName];
+	@:noCompletion private function get_coopLabels() return [for(mode in gameModeLabels) "[TAB] " + mode.modeName];
 	@:noCompletion private function set_coopLabels(names:Array<String>) {
-		gameModeLabels = [for(name in names) {
+		var array = FreeplayGameMode.getGameModesFromSource(BOTH, true);
+		gameModeLabels = [for (name in names) {
 			if (name.startsWith("[TAB] ")) name = name.substr("[TAB] ".length);
-			new FreeplayGameMode(name, switch(name) {
+			var id:String = switch(name) {
 				case "Solo Mode": "codename.solo";
 				case "Opponent Mode": "codename.opponent";
 				case "Co-Op Mode": "codename.coop";
 				case "Co-Op Mode (Switched)": "codename.coop-opponent";
 				default: name.toLowerCase().replace(" ", "-");
-			}, switch(name) {
+			};
+
+			FreeplayGameMode.getSpecific(id, new FreeplayGameMode(name, id, switch(name) {
 				case "Solo Mode": ["solo"];
 				case "Opponent Mode": ["opponent"];
 				case "Co-Op Mode": ["coop"];
 				case "Co-Op Mode (Switched)": ["coop-switched", "opponent", "coop"];
 				default: null;
-			});
+			}), array);
 		}];
 		return names;
 	}
@@ -509,12 +513,12 @@ class FreeplayGameMode {
 	 * Gets a specific game mode by its ID.
 	 * @param modeID The ID of the game mode.
 	 * @param defaultMode The default game mode to return if the specified one is not found.
+	 * @param source The source to get the game modes from (by default it's `null` using `get()`, if it's not `null` it uses `getGameModesFromSource()`). This argument can also accept a `FreeplayGameMode` array.
 	 * @param useTxt Whether to search in the text file for the game modes if it exists.
-	 * @param source The source to get the game modes from (by default it's `null` using `get()`, if it's not `null` it uses `getGameModesFromSource()`).
 	 * @return The game mode with the specified ID, or the default one if it's not found.
 	 */
-	public static function getSpecific(modeID:String, ?defaultMode:FreeplayGameMode = null, useTxt:Bool = true, ?source:AssetSource):FreeplayGameMode {
-		for (mode in (source == null ? FreeplayGameMode.get(useTxt) : FreeplayGameMode.getGameModesFromSource(source, useTxt))) if (mode.modeID == modeID) return mode;
+	public static function getSpecific(modeID:String, ?defaultMode:FreeplayGameMode = null, ?source:OneOfTwo<AssetSource, Array<FreeplayGameMode>>, useTxt:Bool = true):FreeplayGameMode {
+		for (mode in (source is Array ? cast source : (source == null ? FreeplayGameMode.get(useTxt) : FreeplayGameMode.getGameModesFromSource(source, useTxt)))) if (mode.modeID == modeID) return mode;
 		return defaultMode;
 	}
 
@@ -526,11 +530,10 @@ class FreeplayGameMode {
 				list = getGameModesFromSource(MODS, useTxt).concat(getGameModesFromSource(SOURCE, useTxt));
 			case 'append':
 				list = getGameModesFromSource(SOURCE, useTxt).concat(getGameModesFromSource(MODS, useTxt));
-			case 'override':
+			case 'oneOFtwo':
+				if ((list = getGameModesFromSource(MODS, useTxt)).length == 0) list = getGameModesFromSource(SOURCE, useTxt);
+			default:
 				list = getGameModesFromSource(BOTH, useTxt);
-			default /*case 'oneOFtwo'*/:
-				if ((list = getGameModesFromSource(MODS, useTxt)).length == 0)
-					list = getGameModesFromSource(SOURCE, useTxt);
 		}
 
 		return list;

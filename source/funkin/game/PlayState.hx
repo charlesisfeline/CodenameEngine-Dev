@@ -2022,7 +2022,7 @@ class PlayState extends MusicBeatState
 	private static inline function get_coopMode():Bool return gameMode.modeID == "codename.coop" || gameMode.modeID == "codename.coop-opponent";
 	private static inline function set_coopMode(val:Bool):Bool { __oldSetGameMode(opponentMode, val); return coopMode; };
 	private static inline function get_botplayMode():Bool return gameMode.modeID == "codename.botplay";
-	private static inline function set_botplayMode(val:Bool):Bool { gameMode = FreeplayGameMode.getSpecific("codename.botplay", new FreeplayGameMode("Botplay Mode", "codename.botplay", ["botplay"])); return botplayMode; };
+	private static inline function set_botplayMode(val:Bool):Bool { gameMode = FreeplayGameMode.getSpecific("codename.botplay"); return botplayMode; };
 
 	private inline static function get_campaignAccuracy()
 		return campaignAccuracyCount == 0 ? 0 : campaignAccuracyTotal / campaignAccuracyCount;
@@ -2090,9 +2090,9 @@ class PlayState extends MusicBeatState
 
 	// Backwards Compat
 	@:dox(hide) public static function __oldSetGameMode(_opponentMode:Bool = false, _coopMode:Bool = false) {
-		return gameMode = (_opponentMode && _coopMode) ? FreeplayGameMode.getSpecific("codename.coop-opponent", new FreeplayGameMode("Co-Op Mode (Switched)", "codename.coop-opponent", ["coop-switched", "opponent", "coop"])) :
-			(_opponentMode ? FreeplayGameMode.getSpecific("codename.opponent", new FreeplayGameMode("Opponent Mode", "codename.opponent", ["opponent"])) :
-			(_coopMode ? FreeplayGameMode.getSpecific("codename.coop", new FreeplayGameMode("Co-Op Mode", "codename.coop", ["coop"])) : null));
+		return gameMode = (_opponentMode && _coopMode) ? FreeplayGameMode.getSpecific("codename.coop-opponent") :
+			(_opponentMode ? FreeplayGameMode.getSpecific("codename.opponent") :
+			(_coopMode ? FreeplayGameMode.getSpecific("codename.coop") : null));
 	}
 }
 
