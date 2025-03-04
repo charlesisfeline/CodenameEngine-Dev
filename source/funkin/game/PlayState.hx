@@ -1902,10 +1902,13 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-	public function addScript(file:String):Script {
+	public function addScript(file:String, ?pos:Int):Script {
 		var script:Script = null;
-		if (Script.scriptExtensions.contains(Path.extension(file).toLowerCase()))
-			scripts.add(script = Script.create(file));
+		if (Script.scriptExtensions.contains(Path.extension(file).toLowerCase())) {
+			script = Script.create(file);
+			if (pos == null) scripts.add(script);
+			else scripts.insert(pos, script);
+		}
 		return script;
 	}
 

@@ -1,7 +1,7 @@
 //
 function changedGameModeScript(enabled:Bool) for (str in strumLines) {
-	if (str.data.type != 2) str.cpu = enabled ? str.data.type == 1 : str.data.type == 0;
-	if (str.controls == controlsP1 || str.controls == controlsP2) str.controls = (str.type == 1) != enabled ? controlsP1 : controlsP2;
+	if (str.controls == controlsP1 || str.controls == controlsP2) str.controls = (str.data.type == 1) != enabled ? controlsP1 : controlsP2;
+	else if (str.data.type != 2) str.cpu = enabled ? str.data.type == 1 : str.data.type == 0;
 	switchHealthbarColors(enabled);
 }
 
