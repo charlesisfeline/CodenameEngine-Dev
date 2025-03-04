@@ -661,7 +661,7 @@ class PlayState extends MusicBeatState
 
 		generateSong(SONG);
 
-		for(noteType in SONG.noteTypes) {
+		for (noteType in SONG.noteTypes) {
 			var scriptPath = Paths.script('data/notes/${noteType}');
 			if (Assets.exists(scriptPath) && !scripts.contains(scriptPath)) {
 				var script = Script.create(scriptPath);
@@ -672,7 +672,7 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		for(i=>strumLine in SONG.strumLines) {
+		for (i => strumLine in SONG.strumLines) {
 			if (strumLine == null) continue;
 
 			var chars = [];
@@ -690,16 +690,8 @@ class PlayState extends MusicBeatState
 			var strOffset:Float = strumLine.strumLinePos != null ? strumLine.strumLinePos : (strumLine.type == 1 ? 0.75 : 0.25);
 			var strScale:Float = strumLine.strumScale != null ? strumLine.strumScale : 1;
 			var strXPos:Float = (FlxG.width * strOffset) - (Note.swagWidth * strScale * 2);
-			var startingPos:FlxPoint = strumLine.strumPos != null ?
-				FlxPoint.get(strumLine.strumPos[0] == 0 ? strXPos : strumLine.strumPos[0], strumLine.strumPos[1]) :
-				FlxPoint.get(strXPos, this.strumLine.y);
-			var strLine = new StrumLine(chars,
-				startingPos,
-				strumLine.strumScale == null ? 1 : strumLine.strumScale,
-				strumLine.type == 2 || (!coopMode && !((strumLine.type == 1 && !opponentMode) || (strumLine.type == 0 && opponentMode))),
-				strumLine.type != 1, coopMode ? ((strumLine.type == 1) != opponentMode ? controlsP1 : controlsP2) : controls,
-				strumLine.vocalsSuffix
-			);
+			var startingPos:FlxPoint = strumLine.strumPos != null ? FlxPoint.get(strumLine.strumPos[0] == 0 ? strXPos : strumLine.strumPos[0], strumLine.strumPos[1]) : FlxPoint.get(strXPos, this.strumLine.y);
+			var strLine = new StrumLine(chars, startingPos, strumLine.strumScale == null ? 1 : strumLine.strumScale, strumLine.type != 1, strumLine.type != 1, controls, strumLine.vocalsSuffix);
 			strLine.cameras = [camHUD];
 			strLine.data = strumLine;
 			strLine.visible = (strumLine.visible != false);
@@ -754,8 +746,8 @@ class PlayState extends MusicBeatState
 		healthBar = new FlxBar(healthBarBG.x + 4, healthBarBG.y + 4, RIGHT_TO_LEFT, Std.int(healthBarBG.width - 8), Std.int(healthBarBG.height - 8), this,
 			'health', 0, maxHealth);
 		healthBar.scrollFactor.set();
-		var leftColor:Int = dad != null && dad.iconColor != null && Options.colorHealthBar ? dad.iconColor : (opponentMode ? 0xFF66FF33 : 0xFFFF0000);
-		var rightColor:Int = boyfriend != null && boyfriend.iconColor != null && Options.colorHealthBar ? boyfriend.iconColor : (opponentMode ? 0xFFFF0000 : 0xFF66FF33); // switch the colors
+		var leftColor:Int = Options.colorHealthBar && dad != null && dad.iconColor != null ? dad.iconColor : 0xFFFF0000;
+		var rightColor:Int = Options.colorHealthBar && boyfriend != null && boyfriend.iconColor != null ? boyfriend.iconColor : 0xFF66FF33; // switch the colors
 		healthBar.createFilledBar(leftColor, rightColor);
 		add(healthBar);
 
@@ -1449,7 +1441,7 @@ class PlayState extends MusicBeatState
 	 * @param retrySFX SFX played whenever the player retries. Defaults to `retrySFX` (`gameOverEnd`)
 	 */
 	public function gameOver(?character:Character, ?deathCharID:String, ?gameOverSong:String, ?lossSFX:String, ?retrySFX:String) {
-		var charToUse:Character = character.getDefault(opponentMode ? dad : boyfriend);  // Imma still make it check null later just in case dad or bf are also null for some weird scripts  - Nex
+		var charToUse:Character = character.getDefault(boyfriend);  // Imma still make it check null later just in case dad or bf are also null for some weird scripts  - Nex
 		var event:GameOverEvent = gameAndCharsEvent("onGameOver", EventManager.get(GameOverEvent).recycle(
 			charToUse == null ? 0 : charToUse.x,
 			charToUse == null ? 0 : charToUse.y,
