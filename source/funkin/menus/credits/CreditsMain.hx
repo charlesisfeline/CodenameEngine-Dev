@@ -12,7 +12,7 @@ class CreditsMain extends TreeMenu {
 	var items:Array<OptionType> = [];
 
 	public override function create() {
-		bg = new FlxSprite(-80).loadGraphic(Paths.image('menus/menuBGBlue'));
+		bg = new FlxSprite(-80).loadAnimatedGraphic(Paths.image('menus/menuBGBlue'));
 		// bg.scrollFactor.set();
 		bg.scale.set(1.15, 1.15);
 		bg.updateHitbox();
@@ -40,7 +40,7 @@ class CreditsMain extends TreeMenu {
 			optionsTree.add(Type.createInstance(CreditsCodename, []));
 		}));
 		items.push(new TextOption("Friday Night Funkin'", "Select this to open the itch.io page of the original game to donate!", function() {
-			CoolUtil.openURL("https://ninja-muffin24.itch.io/funkin");
+			CoolUtil.openURL(Flags.URL_FNF_ITCH);
 		}));
 
 		main = new OptionsScreen('Credits', 'The people who made this possible!', items);

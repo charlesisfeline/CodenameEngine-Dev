@@ -81,16 +81,13 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 
 		if(!disableScripts)
 			script = Script.create(Paths.script(Path.withoutExtension(Paths.xml('characters/$curCharacter')), null, true));
-		else
-			script = new DummyScript(curCharacter);
-		script.load();
-
-		buildCharacter(xml);
-		scripts.call("create");
-
 		if (script == null)
 			script = new DummyScript(curCharacter);
 
+		script.load();
+
+		scripts.call("create");
+		buildCharacter(xml);
 		scripts.call("postCreate");
 	}
 
@@ -208,7 +205,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	}
 
 	public function isFlippedOffsets()
-		return (isPlayer != playerOffsets) != (flipX != __baseFlipped);
+		return debugMode ? false : (isPlayer != playerOffsets) != (flipX != __baseFlipped);
 
 	var __reversePreDrawProcedure:Bool = false;
 
@@ -247,60 +244,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		super.draw();
 		postDraw();
 
-		if (!ghostDraw) {
-			if (debugHitbox) drawHitbox();
-			if (debugCamera) drawCamera();
-		}
-
 		script.call("postDraw", [e]);
-	}
-
-	public var debugHitbox:Bool = false;
-	public var debugCamera:Bool = false;
-
-	public function drawHitbox() {
-		if (_matrix == null || frame == null) return;
-
-		for (camera in cameras) {
-			var gfx:Graphics = FlxG.renderBlit ? {
-				FlxSpriteUtil.flashGfx.clear();
-				FlxSpriteUtil.flashGfx;
-			} :  camera.debugLayer.graphics;
-
-			_rect.set(_matrix.tx, _matrix.ty, frame.frame.width * _matrix.a, frame.frame.height * _matrix.d);
-			@:privateAccess _rect = camera.transformRect(_rect);
-
-			gfx.lineStyle(2, 0xFF007B8F, 1);
-			gfx.drawRect(_rect.x, _rect.y, _rect.width, _rect.height);
-
-			if (FlxG.renderBlit)
-				camera.buffer.draw(FlxSpriteUtil.flashGfxSprite);
-		}
-	}
-
-	public function drawCamera() {
-		for (camera in cameras) {
-			var gfx:Graphics = FlxG.renderBlit ? {
-				FlxSpriteUtil.flashGfx.clear();
-				FlxSpriteUtil.flashGfx;
-			} :  camera.debugLayer.graphics;
-
-			var camPos:FlxPoint = getCameraPosition();
-			camPos -= camera.scroll;
-
-			gfx.lineStyle(2, 0xFF00A0B9, 1);
-
-			gfx.moveTo(camPos.x - 8, camPos.y);
-			gfx.lineTo(camPos.x + 8, camPos.y);
-
-			gfx.moveTo(camPos.x, camPos.y - 8);
-			gfx.lineTo(camPos.x, camPos.y + 8);
-
-			camPos.put();
-
-			if (FlxG.renderBlit)
-				camera.buffer.draw(FlxSpriteUtil.flashGfxSprite);
-		}
 	}
 
 	public var singAnims = ["singLEFT", "singDOWN", "singUP", "singRIGHT"];
@@ -482,7 +426,8 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 
 		if (holdTime != 4) xml.set("holdTime", Std.string(FlxMath.roundDecimal(holdTime, 4)));
 
-		if (flipX) xml.set("flipX", Std.string(flipX));
+		var realFlipped:Bool = isPlayer ? !__baseFlipped : __baseFlipped;
+		if (realFlipped) xml.set("flipX", "true");
 		xml.set("icon", getIcon());
 
 		if (gameOverCharacter != Character.FALLBACK_DEAD_CHARACTER) xml.set("gameOverChar", gameOverCharacter);
@@ -492,7 +437,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		if (scale.x != 1) xml.set("scale", Std.string(FlxMath.roundDecimal(scale.x, 4)));
 		if (!antialiasing) xml.set("antialiasing", antialiasing == true ? "true" : "false");
 
-		if (playerOffsets) xml.set("isPlayer", playerOffsets == true ? "true" : "false");
+		if (isPlayer) xml.set("isPlayer", isPlayer == true ? "true" : "false");
 
 		var anims:Array<AnimData> = [];
 		if (animsOrder != null) {

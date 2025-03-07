@@ -52,7 +52,7 @@ class Stage extends FlxBasic implements IBeatReceiver {
 		for (k=>e in stageSprites) script.set(k, e);
 
 	public function prepareInfos(node:Access)
-		return XMLImportedScriptInfo.prepareInfos(node, PlayState.instance.scripts, (infos) -> xmlImportedScripts.push(infos));
+		return  PlayState.instance == null ? null : XMLImportedScriptInfo.prepareInfos(node, PlayState.instance.scripts, (infos) -> xmlImportedScripts.push(infos));
 
 	public function new(stage:String, ?state:FlxState, autoLoad:Bool = true) {
 		super();
@@ -409,7 +409,8 @@ class StageCharPos extends FlxObject {
 		oldInfo = getOldInfo(char);
 		char.setPosition(x + (id * charSpacingX), y + (id * charSpacingY));
 		char.scrollFactor.set(scrollFactor.x, scrollFactor.y);
-		char.scale.x *= scale.x; char.scale.y *= scale.y;
+		if (!char.debugMode) 
+			char.scale.x *= scale.x; char.scale.y *= scale.y;
 		char.cameraOffset += FlxPoint.weak(camxoffset, camyoffset);
 		char.skew.x += skewX; char.skew.y += skewY;
 		char.alpha *= alpha;

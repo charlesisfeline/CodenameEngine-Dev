@@ -1,5 +1,10 @@
 package funkin.backend.utils;
 
+import flxanimate.data.AnimationData.AnimAtlas;
+import flixel.graphics.FlxGraphic;
+import openfl.display.BitmapData;
+import flixel.graphics.frames.FlxAtlasFrames;
+import flixel.graphics.frames.FlxFramesCollection;
 #if sys
 import sys.FileSystem;
 #end
@@ -38,6 +43,8 @@ import haxe.xml.Access;
 import lime.utils.Assets;
 import openfl.geom.ColorTransform;
 import flixel.math.FlxPoint;
+import haxe.Constraints.IMap;
+import haxe.EnumTools.EnumValueTools;
 
 using StringTools;
 
@@ -299,7 +306,7 @@ final class CoolUtil
 			label++;
 			rSize /= 1024;
 		}
-		return Std.int(rSize) + "." + addZeros(Std.string(Std.int((rSize % 1) * 100)), 2) + sizeLabels[label];
+		return Std.int(rSize) + ((label <= 1) ? "" : "." + addZeros(Std.string(Std.int((rSize % 1) * 100)), 2)) + sizeLabels[label];
 	}
 
 	/**
@@ -911,6 +918,28 @@ final class CoolUtil
 	}
 
 	/**
+	 * Returns the screen position of an point, while taking the camera zoom into account.
+	 *
+	 * @param	object	Any `FlxObject`
+	 * @param   camera  The desired "screen" coordinate space. If `null`, `FlxG.camera` is used.
+	 * @param   result  Optional arg for the returning point
+	 * @return  The screen position of the object.
+	 */
+	 public static function pointToScreenPosition(object:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint) {
+		if (result == null)
+			result = FlxPoint.get();
+		if (camera == null)
+			camera = FlxG.camera;
+
+		result.set(object.x, object.y);
+		result.x = (((result.x - camera.scroll.x) * camera.zoom) - ((camera.width * 0.5) * (camera.zoom - camera.initialZoom)));
+		result.y = (((result.y - camera.scroll.y) * camera.zoom) - ((camera.height * 0.5) * (camera.zoom - camera.initialZoom)));
+
+		object.putWeak();
+		return result;
+	}
+
+	/**
 	 * Sorts an array alphabetically.
 	 * @param array Array to sort
 	 * @param lowercase Whenever the array should be sorted in lowercase
@@ -1087,6 +1116,174 @@ final class CoolUtil
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * ! REQUIRES FULL PATH!!!
+	 * @param path 
+	 * @return Bool 
+	 */
+	public static function imageHasFrameData(path:String):String {
+		if (FileSystem.exists(Path.withExtension(path, "xml"))) return "xml";
+		if (FileSystem.exists(Path.withExtension(path, "txt"))) return "txt";
+		if (FileSystem.exists(Path.withExtension(path, "json"))) return "json";
+
+		return null;
+	}
+
+	// loads frames with no image, but with data, so you can parse it
+	public static function loadFramesFromData(data:String, ext:String = null):FlxFramesCollection {
+		var frames:FlxFramesCollection = null;
+		var tempBitmap:BitmapData = new BitmapData(1, 1, false);
+
+		// Worlds hackiest work around alert???
+		var graphic:FlxGraphic = FlxG.bitmap.add(tempBitmap);
+		@:privateAccess {
+			// prevent errors from being shown, such as Size is too small
+			graphic.width = 9999999;
+			graphic.height = 9999999;
+		}
+
+		try {
+			switch (ext) {
+				case "xml": frames = FlxAtlasFrames.fromSparrow(graphic, Xml.parse(data));
+				case "txt": frames = FlxAtlasFrames.fromSpriteSheetPacker(graphic, data);
+				case "json": frames = FlxAtlasFrames.fromAseprite(graphic, data);
+			}
+		} catch (e) {trace(e);}
+
+		return frames;
+	}
+
+	public static function removeBOM(str:String):String {
+		return StringTools.replace(str, String.fromCharCode(0xFEFF), "");
+	}
+
+	public static function getAnimsListFromFrames(frames:FlxFramesCollection, ext:String = null):Array<String> {
+		if (frames == null) return [];
+
+		var animsList:Array<String> = [];
+		for (frame in frames.frames) {
+			var animName:String = ext == "txt" ? frame.name.split("_")[0] : frame.name.substr(0, frame.name.length-4);
+			if (!animsList.contains(animName))
+				animsList.push(animName);
+		}
+
+		return animsList;
+	}
+
+	public static function getAnimsListFromAtlas(atlas:AnimAtlas):Array<String> {
+		if (atlas == null) return [];
+
+		var animsList:Array<String> = [];
+		if (atlas.AN.SN != null) animsList.push(atlas.AN.SN);
+		if (atlas.SD != null)
+			for (symbol in atlas.SD.S)
+				if (symbol.SN != null) animsList.push(symbol.SN);
+
+		return animsList;
+	}
+
+	public static function getAnimsListFromSprite(spr:FunkinSprite):Array<String> {
+		if (spr.animateAtlas != null) {
+			return [for (symbol => timeline in spr.animateAtlas.anim.symbolDictionary) symbol];
+		} else 
+			return getAnimsListFromFrames(spr.frames);
+	}
+
+	// TODO: check this for bugs
+	// Code from https://github.com/elnabo/equals/blob/master/src/equals/Equal.hx, (MIT License), but updated to work with haxe 4
+	public static function deepEqual<T> (a:T, b:T) : Bool {
+		if (a == b) { return true; } // if physical equality
+		if (isNull(a) ||  isNull(b)) {
+			return false;
+		}
+
+		switch (Type.typeof(a)) {
+			case TNull, TInt, TBool, TUnknown:
+				return a == b;
+			case TFloat:
+				return Math.isNaN(cast a) && Math.isNaN(cast b); // only valid true result remaining
+			case TFunction:
+				return Reflect.compareMethods(a, b); // only physical equality can be tested for function
+			case TEnum(_):
+				if (EnumValueTools.getIndex(cast a) != EnumValueTools.getIndex(cast b)) {
+					return false;
+				}
+				var a_args = EnumValueTools.getParameters(cast a);
+				var b_args = EnumValueTools.getParameters(cast b);
+				return deepEqual(a_args, b_args);
+			case TClass(_):
+				if ((a is String) && (b is String)) {
+					return a == b;
+				}
+				if ((a is Array) && (b is Array)) {
+					var a = cast(a, Array<Dynamic>);
+					var b = cast(b, Array<Dynamic>);
+					if (a.length != b.length) { return false; }
+					for (i in 0...a.length) {
+						if (!deepEqual(a[i], b[i])) {
+							return false;
+						}
+					}
+					return true;
+				}
+
+				if ((a is IMap) && (b is IMap)) {
+					var a = cast(a, IMap<Dynamic, Dynamic>);
+					var b = cast(b, IMap<Dynamic, Dynamic>);
+					var a_keys = [ for (key in a.keys()) key ];
+					var b_keys = [ for (key in b.keys()) key ];
+					a_keys.sort(Reflect.compare);
+					b_keys.sort(Reflect.compare);
+					if (!deepEqual(a_keys, b_keys)) { return false; }
+					for (key in a_keys) {
+						if (!deepEqual(a.get(key), b.get(key))) {
+							return false;
+						}
+					}
+					return true;
+				}
+
+				if ((a is Date) && (b is Date)) {
+					return cast(a, Date).getTime() == cast(b, Date).getTime();
+				}
+
+				if ((a is haxe.io.Bytes) && (b is haxe.io.Bytes)) {
+					return deepEqual(cast(a, haxe.io.Bytes).getData(), cast(b, haxe.io.Bytes).getData());
+				}
+
+			case TObject:
+		}
+
+		for (field in Reflect.fields(a)) {
+			var pa = Reflect.field(a, field);
+			var pb = Reflect.field(b, field);
+			if (isFunction(pa)) {
+				// ignore function as only physical equality can be tested, unless null
+				if (isNull(pa) != isNull(pb)) {
+					return false;
+				}
+				continue;
+			}
+			if (!deepEqual(pa, pb)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static inline function isNull(a:Dynamic):Bool {
+		return Type.enumEq(Type.typeof(a), TNull);
+	}
+
+	static inline function isFunction(a:Dynamic):Bool {
+		return Type.enumEq(Type.typeof(a), TFunction);
+	}
+
+	public static inline function isMapEmpty<K, V>(map: Map<K, V>): Bool {
+		return !map.keys().hasNext();
 	}
 }
 

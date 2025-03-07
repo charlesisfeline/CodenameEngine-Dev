@@ -1,5 +1,6 @@
 package funkin.editors.character;
 
+import funkin.editors.extra.AxisGizmo;
 import flixel.math.FlxRect;
 import funkin.editors.stage.StageEditor;
 import funkin.game.Stage;
@@ -14,7 +15,6 @@ import funkin.editors.ui.UIContextMenu.UIContextMenuOptionSpr;
 import funkin.game.Character;
 import haxe.xml.Access;
 import haxe.xml.Printer;
-import funkin.editors.extra.DrawAxis;
 
 class CharacterEditor extends UIState {
 	static var __character:String;
@@ -33,7 +33,8 @@ class CharacterEditor extends UIState {
 	// public var dragOffsetsCheckbox:UICheckbox;
 	// public var lockCameraCheckbox:UICheckbox;
 	
-	public var drawAxis:DrawAxis;
+	public var axisGizmo:AxisGizmo;
+	public var characterGizmo:CharacterGizmos;
 	public var uiGroup:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
 
 	public var cameraHoverDummy:CameraHoverDummy;
@@ -42,6 +43,7 @@ class CharacterEditor extends UIState {
 	public var characterAnimsWindow:CharacterAnimsWindow;
 
 	public var charCamera:FlxCamera;
+	public var gizmosCamera:FlxCamera;
 	public var uiCamera:FlxCamera;
 
 	public var animationText:UIText;
@@ -248,12 +250,32 @@ class CharacterEditor extends UIState {
 						label: "Change Animation ↓",
 						keybind: [S],
 						onSelect: _animation_down
-					}
+					},
+					null,
+					{
+						label: "Play Animation On Offset?",
+						onSelect: _animation_toggle_anim_playing_offsets,
+						icon: Options.playAnimOnOffset ? 1 : 0
+					},
 				]
 			},
 		];
 
 		charCamera = FlxG.camera;
+
+		gizmosCamera = new FlxCamera();
+		gizmosCamera.bgColor = 0;
+		FlxG.cameras.add(gizmosCamera);
+
+		axisGizmo = new AxisGizmo();
+		axisGizmo.cameras = [gizmosCamera];
+		add(axisGizmo);
+
+		characterGizmo = new CharacterGizmos();
+		characterGizmo.boxGizmo = Options.characterHitbox;
+		characterGizmo.cameraGizmo = Options.characterCamera;
+		characterGizmo.cameras = [gizmosCamera];
+		add(characterGizmo);
 
 		uiCamera = new FlxCamera();
 		uiCamera.bgColor = 0;
@@ -264,16 +286,11 @@ class CharacterEditor extends UIState {
 		character.debugMode = true;
 		character.cameras = [charCamera];
 
-		character.debugHitbox = Options.characterHitbox;
-		character.debugCamera = Options.characterCamera;
+		characterGizmo.character = character;
 
 		changeCharacterIsPlayer(character.playerOffsets);
 
 		add(character);
-
-		drawAxis = new DrawAxis();
-		drawAxis.cameras = [charCamera];
-		add(drawAxis);
 
 		uiGroup.cameras = [uiCamera];
 		add(cameraHoverDummy = new CameraHoverDummy(uiGroup, FlxPoint.weak(0, 0)));
@@ -288,12 +305,15 @@ class CharacterEditor extends UIState {
 		uiGroup.add(animationText);
 
 		characterAnimsWindow = new CharacterAnimsWindow((FlxG.width-(500-16)-16), characterPropertiesWindow.y+224+16, character);
-		uiGroup.add(characterAnimsWindow);
+		uiGroup.add(characterPropertiesWindow.animsWindow = characterAnimsWindow);
 
 		add(uiGroup);
 
 		playAnimation(character.getAnimOrder()[0]);
 		changeStage("stage");
+
+		if (Options.editorsResizable)
+			UIState.setResolutionAware();
 
 		_view_focus_character(null);
 
@@ -326,7 +346,7 @@ class CharacterEditor extends UIState {
 	public var draggingCharacter:Bool = false;
 	public var draggingOffset:FlxPoint = new FlxPoint();
 	public override function update(elapsed:Float) {
-		if(FlxG.keys.justPressed.ANY)
+		if(FlxG.keys.justPressed.ANY && currentFocus == null)
 			UIUtil.processShortcuts(topMenu);
 
 		if (cameraHoverDummy.hovered && !draggingCharacter) {
@@ -360,7 +380,7 @@ class CharacterEditor extends UIState {
 			animationText.x = animationTopButton.x + animationTopButton.bWidth + 6;
 			animationText.y = Std.int((animationTopButton.bHeight - animationText.height) / 2);
 		}
-		animationText.text = '"${character.getAnimName()}"';
+		animationText.text = '"${characterFakeAnim}"';
 
 		if (Options.characterDragging)
 			handleMouseOffsets();
@@ -370,7 +390,7 @@ class CharacterEditor extends UIState {
 
 	inline function handleMouseOffsets() {
 		if (draggingCharacter) {
-			cameraHoverDummy.cursor = #if (mac) DRAG; #elseif (linux) DRAG; #else CLICK; #end
+			cameraHoverDummy.cursor = DRAG;
 
 			if (FlxG.mouse.justReleased) {
 				draggingOffset.x /= character.scale.x;
@@ -389,13 +409,28 @@ class CharacterEditor extends UIState {
 			if(character.animateAtlas == null) {
 				StageEditor.calcSpriteBounds(character);
 				var bounds:FlxRect = cast character.extra.get(StageEditor.exID("bounds"));
+				trace(bounds);
 				if (bounds.containsPoint(point)) {
-					cameraHoverDummy.cursor = #if (mac) DRAG_OPEN; #elseif (linux) CLICK; #else MOVE; #end
+					cameraHoverDummy.cursor = #if (mac) DRAG_OPEN; #else CLICK; #end
 					if (FlxG.mouse.justPressed)
 						draggingCharacter = true;
 				}
 			}
 		}
+	}
+
+	public override function onResize(width:Int, height:Int) {
+		super.onResize(width, height);
+		if (!UIState.resolutionAware) return;
+
+		if (width < FlxG.initialWidth || height < FlxG.initialHeight) {
+			width = FlxG.initialWidth; height = FlxG.initialHeight;
+		}
+
+		characterPropertiesWindow.x = (FlxG.width-(440)-16) - (((500-16)-(440))/2);
+		characterAnimsWindow.x = (FlxG.width-(500-16)-16);
+
+		characterAnimsWindow.bHeight = Std.int(FlxG.height-(characterPropertiesWindow.y+characterPropertiesWindow.bHeight)-(32));
 	}
 
 	// TOP MENU OPTIONS
@@ -471,6 +506,7 @@ class CharacterEditor extends UIState {
 	}
 
 	function _change_offset(x:Float, y:Float) {
+		if (character.getAnimName() == null) return;
 		_set_offset(
 			character.animOffsets[character.getAnimName()].x - x,
 			character.animOffsets[character.getAnimName()].y - y
@@ -478,6 +514,7 @@ class CharacterEditor extends UIState {
 	}
 
 	function _set_offset(x:Float, y:Float) {
+		if (character.getAnimName() == null) return;
 		characterAnimsWindow.animButtons.get(character.getAnimName()).changeOffset(
 			FlxMath.roundDecimal(x, 2), FlxMath.roundDecimal(y, 2)
 		);
@@ -590,14 +627,17 @@ class CharacterEditor extends UIState {
 			stage.characterPoses[stagePosition].revertCharacter(character);
 
 		changeCharacterIsPlayer(player);
-		remove(character);
-
-		if (stage.characterPoses.exists(stagePosition))
-			stage.applyCharStuff(character, stagePosition, 0);
+		updateCharacterStagePosition();
 		_animation_play(null);
 
 		characterPropertiesWindow.designedAsDropDown.index = characterPropertiesWindow.designedAsDropDown.options.indexOf(player ? "BOYFRIEND" : "DAD");
 		characterPropertiesWindow.designedAsDropDown.label.text = player ? "BOYFRIEND" : "DAD";
+	}
+
+	public inline function updateCharacterStagePosition() {
+		remove(character);
+		if (stage.characterPoses.exists(stagePosition))
+			stage.applyCharStuff(character, stagePosition, 0);
 	}
 
 	public function changeCharacterIsPlayer(player:Bool) @:privateAccess {
@@ -627,17 +667,17 @@ class CharacterEditor extends UIState {
 
 	function _view_character_show_hitbox(t) {
 		t.icon = (Options.characterHitbox = !Options.characterHitbox) ? 1 : 0;
-		character.debugHitbox = Options.characterHitbox;
+		characterGizmo.boxGizmo = Options.characterHitbox;
 	}
 
 	function _view_character_show_camera(t) {
 		t.icon = (Options.characterCamera = !Options.characterCamera) ? 1 : 0;
-		character.debugCamera = Options.characterCamera;
+		characterGizmo.cameraGizmo = Options.characterCamera;
 	}
 
 	function _view_character_show_axis(t) {
 		t.icon = (Options.characterAxis = !Options.characterAxis) ? 1 : 0;
-		drawAxis.visible = Options.characterAxis;
+		axisGizmo.visible = Options.characterAxis;
 	}
 
 	function _view_focus_character(_) {
@@ -661,7 +701,7 @@ class CharacterEditor extends UIState {
 
 	function _animation_play(_) {
 		if (character.getNameList().length != 0)
-			playAnimation(character.getAnimName());
+			playAnimation(characterFakeAnim);
 	}
 
 	function _animation_stop(_) {
@@ -673,20 +713,35 @@ class CharacterEditor extends UIState {
 		playAnimation(
 			characterAnimsWindow.animsList[
 				FlxMath.wrap(
-					characterAnimsWindow.animsList.indexOf(character.getAnimName()) - 1, 
+					characterAnimsWindow.animsList.indexOf(characterFakeAnim) - 1, 
 					0, characterAnimsWindow.animsList.length-1
 			)]
 		);
 	function _animation_down(_)
 		playAnimation(
 			characterAnimsWindow.animsList[FlxMath.wrap(
-					characterAnimsWindow.animsList.indexOf(character.getAnimName()) + 1, 
+					characterAnimsWindow.animsList.indexOf(characterFakeAnim) + 1, 
 					0, characterAnimsWindow.animsList.length-1
 			)]
 		);
 
-	public function playAnimation(anim:String) {
-		character.playAnim(anim, true);
+	function _animation_toggle_anim_playing_offsets(t) {
+		t.icon = (Options.playAnimOnOffset = !Options.playAnimOnOffset) ? 1 : 0;
+	}
+
+	// The animation thats playing regardless if its valid or not
+	public var characterFakeAnim:String = "";
+	public function playAnimation(anim:String) @:privateAccess {
+		characterFakeAnim = anim;
+		if (characterAnimsWindow.animButtons[anim] != null && characterAnimsWindow.animButtons[anim].valid) {
+			character.playAnim(anim, true);
+			character.colorTransform.__identity();
+		} else {
+			var validAnimation:String = characterAnimsWindow.findValid();
+			if (validAnimation != null) character.playAnim(validAnimation, true);
+			_animation_stop(null);
+			character.colorTransform.color = 0xFFEF0202;
+		}
 
 		for(i in characterAnimsWindow.buttons.members)
 			i.alpha = i.anim == anim ? 1 : 0.25;

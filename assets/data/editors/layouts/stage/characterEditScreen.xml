@@ -42,7 +42,7 @@
 		<stepper name="spacingYStepper" value="getEx('spacingY')" x="last.x + last.bWidth + XOFFSET - 20" y="curY" precision="2" step="0.01" width="100" />
 
 		<stepper name="skewXStepper" label="Skew X" value="char.skew.x" x="col(2)" y="curY" precision="2" step="0.01" width="100" />
-		<stepper name="skewYStepper" label="Skew Y" value="char.skew.x" x="last.x + last.bWidth + XOFFSET - 20" y="curY" precision="2" step="0.01" width="100" />
+		<stepper name="skewYStepper" label="Skew Y" value="char.skew.y" x="last.x + last.bWidth + XOFFSET - 20" y="curY" precision="2" step="0.01" width="100" />
 	</section>
 
 	<section>
@@ -52,7 +52,7 @@
 		<stepper name="angleStepper" label="Angle" value="char.angle" x="last.x + last.bWidth + XOFFSET - 20" y="curY" precision="2" step="0.01" width="100" />
 
 		<stepper name="zoomFactorStepper" label="Zoom Factor" value="char.zoomFactor" x="col(1)" y="curY" precision="2" step="0.01" width="100" />
-		
+
 		<section if="!StringTools.startsWith(char.name, 'NO_DELETE_')">
 			<textbox name="charName" label="Position Name" value="char.name" x="col(2)" y="curY" width="100"/>
 		</section>

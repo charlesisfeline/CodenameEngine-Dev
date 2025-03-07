@@ -1,5 +1,6 @@
 package funkin.editors.character;
 
+import flixel.util.typeLimit.OneOfTwo;
 import funkin.backend.utils.XMLUtil.AnimData;
 import flixel.animation.FlxAnimation;
 import flixel.graphics.FlxGraphic;
@@ -14,7 +15,7 @@ class CharacterAnimsWindow extends UIButtonList<CharacterAnimButton> {
 
 	public var displayWindowSprite:FlxSprite;
 	public var displayWindowGraphic:FlxGraphic;
-	public var displayAnimsFramesList:Map<String, {scale:Float, animBounds:Rectangle, frame:Int}> = [];
+	public var displayAnimsFramesList:Map<String, {scale:Float, animBounds:Rectangle, frame:OneOfTwo<Int, String>}> = [];
 
 	public var animButtons:Map<String, CharacterAnimButton> = [];
 	public var animsList:Array<String> = [];
@@ -28,7 +29,7 @@ class CharacterAnimsWindow extends UIButtonList<CharacterAnimButton> {
 
 		buttonCameras.pixelPerfectRender = true;
 
-		if (Assets.exists(Paths.image('characters/${character.sprite}')))
+		if (Assets.exists(Paths.image('characters/${character.sprite}')) && character.animateAtlas == null)
 			displayWindowGraphic = FlxG.bitmap.add(Assets.getBitmapData(Paths.image('characters/${character.sprite}'), true, false));
 
 		displayWindowSprite = new FlxSprite();
@@ -41,6 +42,8 @@ class CharacterAnimsWindow extends UIButtonList<CharacterAnimButton> {
 		for (anim in character.getAnimOrder())
 			addAnimation(character.animDatas.get(anim));
 		addButton.callback = generateAnimation;
+
+		setAnimAutoComplete(CoolUtil.getAnimsListFromSprite(character));
 	}
 
 	public var ghosts:Array<String> = [];
@@ -51,25 +54,45 @@ class CharacterAnimsWindow extends UIButtonList<CharacterAnimButton> {
 		character.ghosts = ghosts;
 	}
 
-	public function buildAnimDisplay(name:String, anim:FlxAnimation) {
-		var frameIndex:Int = anim.frames.getDefault([0])[0];
-		var frame:FlxFrame = displayWindowSprite.frames.frames[frameIndex];
+	public function buildAnimDisplay(name:String, anim:AnimData) @:privateAccess {
+		if (character.animateAtlas == null) {
+			var anim:FlxAnimation = character.animation._animations[anim.name];
+			if (anim == null || anim.frames.length <= 0) return;
 
-		var frameRect:Rectangle = new Rectangle(frame.offset.x, frame.offset.y, frame.sourceSize.x, frame.sourceSize.y);
-		var animBounds:Rectangle = displayWindowGraphic != null ? displayWindowGraphic.bitmap.bounds(frameRect) : frameRect;
+			var frameIndex:Int = anim.frames.getDefault([0])[0];
+			var frame:FlxFrame = displayWindowSprite.frames.frames[frameIndex];
 
-		displayAnimsFramesList.set(name, {frame: anim.frames.getDefault([0])[0], scale: 104/animBounds.height, animBounds: animBounds});
+			var frameRect:Rectangle = new Rectangle(frame.offset.x, frame.offset.y, frame.sourceSize.x, frame.sourceSize.y);
+			var animBounds:Rectangle = displayWindowGraphic != null ? displayWindowGraphic.bitmap.bounds(frameRect) : frameRect;
+
+			displayAnimsFramesList.set(name, {frame: anim.frames.getDefault([0])[0], scale: 104/animBounds.height, animBounds: animBounds});
+		} else {
+			character.storeAtlasState();
+
+			/*
+			character.animateAtlas.anim.play(anim.name, true, false, 0);
+			character.animateAtlas.anim.stop();
+
+			var animBounds:Rectangle = MatrixUtil.getBounds(character).copyToFlash();
+			displayAnimsFramesList.set(name, {frame: anim.anim, scale: 104/animBounds.height, animBounds: animBounds});
+			*/
+
+			character.restoreAtlasState();
+		}
 	}
+
+	public function removeAnimDisplay(name:String)
+		displayAnimsFramesList.remove(name);
 
 	public function deleteAnimation(button:CharacterAnimButton) {
 		if (buttons.members.length <= 1) return;
 		if (character.getAnimName() == button.anim)
 			@:privateAccess CharacterEditor.instance._animation_down(null);
-		
+
 		character.removeAnimation(button.anim);
 		if (character.animOffsets.exists(button.anim)) character.animOffsets.remove(button.anim);
 		if (character.animDatas.exists(button.anim)) character.animDatas.remove(button.anim);
-		
+
 		remove(button); button.destroy();
 	}
 
@@ -95,13 +118,25 @@ class CharacterAnimsWindow extends UIButtonList<CharacterAnimButton> {
 	}
 
 	public function addAnimation(animData:AnimData, animID:Int = -1) @:privateAccess {
-		XMLUtil.addAnimToSprite(character, animData);
-		buildAnimDisplay(animData.name, character.animation._animations[animData.name]);
-
 		var newButton:CharacterAnimButton = new CharacterAnimButton(0, 0, animData, this);
 		newButton.alpha = 0.25; animButtons.set(animData.name, newButton);
 
 		if (animID == -1) add(newButton);
 		else insert(newButton, animID);
+
+		if (newButton.valid) {
+			XMLUtil.addAnimToSprite(character, animData);
+			buildAnimDisplay(animData.name, animData);
+		}
+	}
+
+	public inline function setAnimAutoComplete(anims:Array<String>) {
+		for (button in buttons)
+			button.animTextBox.suggestItems = anims;
+	}
+
+	public function findValid():Null<String> {
+		for (button in buttons) if (button.valid) return button.anim;
+		return null;
 	}
 }

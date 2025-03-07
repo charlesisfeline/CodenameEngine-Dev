@@ -407,6 +407,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		!Flags.OPTIMIZED_NOTES ? notes.destroy() : optimizedNotes.destroy();
 		if(startingPos != null)
 			startingPos.put();
+		notes = FlxDestroyUtil.destroy(notes);
 	}
 
 	/**

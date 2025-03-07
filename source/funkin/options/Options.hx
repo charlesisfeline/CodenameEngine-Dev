@@ -39,6 +39,9 @@ class Options
 	public static var songOffset:Float = 0;
 	public static var framerate:Int = 120;
 	public static var gpuOnlyBitmaps:Bool = #if (mac || web) false #else true #end; // causes issues on mac and web
+	#if MODCHARTING_FEATURES
+	public static var modchartingHoldSubdivisions:Int = 4;
+	#end
 
 	public static var lastLoadedMod:String = null;
 
@@ -80,7 +83,8 @@ class Options
 	public static var characterHitbox:Bool = true;
 	public static var characterCamera:Bool = true;
 	public static var characterAxis:Bool = true;
-	public static var characterDragging:Bool = false;
+	public static var characterDragging:Bool = true;
+	public static var playAnimOnOffset:Bool = false;
 
 	/**
 	 * PLAYER 1 CONTROLS

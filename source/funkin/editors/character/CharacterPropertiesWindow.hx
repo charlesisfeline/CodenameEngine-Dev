@@ -1,28 +1,38 @@
 package funkin.editors.character;
 
+import funkin.backend.FlxAnimate;
+import haxe.io.Path;
 import funkin.editors.character.CharacterInfoScreen.CharacterExtraInfo;
 import funkin.game.Character;
 
 class CharacterPropertiesWindow extends UISliceSprite {
 	public var character:Character;
+	public var animsWindow:CharacterAnimsWindow;
 
 	public var positionXStepper:UINumericStepper;
 	public var positionYStepper:UINumericStepper;
+	public var positionXYComma:UIText;
 	public var scaleStepper:UINumericStepper;
 	public var editCharacterButton:UIButton;
+	public var editSpriteButton:UIButton;
 	public var flipXCheckbox:UICheckbox;
 
 	public var cameraXStepper:UINumericStepper;
 	public var cameraYStepper:UINumericStepper;
+	public var cameraXYComma:UIText;
 	public var antialiasingCheckbox:UICheckbox;
 	public var testAsDropDown:UIDropDown;
 	public var designedAsDropDown:UIDropDown;
 
+	public var labels:Map<UISprite, UIText> = [];
+
 	public function new(x:Float, y:Float, character:Character) @:privateAccess {
 		super(x, y, 424+16, 204+20, "editors/ui/inputbox");
 
-		function addLabelOn(ui:UISprite, text:String)
-			members.push(new UIText(ui.x, ui.y - 24, 0, text));
+		function addLabelOn(ui:UISprite, text:String) {
+			var uiText:UIText = new UIText(ui.x, ui.y-24, 0, text);
+			members.push(uiText); labels.set(ui, uiText);
+		}
 
 		positionXStepper = new UINumericStepper(x+16, y+36, character.globalOffset.x, 0.001, 2, null, null, 104);
 		positionXStepper.onChange = (text:String) -> {
@@ -32,7 +42,7 @@ class CharacterPropertiesWindow extends UISliceSprite {
 		members.push(positionXStepper);
 		addLabelOn(positionXStepper, "Position (X,Y)");
 
-		members.push(new UIText(positionXStepper.x+104-32+0, positionXStepper.y + 9, 0, ",", 22));
+		members.push(positionXYComma = new UIText(positionXStepper.x+104-32+0, positionXStepper.y + 9, 0, ",", 22));
 
 		positionYStepper = new UINumericStepper(positionXStepper.x+104-32+26, positionXStepper.y, character.globalOffset.y, 0.001, 2, null, null, 104);
 		positionYStepper.onChange = (text:String) -> {
@@ -49,8 +59,13 @@ class CharacterPropertiesWindow extends UISliceSprite {
 		members.push(scaleStepper);
 		addLabelOn(scaleStepper, "Scale");
 
-		editCharacterButton = new UIButton(scaleStepper.x + 90 -32 + 26, scaleStepper.y, "Edit Info", editCharacterInfoUI);
+		editCharacterButton = new UIButton(scaleStepper.x + 90 -32 + 26, scaleStepper.y-20, "Edit Info", editCharacterInfoUI, 120, 24);
+		editCharacterButton.field.size -= 2;
 		members.push(editCharacterButton);
+
+		editSpriteButton = new UIButton(editCharacterButton.x, editCharacterButton.y+24+6, "Edit Sprite", editCharacterSpriteUI, 120, 24);
+		editSpriteButton.field.size -= 2;
+		members.push(editSpriteButton);
 
 		flipXCheckbox = new UICheckbox(scaleStepper.x+22, scaleStepper.y+32+14, "Flipped?", character.isPlayer ? !character.__baseFlipped : character.__baseFlipped);
 		flipXCheckbox.onChecked = (checked:Bool) -> {this.changeFlipX(checked);};
@@ -64,7 +79,7 @@ class CharacterPropertiesWindow extends UISliceSprite {
 		members.push(cameraXStepper);
 		addLabelOn(cameraXStepper, "Camera Position (X,Y)");
 
-		members.push(new UIText(cameraXStepper.x + 104-32+0, cameraXStepper.y+9, 0, ",", 22));
+		members.push(cameraXYComma = new UIText(cameraXStepper.x + 104-32+0, cameraXStepper.y+9, 0, ",", 22));
 
 		cameraYStepper = new UINumericStepper(cameraXStepper.x+104-32+26, cameraXStepper.y, character.cameraOffset.y, 0.001, 2, null, null, 104);
 		cameraYStepper.onChange = (text:String) -> {
@@ -130,6 +145,52 @@ class CharacterPropertiesWindow extends UISliceSprite {
 		}));
 	}
 
+	public function editCharacterSpriteUI() {
+		CharacterEditor.instance.openSubState(new CharacterSpriteScreen('characters/${character.sprite}', (sprite:String, isAtlas:Bool) -> {
+			changeSprite(sprite);
+		}));
+	}
+
+	public function changeSprite(sprite:String) @:privateAccess {
+		var path:String = Paths.image('characters/$sprite');
+		var noExt:String = Path.withoutExtension(path);
+
+		character.sprite = sprite;
+
+		animsWindow.displayWindowSprite.animation.reset();
+		animsWindow.displayAnimsFramesList.clear();
+		if (animsWindow.displayWindowGraphic != null) 
+			animsWindow.displayWindowGraphic.destroy();
+
+		if (Assets.exists('$noExt/Animation.json')) {
+			if (character.animateAtlas == null) {
+				character.animation.reset();
+				character.animateAtlas = new FlxAnimate(character.x, character.y);
+			} else
+				character.animateAtlas.anim.stop();
+
+			character.atlasPath = noExt;
+			character.animateAtlas.loadAtlas(noExt);
+		} else {
+			if (character.animateAtlas != null) {
+				character.animateAtlas.destroy();
+				character.animateAtlas = null;
+				character.atlasPlayingAnim = character.atlasPath = null;
+			}
+			character.frames = Paths.getFrames(path, true);
+
+			animsWindow.displayWindowSprite.loadGraphicFromSprite(character);
+			if (Assets.exists(Paths.image('characters/${character.sprite}')))
+				animsWindow.displayWindowGraphic = FlxG.bitmap.add(Assets.getBitmapData(Paths.image('characters/${character.sprite}'), true, false));
+		}
+
+		character.animDatas.clear();
+		for (anim in animsWindow.buttons) anim.checkValid(); // Re-add all animations
+
+		CharacterEditor.instance.playAnimation(animsWindow.findValid().getDefault(animsWindow.buttons.members[0].anim));
+		animsWindow.setAnimAutoComplete(CoolUtil.getAnimsListFromSprite(character));
+	}
+
 	public function changeFlipX(newFlipX:Bool) @:privateAccess {
 		character.flipX = character.isPlayer ? !newFlipX : newFlipX;
 		character.__baseFlipped = character.flipX;
@@ -152,5 +213,31 @@ class CharacterPropertiesWindow extends UISliceSprite {
 	public function changeAntialiasing(newAntialiasing:Bool) {
 		if (character.antialiasing == newAntialiasing) return;
 		character.antialiasing = newAntialiasing;
+		animsWindow.displayWindowSprite.antialiasing = newAntialiasing;
+	}
+
+	public function updateButtonsPos() {
+		positionXStepper.follow(this, 16, 36);
+		positionYStepper.follow(this, 16+104-32+26, 36);
+		positionXYComma.follow(this, 16+104-32+0, 36 + 9);
+		scaleStepper.follow(this, (16+104-32+26)+104-32+26, 36);
+		editCharacterButton.follow(this, ((16+104-32+26)+104-32+26)+90-32+26, 36-20);
+		editSpriteButton.follow(this, ((16+104-32+26)+104-32+26)+90-32+26, (36-20)+24+6);
+		flipXCheckbox.follow(this, (16+104-32+26)+104-32+26+22, 36+32+14);
+	
+		cameraXStepper.follow(this, 16, 36+32+32+4);
+		cameraYStepper.follow(this, (16)+104-32+26, 36+32+32+4);
+		cameraXYComma.follow(this, 16 + 104-32+0, (36+32+32+4)+9);
+		antialiasingCheckbox.follow(this, ((16+104-32+26)+104-32+26)+22, 36+32+14+32);
+		testAsDropDown.follow(this, 16, (36+32+32+4)+32+32+4);
+		designedAsDropDown.follow(this, (16)+193+22, (36+32+32+4)+32+32+4);
+
+		for (ui => text in labels)
+			text.follow(ui, 0, -24);
+	}
+
+	public override function draw() {
+		updateButtonsPos();
+		super.draw();
 	}
 }
