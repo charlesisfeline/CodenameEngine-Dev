@@ -345,10 +345,7 @@ class FreeplayState extends MusicBeatState
 			return;
 		}
 
-		var changes:Array<HighscoreChange> = [];
-		if (__coopMode) changes.push(CCoopMode);
-		if (__opponentMode) changes.push(COpponentMode);
-		var saveData = FunkinSave.getSongHighscore(songs[curSelected].name, songs[curSelected].difficulties[curDifficulty], changes);
+		var saveData = FunkinSave.getSongHighscore(songs[curSelected].name, songs[curSelected].difficulties[curDifficulty], {modeID: gameModeLabels[curGameMode].modeID, fields: gameModeLabels[curGameMode].fields});
 		intendedScore = saveData.score;
 	}
 
@@ -532,7 +529,7 @@ class FreeplayGameMode {
 				list = getGameModesFromSource(SOURCE, useTxt).concat(getGameModesFromSource(MODS, useTxt));
 			case 'oneOFtwo':
 				if ((list = getGameModesFromSource(MODS, useTxt)).length == 0) list = getGameModesFromSource(SOURCE, useTxt);
-			default:
+			default /*case 'override'*/:
 				list = getGameModesFromSource(BOTH, useTxt);
 		}
 

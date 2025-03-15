@@ -1,7 +1,7 @@
 package funkin.savedata;
 
+import funkin.menus.FreeplayState.FreeplayGameMode;
 import flixel.util.FlxSave;
-import lime.app.Application;
 import openfl.Lib;
 
 /**
@@ -13,7 +13,7 @@ import openfl.Lib;
  */
 @:build(funkin.backend.system.macros.FunkinSaveMacro.build("save", "flush", "load"))
 class FunkinSave {
-	@:saveField(highscoreSave) public static var highscores:Map<HighscoreEntry, SongScore> = [];
+	@:saveField(highscoreSave) public static var highscores:Array<Highscore> = [];  // enums unfortunately are extremely buggy on saves, typedefs are the best solution  - Nex
 
 	/**
 	 * ONLY OPEN IF YOU WANT TO EDIT FUNCTIONS RELATED TO SAVING, LOADING OR HIGHSCORES.
@@ -52,14 +52,22 @@ class FunkinSave {
 	 * @param diff Song difficulty
 	 * @param changes Changes made to that song in freeplay.
 	 */
-	public static inline function getSongHighscore(name:String, diff:String, ?changes:Array<HighscoreChange>) {
-		if (changes == null) changes = [];
-		return safeGetHighscore(HSongEntry(name.toLowerCase(), diff.toLowerCase(), changes));
+	public static inline function getSongHighscore(name:String, diff:String, ?gameMode:HighscoreGameMode) {
+		if (gameMode == null) {
+			var temp = FreeplayGameMode.generateDefault();
+			gameMode = {modeID: temp.modeID, fields: temp.fields};
+		}
+
+		return safeGetHighscore({name: name.toLowerCase(), difficulty: diff.toLowerCase(), type: "codename.song", gameMode: gameMode}).data;
 	}
 
-	public static inline function setSongHighscore(name:String, diff:String, highscore:SongScore, ?changes:Array<HighscoreChange>) {
-		if (changes == null) changes = [];
-		if (safeRegisterHighscore(HSongEntry(name.toLowerCase(), diff.toLowerCase(), changes), highscore)) {
+	public static inline function setSongHighscore(name:String, diff:String, highscore:HighscoreData, ?gameMode:HighscoreGameMode) {
+		if (gameMode == null) {
+			var temp = FreeplayGameMode.generateDefault();
+			gameMode = {modeID: temp.modeID, fields: temp.fields};
+		}
+
+		if (safeRegisterHighscore({name: name.toLowerCase(), difficulty: diff.toLowerCase(), type: "codename.song", gameMode: gameMode}, highscore)) {
 			flush();
 			return true;
 		}
@@ -67,33 +75,41 @@ class FunkinSave {
 	}
 
 	public static inline function getWeekHighscore(name:String, diff:String)
-		return safeGetHighscore(HWeekEntry(name.toLowerCase(), diff.toLowerCase()));
+		return safeGetHighscore({name: name.toLowerCase(), difficulty: diff.toLowerCase(), type: "codename.week"}).data;
 
-	public static inline function setWeekHighscore(name:String, diff:String, highscore:SongScore) {
-		if (safeRegisterHighscore(HWeekEntry(name.toLowerCase(), diff.toLowerCase()), highscore)) {
+	public static inline function setWeekHighscore(name:String, diff:String, highscore:HighscoreData) {
+		if (safeRegisterHighscore({name: name.toLowerCase(), difficulty: diff.toLowerCase(), type: "codename.week"}, highscore)) {
 			flush();
 			return true;
 		}
 		return false;
 	}
 
-	private static function safeGetHighscore(entry:HighscoreEntry):SongScore {
-		if (!highscores.exists(entry)) {
-			return {
+	private static function safeGetHighscore(entry:HighscoreEntry):Highscore {
+		for (highscore in highscores) {
+			var stored = highscore.entry;
+			if (stored.name == entry.name && stored.difficulty == entry.difficulty && stored.type == entry.type &&
+				((stored.gameMode == null && entry.gameMode == null) || (stored.gameMode.modeID == entry.gameMode.modeID
+				/*&& stored.gameMode.fields == entry.gameMode.fields*/)))  // cant really do differently because of typedefs  - Nex
+				return highscore;
+		}
+
+		return {
+			entry: entry,
+			data: {
 				score: 0,
 				accuracy: 0,
 				misses: 0,
-				hits: [],
 				date: null
-			};
-		}
-		return highscores.get(entry);
+			}
+		};
 	}
 
-	private static function safeRegisterHighscore(entry:HighscoreEntry, highscore:SongScore) {
+	private static function safeRegisterHighscore(entry:HighscoreEntry, data:HighscoreData) {
 		var oldHigh = safeGetHighscore(entry);
-		if (oldHigh.date == null || oldHigh.score < highscore.score) {
-			highscores.set(entry, highscore);
+		if (oldHigh.data.date == null || oldHigh.data.score < data.score) {
+			highscores.remove(oldHigh);
+			highscores.push({entry: entry, data: data});
 			return true;
 		}
 		return false;
@@ -101,20 +117,26 @@ class FunkinSave {
 	#end
 }
 
-enum HighscoreEntry {
-	HWeekEntry(weekName:String, difficulty:String);
-	HSongEntry(songName:String, difficulty:String, changes:Array<HighscoreChange>);
+typedef Highscore = {
+	var entry:HighscoreEntry;
+	var data:HighscoreData;
 }
 
-enum HighscoreChange {
-	CCoopMode;
-	COpponentMode;
+typedef HighscoreEntry = {
+	var name:String;
+	var difficulty:String;
+	var type:String;  // mods can also customize this btw, example: codename.week or codename.song  - Nex
+	var ?gameMode:HighscoreGameMode;
 }
 
-typedef SongScore = {
+typedef HighscoreGameMode = {
+	var modeID:String;
+	var ?fields:Dynamic;
+}
+
+typedef HighscoreData = {
 	var score:Int;
 	var accuracy:Float;
 	var misses:Int;
-	var hits:Map<String, Int>;
-	var date:String;
+	var date:Date;
 }

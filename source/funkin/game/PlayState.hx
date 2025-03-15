@@ -1497,8 +1497,7 @@ class PlayState extends MusicBeatState
 				score: songScore,
 				misses: misses,
 				accuracy: accuracy,
-				hits: [],
-				date: Date.now().toString()
+				date: Date.now()
 			}, getSongChanges());
 			#end
 		}
@@ -1506,14 +1505,8 @@ class PlayState extends MusicBeatState
 		startCutscene("end-", endCutscene, nextSong, false, false);
 	}
 
-	private static inline function getSongChanges():Array<HighscoreChange> {
-		var a = [];
-		if (opponentMode)
-			a.push(COpponentMode);
-		if (coopMode)
-			a.push(CCoopMode);
-		return a;
-	}
+	private static inline function getSongChanges():HighscoreGameMode
+		return {modeID: gameMode.modeID, fields: gameMode.fields};
 
 	/**
 	 * Immediately switches to the next song, or goes back to the Story/Freeplay menu.
@@ -1535,13 +1528,11 @@ class PlayState extends MusicBeatState
 
 				if (validScore)
 				{
-					// TODO: more week info saving
 					FunkinSave.setWeekHighscore(storyWeek.id, difficulty, {
 						score: campaignScore,
 						misses: campaignMisses,
 						accuracy: campaignAccuracy,
-						hits: [],
-						date: Date.now().toString()
+						date: Date.now()
 					});
 				}
 				FlxG.save.flush();
