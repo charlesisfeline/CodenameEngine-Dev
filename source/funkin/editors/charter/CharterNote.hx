@@ -160,7 +160,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 			sustainDraggable = UIState.state.isOverlapping(sustainSpr, @:privateAccess sustainSpr.__rect);
 		}
 
-		if (__passed != (__passed = step < Conductor.curStepFloat)) {
+		if (__passed != (__passed = step < Conductor.curStepFloat + (Conductor.songOffset / Conductor.stepCrochet))) {
 			if (__passed && FlxG.sound.music.playing && Charter.instance.hitsoundsEnabled(strumLineID))
 				Charter.instance.hitsound.replay();
 		}
@@ -201,6 +201,10 @@ class CharterNote extends UISprite implements ICharterSelectable {
 
 		drawMembers();
 		drawSuper();
+		drawNoteTypeText();
+	}
+
+	public inline function drawNoteTypeText() {
 		if(typeText.exists && typeText.visible && typeVisible) {
 			typeText.alpha = typeAlpha;
 			typeText.follow(this, 20 - (typeText.frameWidth/2), 20 - (typeText.frameHeight/2));

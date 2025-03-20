@@ -265,7 +265,7 @@ class CharacterEditor extends UIState {
 
 		gizmosCamera = new FlxCamera();
 		gizmosCamera.bgColor = 0;
-		FlxG.cameras.add(gizmosCamera);
+		FlxG.cameras.add(gizmosCamera, false);
 
 		axisGizmo = new AxisGizmo();
 		axisGizmo.cameras = [gizmosCamera];
@@ -382,6 +382,8 @@ class CharacterEditor extends UIState {
 		}
 		animationText.text = '"${characterFakeAnim}"';
 
+		StageEditor.calcSpriteBounds(character);
+
 		if (Options.characterDragging)
 			handleMouseOffsets();
 
@@ -396,7 +398,7 @@ class CharacterEditor extends UIState {
 				draggingOffset.x /= character.scale.x;
 				draggingOffset.y /= character.scale.y;
 
-				_change_offset((draggingOffset.x * (character.isPlayer != character.playerOffsets  ? -1 : 1)), draggingOffset.y);
+				_change_offset((draggingOffset.x * (character.isFlippedOffsets()  ? -1 : 1)), draggingOffset.y);
 
 				draggingOffset.set(0, 0); draggingCharacter = false;
 				character.extraOffset = draggingOffset;
@@ -406,15 +408,11 @@ class CharacterEditor extends UIState {
 			}
 		} else {
 			var point = FlxG.mouse.getWorldPosition(charCamera, _point);
-			if(character.animateAtlas == null) {
-				StageEditor.calcSpriteBounds(character);
-				var bounds:FlxRect = cast character.extra.get(StageEditor.exID("bounds"));
-				trace(bounds);
-				if (bounds.containsPoint(point)) {
-					cameraHoverDummy.cursor = #if (mac) DRAG_OPEN; #else CLICK; #end
-					if (FlxG.mouse.justPressed)
-						draggingCharacter = true;
-				}
+			var bounds:FlxRect = cast character.extra.get(StageEditor.exID("bounds"));
+			if (bounds.containsPoint(point)) {
+				cameraHoverDummy.cursor = #if (mac) DRAG_OPEN; #else CLICK; #end
+				if (FlxG.mouse.justPressed)
+					draggingCharacter = true;
 			}
 		}
 	}

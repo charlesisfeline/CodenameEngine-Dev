@@ -10,6 +10,7 @@ import funkin.backend.utils.XMLUtil.AnimData;
 import funkin.editors.stage.elements.*;
 import funkin.editors.stage.elements.StageSpriteButton.StageSpriteEditScreen;
 import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
+import funkin.editors.extra.AxisGizmo;
 import funkin.game.Character;
 import funkin.game.Stage;
 import haxe.xml.Access;
@@ -35,7 +36,7 @@ class StageEditor extends UIState {
 	public var topMenuSpr:UITopMenu;
 
 	public var uiGroup:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
-	public var stageSpritesWindow:UIButtonList<StageElementButton>;
+	public var stageSpritesWindow:StageSpritesWindow;
 
 	public var xmlMap:Map<FlxObject, Access> = new Map<FlxObject, Access>();
 
@@ -45,6 +46,9 @@ class StageEditor extends UIState {
 	public var stageCamera:FlxCamera;
 	//public var guideCamera:FlxCamera;
 	public var uiCamera:FlxCamera;
+
+	public var gizmosCamera:FlxCamera;
+	public var axisGizmo:AxisGizmo;
 
 	public var selection:Selection = new Selection();
 	public var mouseMode:StageEditorMouseMode = NONE;
@@ -205,8 +209,13 @@ class StageEditor extends UIState {
 
 		stageCamera = FlxG.camera;
 
-		//guideCamera = new FlxCamera();
-		//guideCamera.bgColor = 0;
+		gizmosCamera = new FlxCamera();
+		gizmosCamera.bgColor = 0;
+		FlxG.cameras.add(gizmosCamera, false);
+
+		axisGizmo = new AxisGizmo();
+		axisGizmo.cameras = [gizmosCamera];
+		add(axisGizmo);
 
 		uiCamera = new FlxCamera();
 		uiCamera.bgColor = 0;
@@ -219,6 +228,53 @@ class StageEditor extends UIState {
 		// Load from xml
 		var order:Array<Dynamic> = [];
 		var orderNodes:Array<Access> = [];
+
+		loadStage(order, orderNodes);
+
+		// for (sprite => node in xmlMap)
+		// 	sprite.cameras = [stageCamera];
+
+		topMenuSpr = new UITopMenu(topMenu);
+		topMenuSpr.cameras = uiGroup.cameras = [uiCamera];
+
+		stageSpritesWindow = new StageSpritesWindow(Std.int(FlxG.width - 400), 25);
+		for (i=>sprite in order) {
+			var xml = (sprite != null) ? xmlMap.get(sprite) : orderNodes[i];
+			if (xml != null) {
+				if (sprite is Character) {
+					var char:Character = cast sprite;
+					var button = new StageCharacterButton(0,0, char, xml);
+					char.extra.set(exID("button"), button);
+					stageSpritesWindow.add(button);
+				} else if (sprite is FunkinSprite) {
+					var sprite:FunkinSprite = cast sprite;
+					var type = sprite.extra.get(exID("type"));
+					var button:StageElementButton = (type == "box" || type == "solid") ? new StageSolidButton(0,0, sprite, xml) : new StageSpriteButton(0,0, sprite, xml);
+					sprite.extra.set(exID("button"), button);
+					stageSpritesWindow.add(button);
+				} else if(sprite == null) {
+					var basic = new FlxBasic(); // prevent awkward layering
+					insert(i, basic);
+					var button = new StageUnknownButton(0,0, basic, xml);
+					stageSpritesWindow.add(button);
+				}
+			}
+		}
+		uiGroup.add(stageSpritesWindow);
+
+		add(topMenuSpr);
+		add(uiGroup);
+
+		if(Framerate.isLoaded) {
+			Framerate.fpsCounter.alpha = 0.4;
+			Framerate.memoryCounter.alpha = 0.4;
+			Framerate.codenameBuildField.alpha = 0.4;
+		}
+
+		// DiscordUtil.call("onEditorLoaded", ["Stage Editor", __stage]);
+	}
+
+	function loadStage(order:Array<Dynamic>, orderNodes:Array<Access>) {
 		stage = new Stage(__stage, this, false);
 		stage.onXMLLoaded = function(xml:Access, elems:Array<Access>) {
 			return elems;
@@ -291,88 +347,6 @@ class StageEditor extends UIState {
 		add(stage);
 
 		setZoom(stage.defaultZoom);
-
-		topMenuSpr = new UITopMenu(topMenu);
-		topMenuSpr.cameras = uiGroup.cameras = [uiCamera];
-
-		final margin = 0;//22;
-		final width = SPRITE_WINDOW_WIDTH;
-		final TOP_MENU_HEIGHT = 25;
-		var buttonSize:FlxPoint = FlxPoint.get(width-margin*2, SPRITE_WINDOW_BUTTON_HEIGHT);
-		stageSpritesWindow = new UIButtonList<StageElementButton>(Std.int(FlxG.width - width), TOP_MENU_HEIGHT, width, Std.int(FlxG.height - TOP_MENU_HEIGHT), "Stage Sprites", buttonSize);
-		stageSpritesWindow.collapsable = true;
-		stageSpritesWindow.topAlpha = 0.9;
-		stageSpritesWindow.middleAlpha = 0.5;
-		stageSpritesWindow.bottomAlpha = 0.5;
-		stageSpritesWindow.buttonSpacing = 0;
-		stageSpritesWindow.dragCallback = (button, oldID, newID) -> {
-			var sprite:FlxBasic = (button is StageUnknownButton) ? cast(button, StageUnknownButton).basic : button.getSprite();
-			var idx = members.indexOf(sprite);
-			members.splice(idx, 1);
-			members.insert(newID, sprite);
-		}
-		stageSpritesWindow.addButton.callback = () -> {
-			var lastDrawCam = stageSpritesWindow.addButton.__lastDrawCameras[0];
-			var screenPos = stageSpritesWindow.addButton.getScreenPosition(null, lastDrawCam == null ? FlxG.camera : lastDrawCam);
-			openContextMenu([
-				{
-					label: "Sprite",
-					onSelect: _sprite_new,
-					color: 0xFF00FF00,
-					icon: 2
-				},
-				{
-					label: "Box",
-					onSelect: function(_) {
-						UIState.state.displayNotification(new UIBaseNotification("Creating a box isnt implemented yet!", 2, BOTTOM_LEFT));
-						CoolUtil.playMenuSFX(WARNING, 0.45);
-					},
-					color: 0xFF00FF00,
-					icon: 2
-				},
-				{
-					label: "Character",
-					onSelect: _character_new,
-					color: 0xFF00FF00,
-					icon: 2
-				}
-			], null, lastDrawCam.x + screenPos.x, lastDrawCam.y + screenPos.y + stageSpritesWindow.addButton.bHeight, stageSpritesWindow.addButton.bWidth);
-			screenPos.put();
-		}
-		for (i=>sprite in order) {
-			var xml = (sprite != null) ? xmlMap.get(sprite) : orderNodes[i];
-			if (xml != null) {
-				if (sprite is Character) {
-					var char:Character = cast sprite;
-					var button = new StageCharacterButton(0,0, char, xml);
-					char.extra.set(exID("button"), button);
-					stageSpritesWindow.add(button);
-				} else if (sprite is FunkinSprite) {
-					var sprite:FunkinSprite = cast sprite;
-					var type = sprite.extra.get(exID("type"));
-					var button:StageElementButton = (type == "box" || type == "solid") ? new StageSolidButton(0,0, sprite, xml) : new StageSpriteButton(0,0, sprite, xml);
-					sprite.extra.set(exID("button"), button);
-					stageSpritesWindow.add(button);
-				} else if(sprite == null) {
-					var basic = new FlxBasic(); // prevent awkward layering
-					insert(i, basic);
-					var button = new StageUnknownButton(0,0, basic, xml);
-					stageSpritesWindow.add(button);
-				}
-			}
-		}
-		uiGroup.add(stageSpritesWindow);
-
-		add(topMenuSpr);
-		add(uiGroup);
-
-		if(Framerate.isLoaded) {
-			Framerate.fpsCounter.alpha = 0.4;
-			Framerate.memoryCounter.alpha = 0.4;
-			Framerate.codenameBuildField.alpha = 0.4;
-		}
-
-		//DiscordUtil.call("onEditorLoaded", ["Stage Editor", __stage]);
 	}
 
 	function prepareCharacter(charPos:StageCharPos, node:Access):Character {
@@ -925,82 +899,72 @@ class StageEditor extends UIState {
 	override function draw() {
 		super.draw();
 
-		for(sprite in selection) {
-			if(sprite is FunkinSprite)
-				drawGuides(cast sprite);
-		}
+		for(sprite in selection)
+			if(sprite is FunkinSprite) drawGuides(cast sprite);
 	}
 
-	var lineColor:FlxColor = 0xFFb794b6;
-	var circleColor:FlxColor = 0xFF99a8f2;
-	var hollowColor:FlxColor = 0xffb2beff;
-
 	function drawGuides(sprite:FunkinSprite) {
-		//if(sprite._frame == null) return;
-		if(sprite.offset == null) return; // destroyed
+		if(sprite == null || sprite.offset == null) return; // destroyed
 
-		var corners = calcSpriteBounds(sprite);
-		var funkinSprite = sprite is FunkinSprite ? cast(sprite, FunkinSprite) : null;
-
-		if(funkinSprite != null) {
-			if(funkinSprite.extra.exists(exID("buttonBoxes"))) {
-				var oldButtonBoxes:Array<FlxPoint> = cast funkinSprite.extra.get(exID("buttonBoxes"));
-				if(oldButtonBoxes != null) {
-					for(point in oldButtonBoxes) {
-						point.put();
-					}
-				}
-			}
-		}
-		var buttonBoxes = [];
-		if(funkinSprite != null) {
-			funkinSprite.extra.set(exID("buttonBoxes"), buttonBoxes);
+		var corners:Array<FlxPoint> = calcSpriteBounds(sprite);
+		var transformedCorners:Array<FlxPoint> = [for (corner in corners) corner.clone()];
+		for (corner in transformedCorners) {
+			corner.x -= sprite.cameras[0].viewX;
+			corner.y -= sprite.cameras[0].viewY;
+	
+			corner.x *= sprite.cameras[0].zoom;
+			corner.y *= sprite.cameras[0].zoom;
 		}
 
-		DrawUtil.drawLine(corners[0], corners[1]); // tl - tr
-		DrawUtil.drawLine(corners[0], corners[2]); // tl - bl
-		DrawUtil.drawLine(corners[1], corners[3]); // tr - br
-		DrawUtil.drawLine(corners[2], corners[3]); // bl - br
+		if (DrawUtil.line == null) DrawUtil.createDrawers();
+		DrawUtil.line.cameras = [gizmosCamera]; DrawUtil.line.alpha = 0.85;
+		DrawUtil.dot.cameras = [gizmosCamera]; DrawUtil.dot.alpha = 1; 
 
-		DrawUtil.drawLine(corners[7], corners[9], 0.3); // tc - ac // top center to angle center
+		DrawUtil.drawLine(transformedCorners[0], transformedCorners[1], 1, 0xFF007B8F); // tl - tr
+		DrawUtil.drawLine(transformedCorners[0], transformedCorners[2], 1, 0xFF007B8F); // tl - bl
+		DrawUtil.drawLine(transformedCorners[1], transformedCorners[3], 1, 0xFF007B8F); // tr - br
+		DrawUtil.drawLine(transformedCorners[2], transformedCorners[3], 1, 0xFF007B8F); // bl - br
+
+		DrawUtil.drawLine(transformedCorners[7], transformedCorners[9], 1, 0xFF007B8F); // tc - ac // top center to angle center
 
 		// cross
-		//DrawUtil.drawLine(corners[0], corners[3]); // tl - br
-		//DrawUtil.drawLine(corners[1], corners[2]); // tr - bl
-
-		DrawUtil.dot.color = circleColor;
+		// DrawUtil.drawLine(transformedCorners[0], transformedCorners[3], 1, 0xFF007B8F); // tl - br
+		// DrawUtil.drawLine(transformedCorners[1], transformedCorners[2], 1, 0xFF007B8F); // tr - bl
 
 		final ANGLE_INDEX = StageEditorEdge.ROTATE_CIRCLE.toInt();
 		final CENTER_INDEX = StageEditorEdge.CENTER_CIRCLE.toInt();
 
-		DrawUtil.dot.animation.play("default");
-
-		for(i in 0...corners.length) {
-			var corner = corners[i];
-			if(i != CENTER_INDEX) {
-				if(i == ANGLE_INDEX)  {
-					DrawUtil.dot.color = hollowColor;
-					DrawUtil.drawDot(corner.x, corner.y);
-					DrawUtil.dot.animation.play("hollow");
-					DrawUtil.dot.color = circleColor;
-					DrawUtil.drawDot(corner.x, corner.y);
-				} else {
-					DrawUtil.drawDot(corner.x, corner.y);
-				}
-				buttonBoxes.push(corner);
-			}
-			else if(sprite.visible){
-				DrawUtil.dot.color = circleColor;
-				DrawUtil.drawDot(corner.x, corner.y, 0.7);
-				DrawUtil.dot.animation.play("hollow");
-				buttonBoxes.push(corner);
-			}
+		if(sprite.extra.exists(exID("buttonBoxes"))) {
+			var oldButtonBoxes:Array<FlxPoint> = cast sprite.extra.get(exID("buttonBoxes"));
+			if(oldButtonBoxes != null)
+				for(point in oldButtonBoxes) point.put();
 		}
 
-		if(funkinSprite == null) {
-			for(corner in buttonBoxes) {
-				corner.put();
+		var buttonBoxes:Array<FlxPoint> = [];
+		if(sprite != null) sprite.extra.set(exID("buttonBoxes"), buttonBoxes);
+
+		DrawUtil.dot.color = 0xFFBBE4EA; DrawUtil.dot.animation.play("default");
+		for(i in 0...transformedCorners.length) {
+			var transformedCorner:FlxPoint = transformedCorners[i];
+
+			if (i != CENTER_INDEX) {
+				if (i == ANGLE_INDEX)  {
+					DrawUtil.dot.animation.play("hollow"); DrawUtil.dot.color = 0xFFBBE4EA;
+					DrawUtil.drawDot(transformedCorner.x, transformedCorner.y, 0.5);
+				} else {
+					DrawUtil.dot.animation.play("default"); DrawUtil.dot.color = 0xFFF7A7A7;
+					DrawUtil.drawDot(transformedCorner.x, transformedCorner.y, 0.3);
+
+					DrawUtil.dot.animation.play("hollow"); DrawUtil.dot.color = 0xFFBBE4EA;
+					DrawUtil.drawDot(transformedCorner.x, transformedCorner.y, 0.5);
+				}
+			} else if (sprite.visible) {
+				DrawUtil.dot.color = 0xFFBBE4EA;
+				DrawUtil.drawDot(transformedCorner.x, transformedCorner.y, 0.7*0.5);
+				DrawUtil.dot.animation.play("hollow");
 			}
+
+			buttonBoxes.push(corners[i]);
 		}
 	}
 
