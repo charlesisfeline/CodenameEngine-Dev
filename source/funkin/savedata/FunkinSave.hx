@@ -1,7 +1,7 @@
 package funkin.savedata;
 
+import flixel.util.FlxSignal.FlxTypedSignal;
 import funkin.menus.FreeplayState.FreeplayGameMode;
-import flixel.util.FlxSave;
 import openfl.Lib;
 
 /**
@@ -13,7 +13,8 @@ import openfl.Lib;
  */
 @:build(funkin.backend.system.macros.FunkinSaveMacro.build("save", "flush", "load"))
 class FunkinSave {
-	@:saveField(highscoreSave) public static var highscores:Array<Highscore> = [];  // enums unfortunately are extremely buggy on saves, typedefs are the best solution  - Nex
+	@:saveField(highscoreSave)
+	public static var highscores:Array<Highscore> = [];  // enums unfortunately are extremely buggy on saves, typedefs are the best solution  - Nex
 
 	/**
 	 * ONLY OPEN IF YOU WANT TO EDIT FUNCTIONS RELATED TO SAVING, LOADING OR HIGHSCORES.
@@ -26,24 +27,50 @@ class FunkinSave {
 	@:doNotSave
 	public static var highscoreSave:CodenameSave;
 
-	// mod/data.cns
-	// mod/highscores.cns
+	/**
+	 * INTERNAL - Only use when editing source mods!!
+	 */
+	@:dox(hide) @:doNotSave
+	public static var onReloadSave:FlxTypedSignal<Void->Void> = new FlxTypedSignal<Void->Void>();
 
 	public static function init() {
-		save = new CodenameSave();
-		save.bind('generic');
-
-		highscoreSave = new CodenameSave();
-		highscoreSave.bind('highscores');
-		load();
-
 		if (!__eventAdded) {
+			onReloadSave.add(function() {
+				if (save != null && save.isBound) save.close();
+				save = new CodenameSave();
+				save.bind('generic');
+
+				if (highscoreSave != null && highscoreSave.isBound) highscoreSave.close();
+				highscoreSave = new CodenameSave();
+				highscoreSave.bind('highscores');
+
+				load();
+			});
+
 			Lib.application.onExit.add(function(i:Int) {
 				trace('Saving mod save data...');
 				flush();
 			});
 			__eventAdded = true;
 		}
+	}
+
+	public static function reloadSaves() {
+		#if FLX_DEBUG
+		@:privateAccess
+		if (flixel.system.debug.FlxDebugger.save == null)
+			flixel.system.debug.FlxDebugger.save = {
+				var save = new CodenameSave();
+				save.bindGlobal("debug");
+				save;
+			}
+		#end
+
+		if (FlxG.save.isBound) FlxG.save.close(); // calls flush
+		@:privateAccess FlxG.save = new CodenameSave();
+		FlxG.save.bind("data");
+
+		onReloadSave.dispatch();
 	}
 
 	/**

@@ -6,9 +6,10 @@ import sys.FileSystem;
 import flixel.FlxState;
 import funkin.backend.assets.ModsFolder;
 import funkin.backend.chart.EventsData;
+import funkin.backend.system.framerate.Framerate;
 import funkin.menus.BetaWarningState;
 import funkin.menus.TitleState;
-import funkin.backend.system.framerate.Framerate;
+import funkin.savedata.FunkinSave;
 
 /**
  * Simple state used for loading the game
@@ -18,10 +19,8 @@ class MainState extends FlxState {
 	public static var betaWarningShown:Bool = false;
 	public override function create() {
 		super.create();
-		if (!initiated) {
-			Main.loadGameSettings();
-		}
 
+		if (!initiated) Main.loadGameSettings();
 		initiated = true;
 
 		#if sys
@@ -58,7 +57,7 @@ class MainState extends FlxState {
 
 		Flags.load(); // Load this first because its used a lot afterwards
 
-		Main.reloadSave();
+		FunkinSave.reloadSaves();
 		ModsFolder.onModSwitch.dispatch(ModsFolder.currentModFolder); // Loads global.hx
 		MusicBeatTransition.script = Flags.DEFAULT_TRANSITION_SCRIPT;
 		WindowUtils.resetTitle();

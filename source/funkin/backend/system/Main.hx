@@ -6,17 +6,15 @@ import flixel.addons.transition.TransitionData;
 import flixel.graphics.FlxGraphic;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
-import flixel.system.ui.FlxSoundTray;
 import funkin.backend.assets.AssetsLibraryList;
 import funkin.backend.assets.ModsFolder;
 import funkin.backend.system.framerate.SystemInfo;
 import funkin.backend.system.modules.*;
 import funkin.editors.SaveWarning;
-import funkin.savedata.CodenameSave;
+import funkin.savedata.FunkinSave;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Sprite;
-import openfl.text.TextFormat;
 import openfl.utils.AssetLibrary;
 
 #if ALLOW_MULTITHREADING
@@ -60,24 +58,6 @@ class Main extends Sprite
 	public static var gameThreads:Array<Thread> = [];
 	#end
 
-	public static function reloadSave() {
-		#if FLX_DEBUG
-		@:privateAccess
-		if (flixel.system.debug.FlxDebugger.save == null)
-			flixel.system.debug.FlxDebugger.save = {
-				var save = new CodenameSave();
-				save.bindGlobal("debug");
-				save;
-			}
-		#end
-
-		if(FlxG.save.isBound)
-			FlxG.save.close(); // calls flush
-		@:privateAccess
-		FlxG.save = new CodenameSave();
-		FlxG.save.bind("data");
-	}
-
 	public function new()
 	{
 		super();
@@ -86,7 +66,7 @@ class Main extends Sprite
 
 		CrashHandler.init();
 
-		reloadSave();
+		FunkinSave.reloadSaves();
 
 		addChild(game = new FunkinGame(gameWidth, gameHeight, MainState, Options.framerate, Options.framerate, skipSplash, startFullscreen));
 
@@ -168,7 +148,7 @@ class Main extends Sprite
 		Assets.registerLibrary('default', lib);
 
 		funkin.options.PlayerSettings.init();
-		funkin.savedata.FunkinSave.init();
+		FunkinSave.init();
 		Options.load();
 
 		FlxG.fixedTimestep = false;
