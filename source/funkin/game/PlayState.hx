@@ -982,11 +982,9 @@ class PlayState extends MusicBeatState
 
 	public override function destroy() {
 		scripts.call("destroy");
-		for(g in __cachedGraphics)
-			g.useCount--;
-		@:privateAccess
-			for (strumLine in strumLines.members)
-				FlxG.sound.destroySound(strumLine.vocals);
+
+		for (g in __cachedGraphics) g.useCount--;
+		@:privateAccess for (strumLine in strumLines.members) FlxG.sound.destroySound(strumLine.vocals);
 		super.destroy();
 		scripts = FlxDestroyUtil.destroy(scripts);
 		@:privateAccess {
@@ -1492,14 +1490,12 @@ class PlayState extends MusicBeatState
 
 		if (validScore)
 		{
-			#if !switch
 			FunkinSave.setSongHighscore(SONG.meta.name, difficulty, {
 				score: songScore,
 				misses: misses,
 				accuracy: accuracy,
 				date: Date.now()
 			}, getSongChanges());
-			#end
 		}
 
 		startCutscene("end-", endCutscene, nextSong, false, false);
@@ -1535,7 +1531,6 @@ class PlayState extends MusicBeatState
 						date: Date.now()
 					});
 				}
-				FlxG.save.flush();
 			}
 			else
 			{

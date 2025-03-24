@@ -111,8 +111,7 @@ class Main extends Sprite
 		@:privateAccess
 		FlxG.game.getTimer = getTimer;
 		#if ALLOW_MULTITHREADING
-		for(i in 0...4)
-			gameThreads.push(Thread.createWithEventLoop(function() {Thread.current().events.promise();}));
+		for(_ in 0...4) gameThreads.push(Thread.createWithEventLoop(() -> Thread.current().events.promise()));
 		#end
 		FunkinCache.init();
 		Paths.assetsTree = new AssetsLibraryList();

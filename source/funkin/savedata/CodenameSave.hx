@@ -18,6 +18,18 @@ class CodenameSave extends FlxSave
 	 */
 	public static var onFailedToLoad:FlxTypedSignal<(name:String, path:String) -> Void> = new FlxTypedSignal();
 
+	/**
+	 * Whether it should automatically flush the data when the application closes.
+	 */
+	public var autoSave(get, set):Bool;
+
+	private var _autoSave:Bool = true;  // avoiding to use @:bypassAccessor cuz its a bit buggy apparently, thanks haxe  - Nex
+	private function get_autoSave() return _sharedObject != null && _sharedObject is CodenameSharedObject ? ({var _:CodenameSharedObject = cast _sharedObject; _;}).autoSave : _autoSave;
+	private function set_autoSave(val:Bool) {  // unsafe casting in these two goes funny  - Nex
+		if (_sharedObject != null && _sharedObject is CodenameSharedObject) ({var _:CodenameSharedObject = cast _sharedObject; _;}).autoSave = val;
+		return _autoSave = val;
+	}
+
 	public function new()
 	{
 		super();
@@ -59,7 +71,9 @@ class CodenameSave extends FlxSave
 		{
 			try
 			{
-				_sharedObject = CodenameSharedObject.getLocal(name, path);
+				var temp = CodenameSharedObject.getLocal(name, path);  // making a temp to avoid casting  - Nex
+				temp.autoSave = _autoSave;
+				_sharedObject = temp;
 				status = BOUND(name, path);
 			}
 			catch (e:InvalidFormatError)
@@ -157,6 +171,7 @@ class CodenameSharedObject extends SharedObject implements IDisposable
 {
 	static var all:Map<String, CodenameSharedObject>;
 
+	public var autoSave:Bool = true;
 	var allId:String;
 
 	public static function getSaves():Map<String, CodenameSharedObject>
@@ -191,7 +206,7 @@ class CodenameSharedObject extends SharedObject implements IDisposable
 	static function onExit(_)
 	{
 		for (sharedObject in all)
-			sharedObject.flush();
+			if (sharedObject.autoSave) sharedObject.flush();
 	}
 
 	/**
@@ -268,7 +283,7 @@ class CodenameSharedObject extends SharedObject implements IDisposable
 		return backupName;
 	}
 
-	public static function getLocal(name:String, ?localPath:String):SharedObject
+	public static function getLocal(name:String, ?localPath:String):CodenameSharedObject
 	{
 		if (name == null || name == "")
 			throw new Error('Error: Invalid name:"$name".');

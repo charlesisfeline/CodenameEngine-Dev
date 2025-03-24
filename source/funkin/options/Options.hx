@@ -129,6 +129,7 @@ class Options
 
 	private static function bindSave(save:CodenameSave, name:String) {
 		if(save == null) save = new CodenameSave();
+		save.autoSave = false;  // cuz we must set volume and mute before, at this point lets use for every save in here the save() func  - Nex
 		save.bindGlobal(name);
 		return save;
 	}

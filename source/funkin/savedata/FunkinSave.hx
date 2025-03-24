@@ -2,7 +2,6 @@ package funkin.savedata;
 
 import flixel.util.FlxSignal.FlxTypedSignal;
 import funkin.menus.FreeplayState.FreeplayGameMode;
-import openfl.Lib;
 
 /**
  * The stuff here is saved in the mod save folder.
@@ -47,10 +46,6 @@ class FunkinSave {
 				load();
 			});
 
-			Lib.application.onExit.add(function(i:Int) {
-				trace('Saving mod save data...');
-				flush();
-			});
 			__eventAdded = true;
 		}
 	}
