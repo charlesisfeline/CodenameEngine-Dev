@@ -2,6 +2,7 @@ package funkin.savedata;
 
 import flixel.util.FlxSignal.FlxTypedSignal;
 import funkin.menus.FreeplayState.FreeplayGameMode;
+import openfl.Lib;
 
 /**
  * The stuff here is saved in the mod save folder.
@@ -38,12 +39,19 @@ class FunkinSave {
 				if (save != null && save.isBound) save.close();
 				save = new CodenameSave();
 				save.bind('generic');
+				save.autoSave = false;  // cuz autoSave doesnt update the fields, so we do it manually  - Nex
 
 				if (highscoreSave != null && highscoreSave.isBound) highscoreSave.close();
 				highscoreSave = new CodenameSave();
 				highscoreSave.bind('highscores');
+				highscoreSave.autoSave = false;
 
 				load();
+			});
+
+			Lib.application.onExit.add((_) -> {
+				trace('Saving mod save data...');
+				flush();
 			});
 
 			__eventAdded = true;
