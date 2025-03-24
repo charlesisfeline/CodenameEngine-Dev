@@ -1,5 +1,6 @@
 package funkin.savedata;
 
+import flixel.util.FlxSave;
 import flixel.util.FlxSignal.FlxTypedSignal;
 import funkin.menus.FreeplayState.FreeplayGameMode;
 import openfl.Lib;
@@ -11,9 +12,8 @@ import openfl.Lib;
  * Just add your save variables the way you would do in the Options.hx file.
  * The macro will automatically generate the `flush` and `load` functions.
  */
-@:build(funkin.backend.system.macros.FunkinSaveMacro.build("save", "flush", "load"))
+@:build(funkin.backend.system.macros.FunkinSaveMacro.build("highscoreSave", "flush", "load"))
 class FunkinSave {
-	@:saveField(highscoreSave)
 	public static var highscores:Array<Highscore> = [];  // enums unfortunately are extremely buggy on saves, typedefs are the best solution  - Nex
 
 	/**
@@ -22,8 +22,6 @@ class FunkinSave {
 	#if REGION
 	@:dox(hide) @:doNotSave
 	private static var __eventAdded = false;
-	@:doNotSave
-	public static var save:CodenameSave;
 	@:doNotSave
 	public static var highscoreSave:CodenameSave;
 
@@ -36,15 +34,10 @@ class FunkinSave {
 	public static function init() {
 		if (!__eventAdded) {
 			onReloadSave.add(function() {
-				if (save != null && save.isBound) save.close();
-				save = new CodenameSave();
-				save.bind('generic');
-				save.autoSave = false;  // cuz autoSave doesnt update the fields, so we do it manually  - Nex
-
 				if (highscoreSave != null && highscoreSave.isBound) highscoreSave.close();
 				highscoreSave = new CodenameSave();
 				highscoreSave.bind('highscores');
-				highscoreSave.autoSave = false;
+				highscoreSave.autoSave = false;  // cuz autoSave doesnt update the fields, so we do it manually  - Nex
 
 				load();
 			});
@@ -145,6 +138,11 @@ class FunkinSave {
 		return false;
 	}
 	#end
+
+	// Backwards compat
+	@:dox(hide) @:doNotSave
+	public static var save(get, never):FlxSave;
+	private static function get_save() return FlxG.save;
 }
 
 typedef Highscore = {
