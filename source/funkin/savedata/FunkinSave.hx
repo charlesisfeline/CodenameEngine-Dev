@@ -12,8 +12,9 @@ import openfl.Lib;
  * Just add your save variables the way you would do in the Options.hx file.
  * The macro will automatically generate the `flush` and `load` functions.
  */
-@:build(funkin.backend.system.macros.FunkinSaveMacro.build("highscoreSave", "flush", "load"))
+@:build(funkin.backend.system.macros.FunkinSaveMacro.build(null, "flush", "load"))
 class FunkinSave {
+	@:saveField(highscoreSave)
 	public static var highscores:Array<Highscore> = [];  // enums unfortunately are extremely buggy on saves, typedefs are the best solution  - Nex
 
 	/**

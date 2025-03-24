@@ -23,12 +23,12 @@ class FunkinSaveMacro
 {
 	/**
 	 * Generates flush and load functions.
-	 * @param saveFieldName Name of the save field (`save`)
+	 * @param saveFieldName Name of the save field (`save`) or `null` to not have a default save field
 	 * @param saveFuncName Name of the save func (`flush`)
 	 * @param loadFuncName Name of the load func (`load`)
 	 * @return Array<Field>
 	 */
-	public static function build(saveFieldName:String = "save", saveFuncName:String = "flush", loadFuncName:String = "load"):Array<Field>
+	public static function build(saveFieldName:Null<String>, saveFuncName:String = "flush", loadFuncName:String = "load"):Array<Field>
 	{
 		var fields:Array<Field> = Context.getBuildFields();
 
@@ -41,10 +41,10 @@ class FunkinSaveMacro
 			switch (field.kind)
 			{
 				case FVar(type, expr):
-					if (field.name == saveFieldName)
+					if (saveFieldName != null && field.name == saveFieldName)
 						continue;
 					var valid:Bool = true;
-					var customSaveFieldName:String = saveFieldName;
+					var customSaveFieldName:Null<String> = saveFieldName;
 					if (field.meta != null)
 					{
 						for (m in field.meta)
@@ -55,6 +55,8 @@ class FunkinSaveMacro
 								customSaveFieldName = meta_extractIdent(m);
 						}
 					}
+					if(customSaveFieldName == null)
+						Context.error("Field " + field.name + " is not marked with @:saveField", field.pos);
 					if (valid)
 						fieldNames.push(new FieldName(field.name, customSaveFieldName));
 				default:
@@ -63,7 +65,8 @@ class FunkinSaveMacro
 		}
 
 		var _allSaveFields:Array<String> = [for (f in fieldNames) f.saveField];
-		_allSaveFields.push(saveFieldName);
+		if(saveFieldName != null)
+			_allSaveFields.push(saveFieldName);
 		var __allSaveFields:Map<String, Bool> = [];
 		for (f in _allSaveFields) __allSaveFields.set(f, true);
 		var allSaveFields:Array<String> = [];
