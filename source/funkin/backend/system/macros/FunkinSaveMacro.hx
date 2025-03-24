@@ -55,7 +55,7 @@ class FunkinSaveMacro
 								customSaveFieldName = meta_extractIdent(m);
 						}
 					}
-					if(customSaveFieldName == null)
+					if(valid && customSaveFieldName == null)
 						Context.error("Field " + field.name + " is not marked with @:saveField", field.pos);
 					if (valid)
 						fieldNames.push(new FieldName(field.name, customSaveFieldName));
