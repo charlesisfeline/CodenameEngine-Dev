@@ -97,6 +97,19 @@ class Script extends FlxBasic implements IFlxDestroyable {
 			"BitmapUtil"		=> funkin.backend.utils.BitmapUtil,
 		];
 	}
+
+	/**
+	 * Used internally to keep backwards compatibility with old scripts.
+	 * This gets set on `hscript.Interp.importRedirects`,
+	 * if you wanna modify it, please edit `hscript.Interp.importRedirects` directly.
+	**/
+	public static function getDefaultImportRedirects():Map<String, String> {
+		return [
+			"funkin.backend.system.github.GitHub" => "github.api.GitHubAPI",
+			"funkin.backend.system.github.GitHubException" => "github.api.APIException"
+		];
+	}
+
 	public static function getDefaultPreprocessors():Map<String, Dynamic> {
 		var defines = funkin.backend.system.macros.DefinesMacro.defines;
 		defines.set("CODENAME_ENGINE", true);
