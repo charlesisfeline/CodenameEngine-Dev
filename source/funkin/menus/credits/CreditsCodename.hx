@@ -9,9 +9,10 @@ import flixel.text.FlxText;
 using StringTools;
 
 class CreditsCodename extends funkin.options.OptionsScreen {
-	public var error:Bool = false;
 	public var author:String = "CodenameCrew";
-	public var totalContributions:Int = 0;
+	static var lastDownloaded:Float = 0;
+	var totalContributions:Int = 0;
+	var error:Bool = false;
 
 	public var mainDevCol:FlxColor = 0xFF9C35D5;
 	public var minContrCol:FlxColor = 0xFFB4A7DA;
@@ -73,8 +74,8 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 
 	public function checkUpdate():Bool {
 		var curTime:Float = Date.now().getTime();
-		if(Options.lastUpdated != null && curTime < Options.lastUpdated + 120000) return false;  // Fuck you Github rate limits  - Nex
-		Options.lastUpdated = curTime;
+		if (curTime < lastDownloaded + 300000 || !GitHub.checkAndUseApi(2)) return false;  // can download every 5m to avoid any problems with the rate limit  - Nex
+		lastDownloaded = curTime;
 
 		error = false;
 		var idk = GitHub.getContributors(author, "CodenameEngine", function(e) {
@@ -82,8 +83,8 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 			var errMsg:String = 'Error while trying to download contributors list:\n${CoolUtil.removeIP(e.message)}';
 			Logs.traceColored([Logs.logText(errMsg.replace('\n', ' '), RED)], ERROR);
 			funkin.backend.utils.NativeAPI.showMessageBox("Codename Engine Warning", errMsg, MSG_WARNING);
-		});
-		if(error) return false;
+		}, false);
+		if (error) return false;
 		Options.contributors = idk;
 		trace('Contributors list Updated!');
 
@@ -93,8 +94,8 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 			var errMsg:String = 'Error while trying to download $author members list:\n${CoolUtil.removeIP(e.message)}';
 			Logs.traceColored([Logs.logText(errMsg.replace('\n', ' '), RED)], ERROR);
 			funkin.backend.utils.NativeAPI.showMessageBox("Codename Engine Warning", errMsg, MSG_WARNING);
-		});
-		if(!errorOnMain) {
+		}, false);
+		if (!errorOnMain) {
 			Options.mainDevs = [for(m in idk2) m.id];
 			trace('Main Devs list Updated!');
 		}
@@ -113,10 +114,10 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 		}
 
 		totalContributions = 0;
-		for(c in Options.contributors) totalContributions += c.contributions;
-		for(c in Options.contributors) {
+		for (c in Options.contributors) totalContributions += c.contributions;
+		for (c in Options.contributors) {
 			var opt:GithubIconOption = new GithubIconOption(c, 'Total Contributions: ~${c.contributions}~ / *${totalContributions}* (~${FlxMath.roundDecimal(c.contributions / totalContributions * 100, 2)}%~) - Select to open GitHub account');
-			if(Options.mainDevs.contains(c.id)) {
+			if (Options.mainDevs.contains(c.id)) {
 				opt.desc += " *- Public member of the main Devs!*";
 				@:privateAccess opt.__text.color = mainDevCol;
 			}

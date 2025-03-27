@@ -62,17 +62,17 @@ class GithubUserIcon extends FlxSprite
 					var planB:Bool = true;
 
 					var bytes = null;
-					if(unfLink) {
+					if (unfLink) {
 						try bytes = HttpUtil.requestBytes('${user.avatar_url}?size=$size')
 						catch(e) Logs.traceColored([Logs.logText('Failed to download github pfp for ${user.login}: ${CoolUtil.removeIP(e.message)} - (Retrying using the api..)', RED)], ERROR);
 
-						if(bytes != null) {
+						if (bytes != null) {
 							bmap = BitmapData.fromBytes(bytes);
 							planB = false;
 						}
 					}
 
-					if(planB) {
+					if (planB) {
 						if(unfLink) user = GitHub.getUser(user.login, function(e) Logs.traceColored([Logs.logText('Failed to download github user info for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR));  // Api part - Nex
 						try bytes = HttpUtil.requestBytes('${user.avatar_url}&size=$size')
 						catch(e) Logs.traceColored([Logs.logText('Failed to download github pfp for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR);
@@ -80,7 +80,7 @@ class GithubUserIcon extends FlxSprite
 						if(bytes != null) bmap = BitmapData.fromBytes(bytes);
 					}
 
-					if(bmap != null) try {
+					if (bmap != null) try {
 						mutex.acquire();  // Avoiding critical section  - Nex
 						var leGraphic:FlxGraphic = FlxG.bitmap.add(bmap, false, key);
 						leGraphic.persist = true;

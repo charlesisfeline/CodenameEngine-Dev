@@ -54,7 +54,7 @@ class UpdateUtil {
 
 	static var __curVersionPos = -2;
 	static function __doReleaseFiltering(releases:Array<GitHubRelease>, currentVersionTag:String) {
-		releases = releases.filterReleases(Options.betaUpdates, false);
+		releases = releases.filterReleases(Options.commitUpdates, false);
 		if (releases.length <= 0)
 			return releases;
 

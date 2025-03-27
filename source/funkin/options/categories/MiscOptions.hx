@@ -6,9 +6,9 @@ class MiscOptions extends OptionsScreen {
 		super("Miscellaneous", "Use this menu to reset save data or engine settings.");
 		#if UPDATE_CHECKING
 		add(new Checkbox(
-			"Enable Nightly Updates",
-			"If checked, will also include nightly builds in the update checking.",
-			"betaUpdates"));,
+			"Enable Early Updates",
+			"If checked, will also include GitHub's action builds in the update checking (these builds are very experimental!).",
+			"commitUpdates"));
 		add(new TextOption(
 			"Check for Updates",
 			"Select this option to check for new engine updates.",
@@ -18,9 +18,9 @@ class MiscOptions extends OptionsScreen {
 					FlxG.switchState(new funkin.backend.system.updating.UpdateAvailableScreen(report));
 				} else {
 					CoolUtil.playMenuSFX(CANCEL);
-					updateDescText("No update found.");
+					//updateDescText("No update found.");
 				}
-		}));,
+		}));
 		#end
 		add(new TextOption(
 			"Reset Save Data",

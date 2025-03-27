@@ -29,7 +29,7 @@ class Options
 	public static var gameplayShaders:Bool = true;
 	public static var colorHealthBar:Bool = true;
 	public static var lowMemoryMode:Bool = false;
-	public static var betaUpdates:Bool = false;
+	public static var commitUpdates:Bool = false;
 	public static var splashesEnabled:Bool = true;
 	public static var hitWindow:Float = 250;
 	public static var songOffset:Float = 0;
@@ -53,7 +53,6 @@ class Options
 	public static var freeplayLastDifficulty:String = "normal";
 	public static var contributors:Array<funkin.backend.system.github.GitHubContributor> = [];
 	public static var mainDevs:Array<Int> = [];  // IDs
-	public static var lastUpdated:Null<Float>;
 
 	/**
 	 * CHARTER
