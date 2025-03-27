@@ -3,8 +3,11 @@ package funkin.options.type;
 import openfl.display.BitmapData;
 import flixel.graphics.FlxGraphic;
 import funkin.backend.shaders.CustomShader;
-import funkin.backend.system.github.GitHub;
 import flixel.util.FlxColor;
+
+#if GITHUB_API
+import github.api.GitHubAPI;
+#end
 
 class GithubIconOption extends TextOption
 {
@@ -44,19 +47,19 @@ class GithubUserIcon extends FlxSprite
 	}
 
 	override function update(elapsed:Float) {
-		if(waitUntilLoad > 0) waitUntilLoad -= elapsed;
+		if (waitUntilLoad > 0) waitUntilLoad -= elapsed;
 		super.update(elapsed);
 	}
 
 	final mutex = new sys.thread.Mutex();
 	override function drawComplex(camera:FlxCamera):Void {  // Making the image downlaod only if the player actually sees it on the screeeeen  - Nex
-		if(waitUntilLoad <= 0) {
+		if (waitUntilLoad <= 0) {
 			waitUntilLoad = null;
 			Main.execAsync(function() {
 				var key:String = 'GITHUB-USER:${user.login}';
 				var bmap:Dynamic = FlxG.bitmap.get(key);
 
-				if(bmap == null) {
+				if (bmap == null) {
 					trace('Downloading avatar: ${user.login}');
 					var unfLink:Bool = StringTools.endsWith(user.avatar_url, '.png');
 					var planB:Bool = true;
@@ -72,13 +75,15 @@ class GithubUserIcon extends FlxSprite
 						}
 					}
 
+					#if GITHUB_API
 					if (planB) {
-						if(unfLink) user = GitHub.getUser(user.login, function(e) Logs.traceColored([Logs.logText('Failed to download github user info for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR));  // Api part - Nex
+						if (unfLink) user = GitHubAPI.getUser(user.login, function(e) Logs.traceColored([Logs.logText('Failed to download github user info for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR));  // Api part - Nex
 						try bytes = HttpUtil.requestBytes('${user.avatar_url}&size=$size')
 						catch(e) Logs.traceColored([Logs.logText('Failed to download github pfp for ${user.login}: ${CoolUtil.removeIP(e.message)}', RED)], ERROR);
 
-						if(bytes != null) bmap = BitmapData.fromBytes(bytes);
+						if (bytes != null) bmap = BitmapData.fromBytes(bytes);
 					}
+					#end
 
 					if (bmap != null) try {
 						mutex.acquire();  // Avoiding critical section  - Nex

@@ -7,7 +7,7 @@ class MiscOptions extends OptionsScreen {
 		#if UPDATE_CHECKING
 		add(new Checkbox(
 			"Enable Early Updates",
-			"If checked, will also include GitHub's action builds in the update checking (these builds are very experimental!).",
+			"If checked, will also include GitHub's action builds (through Nightly service) in the update checking (these builds are very experimental!).",
 			"commitUpdates"));
 		add(new TextOption(
 			"Check for Updates",

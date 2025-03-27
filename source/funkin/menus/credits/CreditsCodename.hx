@@ -1,10 +1,11 @@
 package funkin.menus.credits;
 
+#if GITHUB_API
 import funkin.options.PlayerSettings;
 import flixel.util.FlxColor;
-import funkin.backend.system.github.GitHub;
 import funkin.options.type.GithubIconOption;
 import flixel.text.FlxText;
+import github.api.GitHubAPI;
 
 using StringTools;
 
@@ -74,11 +75,11 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 
 	public function checkUpdate():Bool {
 		var curTime:Float = Date.now().getTime();
-		if (curTime < lastDownloaded + 300000 || !GitHub.checkAndUseApi(2)) return false;  // can download every 5m to avoid any problems with the rate limit  - Nex
+		if (curTime < lastDownloaded + 300000 || !GitHubAPI.checkAndUseApi(2)) return false;  // can download every 5m to avoid any problems with the rate limit  - Nex
 		lastDownloaded = curTime;
 
 		error = false;
-		var idk = GitHub.getContributors(author, "CodenameEngine", function(e) {
+		var idk = GitHubAPI.getContributors(author, "CodenameEngine", function(e) {
 			error = true;
 			var errMsg:String = 'Error while trying to download contributors list:\n${CoolUtil.removeIP(e.message)}';
 			Logs.traceColored([Logs.logText(errMsg.replace('\n', ' '), RED)], ERROR);
@@ -89,7 +90,7 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 		trace('Contributors list Updated!');
 
 		var errorOnMain:Bool = false;
-		var idk2 = GitHub.getOrganizationMembers(author, function(e) {
+		var idk2 = GitHubAPI.getOrganizationMembers(author, function(e) {
 			errorOnMain = true;
 			var errMsg:String = 'Error while trying to download $author members list:\n${CoolUtil.removeIP(e.message)}';
 			Logs.traceColored([Logs.logText(errMsg.replace('\n', ' '), RED)], ERROR);
@@ -116,7 +117,7 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 		totalContributions = 0;
 		for (c in Options.contributors) totalContributions += c.contributions;
 		for (c in Options.contributors) {
-			var opt:GithubIconOption = new GithubIconOption(c, 'Total Contributions: ~${c.contributions}~ / *${totalContributions}* (~${FlxMath.roundDecimal(c.contributions / totalContributions * 100, 2)}%~) - Select to open GitHub account');
+			var opt:GithubIconOption = new GithubIconOption(c, 'Total Contributions: ~${c.contributions}~ / *${totalContributions}* (~${FlxMath.roundDecimal(c.contributions / totalContributions * 100, 2)}%~) - Select to open GitHubAPI account');
 			if (Options.mainDevs.contains(c.id)) {
 				opt.desc += " *- Public member of the main Devs!*";
 				@:privateAccess opt.__text.color = mainDevCol;
@@ -127,3 +128,4 @@ class CreditsCodename extends funkin.options.OptionsScreen {
 		updateMenuDesc();
 	}
 }
+#end

@@ -1,5 +1,6 @@
 package funkin.backend.system.updating;
 
+#if GITHUB_API
 import openfl.Lib;
 import sys.io.Process;
 import haxe.zip.Reader;
@@ -13,17 +14,19 @@ import openfl.events.ProgressEvent;
 import openfl.net.URLRequest;
 import openfl.net.URLLoader;
 import sys.FileSystem;
-import funkin.backend.system.github.GitHubRelease;
+import github.api.structures.Release;
 
 class AsyncUpdater {
 	// NON ASYNC STUFF
 	#if REGION
-	public function new(releases:Array<GitHubRelease>) {
+	public function new(releases:Array<Release>) {
 		this.releases = releases;
 	}
 
 	public function execute() {
+		#if GITHUB_API
 		Main.execAsync(installUpdates);
+		#end
 	}
 	#end
 
@@ -41,7 +44,7 @@ class AsyncUpdater {
 	public static var executableName:String = "CodenameEngine";
 	#end
 
-	public var releases:Array<GitHubRelease>;
+	public var releases:Array<Release>;
 	public var progress:UpdaterProgress = new UpdaterProgress();
 	public var path:String;
 	public var downloadStream:URLLoader;
@@ -191,3 +194,4 @@ enum abstract UpdaterStep(Int) {
 	var DOWNLOADING_EXECUTABLE = 2;
 	var INSTALLING = 3;
 }
+#end

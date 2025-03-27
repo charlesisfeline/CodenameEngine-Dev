@@ -1,5 +1,6 @@
 package funkin.backend.system.updating;
 
+#if GITHUB_API
 import funkin.backend.utils.MarkdownUtil;
 import funkin.menus.MainMenuState;
 import flixel.math.FlxPoint;
@@ -152,3 +153,4 @@ class UpdateAvailableScreen extends MusicBeatState {
 		oldPos.put();
 	}
 }
+#end

@@ -1,12 +1,13 @@
 package funkin.backend.system.updating;
 
+#if GITHUB_API
 import sys.FileSystem;
 import haxe.io.Path;
-import funkin.backend.system.github.GitHubRelease;
-import funkin.backend.system.github.GitHub;
+import github.api.structures.Release;
+import github.api.GitHubAPI;
 import lime.app.Application;
 
-using funkin.backend.system.github.GitHub;
+using github.api.GitHubAPI;
 
 class UpdateUtil {
 	public static final repoOwner:String = "YoshiCrafter29";
@@ -27,7 +28,7 @@ class UpdateUtil {
 
 		var error = false;
 
-		var newUpdates = __doReleaseFiltering(GitHub.getReleases(repoOwner, repoName, function(e) {
+		var newUpdates = __doReleaseFiltering(GitHubAPI.getReleases(repoOwner, repoName, function(e) {
 			error = true;
 		}), curTag);
 
@@ -53,12 +54,12 @@ class UpdateUtil {
 	}
 
 	static var __curVersionPos = -2;
-	static function __doReleaseFiltering(releases:Array<GitHubRelease>, currentVersionTag:String) {
+	static function __doReleaseFiltering(releases:Array<Release>, currentVersionTag:String) {
 		releases = releases.filterReleases(Options.commitUpdates, false);
 		if (releases.length <= 0)
 			return releases;
 
-		var newArray:Array<GitHubRelease> = [];
+		var newArray:Array<Release> = [];
 
 		var skipNextBinaryChecks:Bool = false;
 		for(index in 0...releases.length) {
@@ -101,5 +102,6 @@ typedef UpdateCheckCallback = {
 
 	@:optional var newVersionTag:String;
 
-	@:optional var updates:Array<GitHubRelease>;
+	@:optional var updates:Array<Release>;
 }
+#end

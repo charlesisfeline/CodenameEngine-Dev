@@ -35,9 +35,11 @@ class CreditsMain extends TreeMenu {
 						items.push(c);
 			}
 		}
+		#if GITHUB_API
 		items.push(new TextOption("Codename Engine >", "Select this to see all the contributors of the engine!", function() {
 			optionsTree.add(Type.createInstance(CreditsCodename, []));
 		}));
+		#end
 		items.push(new TextOption("Friday Night Funkin'", "Select this to open the itch.io page of the original game to donate!", function() {
 			CoolUtil.openURL("https://ninja-muffin24.itch.io/funkin");
 		}));

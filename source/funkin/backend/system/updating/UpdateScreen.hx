@@ -1,5 +1,6 @@
 package funkin.backend.system.updating;
 
+#if GITHUB_API
 import funkin.backend.shaders.CustomShader;
 import funkin.backend.FunkinText;
 import funkin.menus.TitleState;
@@ -136,3 +137,4 @@ class UpdateScreen extends MusicBeatState {
 		}
 	}
 }
+#end
