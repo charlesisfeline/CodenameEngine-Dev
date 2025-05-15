@@ -34,16 +34,20 @@ class CharterSelection extends EditorTreeMenu {
 							FlxG.switchState(new Charter(s.name, d));
 						})
 				];
+				#if sys
 				list.push(new NewOption("New Difficulty", "New Difficulty", function() {
 					FlxG.state.openSubState(new ChartCreationScreen(saveChart));
 				}));
+				#end
 				optionsTree.add(new OptionsScreen(s.name, "Select a difficulty to continue.", list));
 			}, s.parsedColor.getDefault(0xFFFFFFFF))
 		];
 
+		#if sys
 		list.insert(0, new NewOption("New Song", "New Song", function() {
 			FlxG.state.openSubState(new SongCreationScreen(saveSong));
 		}));
+		#end
 
 		main = new OptionsScreen("Chart Editor", "Select a song to modify the charts from.", list);
 
@@ -88,7 +92,8 @@ class CharterSelection extends EditorTreeMenu {
 		}
 	}
 
-	public function saveSong(creation:SongCreationData) {
+	#if sys
+	public function saveSong(creation:SongCreationData, ?callback:String -> SongCreationData -> Void) {
 		var songAlreadyExists:Bool = [for (s in freeplayList.songs) s.name.toLowerCase()].contains(creation.meta.name.toLowerCase());
 
 		if (songAlreadyExists) {
@@ -112,7 +117,13 @@ class CharterSelection extends EditorTreeMenu {
 		CoolUtil.safeSaveFile('$songFolder/meta.json', Json.stringify(creation.meta, Flags.JSON_PRETTY_PRINT));
 		if (creation.instBytes != null) sys.io.File.saveBytes('$songFolder/song/Inst.${Flags.SOUND_EXT}', creation.instBytes);
 		if (creation.voicesBytes != null) sys.io.File.saveBytes('$songFolder/song/Voices.${Flags.SOUND_EXT}', creation.voicesBytes);
+
+		if (creation.playerVocals != null) sys.io.File.saveBytes('$songFolder/song/Voices-Player.${Flags.SOUND_EXT}', creation.playerVocals);
+		if (creation.oppVocals != null) sys.io.File.saveBytes('$songFolder/song/Voices-Opponent.${Flags.SOUND_EXT}', creation.oppVocals);
 		#end
+
+		if (callback != null)
+			callback(songFolder, creation);
 
 		var option = new EditorIconOption(creation.meta.name, "Press ACCEPT to choose a difficulty to edit.", creation.meta.icon, function() {
 			curSong = creation.meta;
@@ -163,4 +174,5 @@ class CharterSelection extends EditorTreeMenu {
 			CoolUtil.safeSaveFile('$songFolder/meta.json', Json.stringify(meta));
 		}
 	}
+	#end
 }

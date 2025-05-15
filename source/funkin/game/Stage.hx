@@ -27,6 +27,9 @@ class Stage extends FlxBasic implements IBeatReceiver {
 	public var characterPoses:Map<String, StageCharPos> = [];
 	public var xmlImportedScripts:Array<XMLImportedScriptInfo> = [];
 
+	public var defaultZoom:Float = 1.05;
+	public var startCam = new FlxPoint();
+
 	private var spritesParentFolder = "";
 
 	/**
@@ -63,14 +66,19 @@ class Stage extends FlxBasic implements IBeatReceiver {
 
 		var event = null;
 		if (stageXML != null) {
+			var parsed:Null<Float>;
+			if((parsed = Std.parseFloat(stageXML.getAtt("startCamPosX"))).isNotNull()) startCam.x = parsed;
+			if((parsed = Std.parseFloat(stageXML.getAtt("startCamPosY"))).isNotNull()) startCam.y = parsed;
+			if((parsed = Std.parseFloat(stageXML.getAtt("zoom"))).isNotNull()) defaultZoom = parsed;
+
 			stageName = stageXML.getAtt("name").getDefault(stage);
 
-			if (PlayState.instance != null) {
-				var parsed:Null<Float>;
-				if(stageXML.has.startCamPosX && (parsed = Std.parseFloat(stageXML.att.startCamPosX)) != null) PlayState.instance.camFollow.x = parsed;
-				if(stageXML.has.startCamPosY && (parsed = Std.parseFloat(stageXML.att.startCamPosY)) != null) PlayState.instance.camFollow.y = parsed;
-				if(stageXML.has.zoom && (parsed = Std.parseFloat(stageXML.att.zoom)) != null) PlayState.instance.defaultCamZoom = parsed;
+			if (PlayState.instance == state) {
+				if(stageXML.has.startCamPosX) PlayState.instance.camFollow.x = startCam.x;
+				if(stageXML.has.startCamPosY) PlayState.instance.camFollow.y = startCam.y;
+				if(stageXML.has.zoom) PlayState.instance.defaultCamZoom = defaultZoom;
 			}
+
 			if (stageXML.has.folder) {
 				spritesParentFolder = stageXML.att.folder;
 				if (!spritesParentFolder.endsWith("/")) spritesParentFolder += "/";
@@ -297,6 +305,11 @@ class Stage extends FlxBasic implements IBeatReceiver {
 	public function stepHit(curStep:Int) {}
 
 	public function measureHit(curMeasure:Int) {}
+
+	public override function destroy() {
+		startCam.put();
+		super.destroy();
+	}
 
 	/**
 	 * Gets a list of stages that are available to be used.

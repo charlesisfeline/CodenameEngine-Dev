@@ -59,18 +59,18 @@ class Flags {
 	public static var WEEKS_LIST_MOD_MODE:Allow<"prepend", "override", "append"> = "override";
 
 	public static var DEFAULT_BPM:Float = 100.0;
-	public static var DEFAULT_BEATS_PER_MEASURE:Float = 4;
+	public static var DEFAULT_BEATS_PER_MEASURE:Int = 4;
 	public static var DEFAULT_STEPS_PER_BEAT:Int = 4;
 
 	public static var SUPPORTED_CHART_RUNTIME_FORMATS:Array<String> = ["Legacy", "Psych Engine"];
 	public static var SUPPORTED_CHART_FORMATS:Array<String> = ["BaseGame"];
 
-	public static var BASEGAME_SONG_METADATA_VERSION:String = "2.2.2";
-	public static var BASEGAME_SONG_CHART_DATA_VERSION:String = "2.0.0";
-	public static var BASEGAME_DEFAULT_NOTE_STYLE:String = 'funkin';
-	public static var BASEGAME_DEFAULT_ALBUM_ID:String = 'volume1';
-	public static var BASEGAME_DEFAULT_PREVIEW_START:Float = 0;
-	public static var BASEGAME_DEFAULT_PREVIEW_END:Float = 15000;
+	public static var VSLICE_SONG_METADATA_VERSION:String = "2.2.2";
+	public static var VSLICE_SONG_CHART_DATA_VERSION:String = "2.0.0";
+	public static var VSLICE_DEFAULT_NOTE_STYLE:String = 'funkin';
+	public static var VSLICE_DEFAULT_ALBUM_ID:String = 'volume1';
+	public static var VSLICE_DEFAULT_PREVIEW_START:Int = 0;
+	public static var VSLICE_DEFAULT_PREVIEW_END:Int = 15000;
 
 	/**
 	 * Default background colors for songs without bg color
@@ -97,7 +97,7 @@ class Flags {
 	public static var DEFAULT_CAM_ZOOM_STRENGTH:Int = 1;
 	public static var DEFAULT_CAM_ZOOM:Float = 1.05; // what zoom level it defaults to
 	public static var DEFAULT_HUD_ZOOM:Float = 1.0;
-	public static var MAX_CAMERA_ZOOM:Float = 1.35;
+	public static var MAX_CAMERA_ZOOM_MULT:Float = 1.35;
 
 	public static var DEFAULT_PAUSE_ITEMS:Array<String> = ['Resume', 'Restart Song', 'Change Controls', 'Change Options', 'Exit to menu', "Exit to charter"];
 	public static var DEFAULT_CUTSCENE_PAUSE_ITEMS:Array<String> = ['Resume Cutscene', 'Skip Cutscene', 'Restart Cutscene', 'Exit to menu'];
@@ -157,7 +157,7 @@ class Flags {
 	// -- End of Codename's Default Flags --
 
 	/**
-	 * Flags that Codename couldn't recognize as it's own defaults (they can only be `string`!).
+	 * Flags that Codename couldn't recognize as it's own defaults (they can only be `string`! due to them being unparsed).
 	 */
 	@:bypass public static var customFlags:Map<String, String> = [];
 
@@ -187,10 +187,9 @@ class Flags {
 		}
 	}
 
-	public static function loadFromDatas(files:Array<String>) {
+	public static function loadFromDatas(datas:Array<String>) {
 		var flags:Map<String, String> = [];
-		for(file in files) {
-			var data:String = Assets.getText(file);
+		for(data in datas) {
 			if(data != null)
 				loadFromData(flags, data);
 		}
