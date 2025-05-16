@@ -74,7 +74,7 @@ class HuffTools {
 
 	function treeMake(bits:haxe.ds.IntMap<Int>, maxbits:Int, v:Int, len:Int) {
 		if (len > maxbits)
-			throw "Invalid huffman";
+			throw "Invalid huffman - tree len exceeds maxbits";
 		var idx = (v << 5) | len;
 		if (bits.exists(idx))
 			return Found(bits.get(idx));
@@ -90,7 +90,7 @@ class HuffTools {
 		var counts = new Array();
 		var tmp = new Array();
 		if (maxbits > 32)
-			throw "Invalid huffman";
+			throw "Invalid huffman - too many bits";
 		for (i in 0...maxbits) {
 			counts.push(0);
 			tmp.push(0);
@@ -98,7 +98,7 @@ class HuffTools {
 		for (i in 0...nlengths) {
 			var p = lengths[i + pos];
 			if (p >= maxbits)
-				throw "Invalid huffman";
+				throw "Invalid huffman - invalid length";
 			counts[p]++;
 		}
 		var code = 0;

@@ -5,6 +5,9 @@ import funkin.backend.utils.zip.methods.Huffman;
 import funkin.backend.utils.zip.methods.InflateImpl;
 import haxe.ds.List;
 import haxe.io.Input;
+#if sys
+import sys.io.File;
+#end
 
 class EndOfCentralDirectory {
 	public var address:Int;
@@ -42,6 +45,8 @@ class EndOfCentralDirectory {
 	public var comment:String;
 
 	public function new(i:InputAdapter, address:Int) {
+		if(i == null) return;
+
 		this.address = address;
 		var old = i.tell();
 		i.seek(address, SeekBegin);
@@ -57,7 +62,7 @@ class EndOfCentralDirectory {
 	}
 }
 
-class GeneralPurposeBitFlags {
+class ZipBitFlags {
 	public var encrypted:Bool;
 	public var compressionOptions:Int;
 	public var crcAndSizesInCDAndDataDescriptor:Bool;
@@ -158,6 +163,8 @@ class ExtraField {
 	public var data:ExtraFieldData;
 
 	public function new(i:InputAdapter) {
+		if(i == null) return;
+
 		this.tag = i.readUInt16();
 		this.size = i.readUInt16();
 
@@ -174,7 +181,7 @@ class ExtraField {
 class LocalFileHeader {
 	public var headerSignature:Int;
 	public var version:Int;
-	public var generalPurposeBitFlags:GeneralPurposeBitFlags;
+	public var flags:ZipBitFlags;
 	public var compressionMethod:CompressionMethod;
 	public var lastModifyDate:Date;
 	public var crc32:Int;
@@ -182,16 +189,18 @@ class LocalFileHeader {
 	public var uncompressedSize:Int;
 	public var fileName:String;
 	public var extraFields:List<ExtraField>;
-	public var data(get, null):haxe.io.Bytes = null;
+	public var data(get, never):haxe.io.Bytes;
+	private var _cachedData:Null<haxe.io.Bytes> = null;
 	private var dataPos:Int;
 	private var i:InputAdapter;
 
 	public function new(i:InputAdapter, location:Int) {
+		if(i == null) return;
 		var old = i.tell();
 		i.seek(location, SeekBegin);
 		this.headerSignature = i.readInt32();
 		this.version = i.readUInt16();
-		this.generalPurposeBitFlags = new GeneralPurposeBitFlags(i.readUInt16());
+		this.flags = new ZipBitFlags(i.readUInt16());
 		this.compressionMethod = i.readUInt16();
 		this.lastModifyDate = ZipReader.readZipDate(i);
 		this.crc32 = i.readInt32();
@@ -210,11 +219,11 @@ class LocalFileHeader {
 		i.seek(old, SeekBegin);
 	}
 
-	inline function get_data() {
+	function get_data() {
+		if(_cachedData != null)
+			return _cachedData;
 		var old = i.tell();
 		i.seek(dataPos, SeekBegin);
-		//trace("Seek: " + dataPos);
-		//trace("Compression: " + CompressionMethod.toReadable(compressionMethod) + " (" + compressedSize + " bytes)");
 		var res = switch(compressionMethod) {
 			case CompressionMethod.None: i.read(compressedSize);
 			case CompressionMethod.Deflate: {
@@ -233,9 +242,10 @@ class LocalFileHeader {
 			case BZIP2: BZip2.decompress(i);
 			// TODO: support lzma
 			// TODO: support zstd
-			default: throw "Unsupported compression method: " + CompressionMethod.toReadable(compressionMethod);
+			default: throw "Unsupported compression method in zip: " + CompressionMethod.toReadable(compressionMethod);
 		}
 		i.seek(old, SeekBegin);
+		_cachedData = res;
 		return res;
 	}
 
@@ -243,14 +253,14 @@ class LocalFileHeader {
 	 * To reduce memory usage.
 	**/
 	public function clearData() {
-		data = null;
+		_cachedData = null;
 	}
 
 
 	/*struct LocalFileHeader {
 		u32 headerSignature [[name("LCF PK\\3\\4")]];
 		u16 version [[ comment("The minimum supported ZIP specification version needed to extract the file") ]];
-		GeneralPurposeBitFlags generalPurposeBitFlags  [[ comment("General purpose bit flag") ]];
+		ZipBitFlags flags  [[ comment("General purpose bit flag") ]];
 		CompressionMethod compressionMethod [[ comment("Compression method") ]];
 		u16 lastModifyTime [[ comment("File last modification time") ]];
 		u16 lastModifyDate [[ comment("File last modification date") ]];
@@ -282,7 +292,7 @@ class FileHeader {
 	/**
 	 * General purpose bit flag
 	**/
-	public var generalPurposeBitFlags:GeneralPurposeBitFlags; // Size: 2
+	public var flags:ZipBitFlags; // Size: 2
 	/**
 	 * Compression method
 	**/
@@ -290,7 +300,7 @@ class FileHeader {
 	/**
 	 * File last modification time
 	**/
-	public var fileLastModifyDate:Date; // Size: 4 (2 bytes + 2 bytes)
+	public var lastModifyDate:Date; // Size: 4 (2 bytes + 2 bytes)
 	/**
 	 * CRC-32 of uncompressed data
 	**/
@@ -334,13 +344,29 @@ class FileHeader {
 		return localFile.data;
 	}
 
+	public function clearData() {
+		localFile.clearData();
+	}
+
+	// basic backwards compatibility with haxe.zip.Entry
+	public var fileSize(get, never):Int;
+	private inline function get_fileSize() return localFile.uncompressedSize;
+	public var compressed(get, never):Bool;
+	private inline function get_compressed() return localFile.compressionMethod != CompressionMethod.None;
+	public var dataSize(get, never):Int;
+	private inline function get_dataSize() return localFile.compressedSize;
+	public var fileTime(get, never):Date;
+	private inline function get_fileTime() return localFile.lastModifyDate;
+
 	public function new(i:InputAdapter) {
+		if(i == null) return;
+
 		this.headerSignature = i.readInt32();
 		this.versionMade = i.readUInt16();
 		this.versionExtract = i.readUInt16();
-		this.generalPurposeBitFlags = new GeneralPurposeBitFlags(i.readUInt16());
+		this.flags = new ZipBitFlags(i.readUInt16());
 		this.compressionMethod = i.readUInt16();
-		this.fileLastModifyDate = ZipReader.readZipDate(i);
+		this.lastModifyDate = ZipReader.readZipDate(i);
 		this.crc32 = i.readInt32();
 		this.compressedSize = i.readInt32();
 		this.uncompressedSize = i.readInt32();
@@ -368,56 +394,27 @@ class ZipReader {
 	public var eocd:EndOfCentralDirectory;
 
 	public function new(i:haxe.io.Input) {
-		this.i = InputAdapter.fromInput(i);
+		if(i == null) return;
 
+		this.i = InputAdapter.fromInput(i);
 		this.len = this.i.length;
 	}
 
-	public function close() {
-		i.close();
+	/**
+	 * To reduce memory usage.
+	**/
+	public function clearData() {
+		if(files == null) return;
+		for(e in files)
+			e.clearData();
 	}
 
-	/*function readZipDate() {
-		var t = i.readUInt16();
-		var hour = (t >> 11) & 31;
-		var min = (t >> 5) & 63;
-		var sec = t & 31;
-		var d = i.readUInt16();
-		var year = d >> 9;
-		var month = (d >> 5) & 15;
-		var day = d & 31;
-		return new Date(year + 1980, month - 1, day, hour, min, sec << 1);
-	}*/
-/*
-	function readExtraFields(length) {
-		var fields = new List();
-		while (length > 0) {
-			if (length < 4)
-				throw "Invalid extra fields data";
-			var tag = i.readUInt16();
-			var len = i.readUInt16();
-			if (length < len)
-				throw "Invalid extra fields data";
-			switch (tag) {
-				case 0x7075:
-					var version = i.readByte();
-					if (version != 1) {
-						var data = new haxe.io.BytesBuffer();
-						data.addByte(version);
-						data.add(i.read(len - 1));
-						fields.add(FUnknown(tag, data.getBytes()));
-					} else {
-						var crc = i.readInt32();
-						var name = i.read(len - 5).toString();
-						fields.add(FInfoZipUnicodePath(name, crc));
-					}
-				default:
-					fields.add(FUnknown(tag, i.read(len)));
-			}
-			length -= 4 + len;
-		}
-		return fields;
-	}*/
+	public var closed:Bool = false;
+	public function close() {
+		if(closed) return;
+		i.close();
+		closed = true;
+	}
 
 	public function readByteAt(pos:Int) {
 		var old = i.tell();
@@ -502,7 +499,11 @@ class ZipReader {
 		return new FileHeader(i);
 	}
 
+	public var files:List<FileHeader>;
+
 	public function read():List<FileHeader> {
+		if(files != null) return files;
+		if(i == null) throw "Input is null in ZipReader.read()";
 		if(eocd == null) readEOCD();
 
 		i.seek(eocd.CDOffset, SeekBegin);
@@ -517,12 +518,21 @@ class ZipReader {
 			l.add(e);
 			totalRead++;
 		}
+		this.files = l;
 		return l;
 	}
 
 	public static function readZip(i:haxe.io.Input) {
 		var r = new ZipReader(i);
 		return r.read();
+	}
+
+	public static function openFile(path:String) {
+		#if sys
+		return new ZipReader(File.read(path, true));
+		#else
+		return new ZipReader(new haxe.io.BytesInput(Assets.getBytes(path)));
+		#end
 	}
 
 	/*public static function unzip(f:Entry) {

@@ -18,11 +18,10 @@ import haxe.zip.Writer;
 import sys.FileSystem;
 import sys.io.File;
 import sys.thread.Thread;
+import flixel.util.typeLimit.OneOfTwo;
+import funkin.backend.utils.zip.ZipReader;
 
 using StringTools;
-
-// import ZipUtils; ZipUtils.uncompressZip(ZipUtils.openZip("E:\\Desktop\\test\\termination lua.ycemod"), "E:\\Desktop\\test\\uncompressed\\");
-// import ZipUtils; var e = ZipUtils.createZipFile("file.ycemod"); ZipUtils.writeFolderToZip(e, "./mods/Friday Night Funkin'/", "Friday Night Funkin'/"); e.flush(); e.close();
 
 class ZipUtil {
 	public static var bannedNames:Array<String> = [".git", ".gitignore", ".github", ".vscode", ".gitattributes", "readme.txt"];
@@ -32,7 +31,7 @@ class ZipUtil {
 	 * @param zip
 	 * @param destFolder
 	 */
-	public static function uncompressZip(zip:Reader, destFolder:String, ?prefix:String, ?prog:ZipProgress):ZipProgress {
+	public static function uncompressZip(zip:ZipReader, destFolder:String, ?prefix:String, ?prog:ZipProgress):ZipProgress {
 		// we never know
 		FileSystem.createDirectory(destFolder);
 
@@ -41,7 +40,7 @@ class ZipUtil {
 		try {
 			if (prefix != null) {
 				var f = fields;
-				fields = new List<Entry>();
+				fields = new List<FileHeader>();
 				for(field in f) {
 					if (field.fileName.startsWith(prefix)) {
 						fields.push(field);
@@ -76,7 +75,7 @@ class ZipUtil {
 	}
 
 	#if (!macro && sys)
-	public static function uncompressZipAsync(zip:Reader, destFolder:String, ?prog:ZipProgress, ?prefix:String):ZipProgress {
+	public static function uncompressZipAsync(zip:ZipReader, destFolder:String, ?prog:ZipProgress, ?prefix:String):ZipProgress {
 		if (prog == null)
 			prog = new ZipProgress();
 		Thread.create(function() {
@@ -87,11 +86,11 @@ class ZipUtil {
 	#end
 
 	/**
-	 * [Description] Returns a `zip.Reader` instance from path.
+	 * [Description] Returns a `funkin.backend.utils.zip.ZipReader` instance from path.
 	 * @param zipPath
-	 * @return Reader
+	 * @return ZipReader
 	 */
-	public static function openZip(zipPath:String):Reader {
+	public static function openZip(zipPath:String):ZipReader {
 		return new ZipReader(File.read(zipPath));
 	}
 
@@ -99,18 +98,7 @@ class ZipUtil {
 	 * [Description] Copy of haxe's Zip unzip function cause lime replaced it.
 	 * @param f Zip entry
 	 */
-	public static function unzip(f:Entry) {
-		if (!f.compressed)
-			return f.data;
-		var c = new haxe.zip.Uncompress(-15);
-		var s = haxe.io.Bytes.alloc(f.fileSize);
-		var r = c.execute(f.data, 0, s, 0);
-		c.close();
-		if (!r.done || r.read != f.data.length || r.write != f.fileSize)
-			throw "Invalid compressed data for " + f.fileName;
-		f.compressed = false;
-		f.dataSize = f.fileSize;
-		f.data = s;
+	public static function unzip(f:FileHeader) {
 		return f.data;
 	}
 
@@ -202,12 +190,12 @@ class ZipUtil {
 	}
 
 	/**
-	 * [Description] Converts an `Array<Entry>` to a `List<Entry>`.
+	 * [Description] Converts an `Array<FileHeader>` to a `List<FileHeader>`.
 	 * @param array
-	 * @return List<Entry>
+	 * @return List<FileHeader>
 	 */
-	public static function arrayToList(array:Array<Entry>):List<Entry> {
-		var list = new List<Entry>();
+	public static function arrayToList(array:Array<FileHeader>):List<FileHeader> {
+		var list = new List<FileHeader>();
 		for(e in array) list.push(e);
 		return list;
 	}
@@ -238,6 +226,19 @@ class ZipWriter extends Writer {
 		o.writeFullBytes(entry.data, 0, entry.data.length);
 	}
 
+	public function writeFileHeader(entry:FileHeader) {
+		writeEntryHeader({
+			fileName: entry.fileName,
+			fileSize: entry.uncompressedSize,
+			fileTime: entry.fileTime,
+			dataSize: entry.compressedSize,
+			data: entry.data,
+			crc32: entry.crc32,
+			compressed: false
+		});
+		o.writeFullBytes(entry.data, 0, entry.data.length);
+	}
+
 	public function close() {
 		o.close();
 	}
@@ -253,17 +254,3 @@ class StrNameLabel {
 	}
 }
 #end
-
-class ZipReader extends Reader {
-	public var files:List<Entry>;
-
-	public override function read() {
-		if (files != null) return files;
-		try {
-			var files = super.read();
-			return this.files = files;
-		} catch(e) {
-		}
-		return new List<Entry>();
-	}
-}

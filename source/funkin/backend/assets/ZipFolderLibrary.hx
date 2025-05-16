@@ -1,7 +1,7 @@
 package funkin.backend.assets;
 
 #if MOD_SUPPORT
-import funkin.backend.utils.SysZip;
+import funkin.backend.utils.zip.ZipReader;
 import haxe.io.Path;
 import lime.graphics.Image;
 import lime.media.AudioBuffer;
@@ -16,9 +16,9 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var useImageCache:Bool = false;
 	public var prefix = 'assets/';
 
-	public var zip:SysZip;
-	public var assets:Map<String, SysZipEntry> = [];
-	public var lowerCaseAssets:Map<String, SysZipEntry> = [];
+	public var zip:ZipReader;
+	public var assets:Map<String, FileHeader> = [];
+	public var lowerCaseAssets:Map<String, FileHeader> = [];
 	public var nameMap:Map<String, String> = [];
 
 	public function new(zipPath:String, libName:String, ?modName:String) {
@@ -27,7 +27,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 
 		this.modName = modName == null ? libName : modName;
 
-		zip = SysZip.openFromFile(zipPath);
+		zip = ZipReader.openFile(zipPath);
 		var entries = zip.read();
 		for(entry in entries) {
 			var lowerCaseName = entry.fileName.toLowerCase();
@@ -41,19 +41,23 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var _parsedAsset:String;
 
 	public override function getAudioBuffer(id:String):AudioBuffer {
-		__parseAsset(id);
+		if (!exists(id, "SOUND"))
+			return null;
 		return AudioBuffer.fromBytes(unzip(assets[_parsedAsset]));
 	}
 	public override function getBytes(id:String):Bytes {
-		__parseAsset(id);
+		if (!exists(id, "BINARY"))
+			return null;
 		return Bytes.fromBytes(unzip(assets[_parsedAsset]));
 	}
 	public override function getFont(id:String):Font {
-		__parseAsset(id);
+		if (!exists(id, "FONT"))
+			return null;
 		return ModsFolder.registerFont(Font.fromBytes(unzip(assets[_parsedAsset])));
 	}
 	public override function getImage(id:String):Image {
-		__parseAsset(id);
+		if (!exists(id, "IMAGE"))
+			return null;
 		return Image.fromBytes(unzip(assets[_parsedAsset]));
 	}
 
@@ -63,9 +67,12 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	}
 
 
-
-	public inline function unzip(f:SysZipEntry)
-		return f == null ? null : zip.unzipEntry(f);
+	public inline function unzip(f:FileHeader) {
+		if(f == null) return null;
+		var data = f.data;
+		f.clearData(); // reduce memory usage
+		return data;
+	}
 
 	public function __parseAsset(asset:String):Bool {
 		if (!asset.startsWith(prefix)) return false;

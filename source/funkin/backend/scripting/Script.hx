@@ -141,6 +141,8 @@ class Script extends FlxBasic implements IFlxDestroyable {
 		redirects[events + "StageNodeEvent"]				= events + "stage.StageNodeEvent";
 		redirects[events + "StageXMLEvent"]					= events + "stage.StageXMLEvent";
 
+		redirects["funkin.backend.utils.ZipReader"]		= "funkin.backend.utils.zip.ZipReader";
+
 		return redirects;
 	}
 

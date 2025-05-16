@@ -1,9 +1,9 @@
 package funkin.backend.utils.zip.methods;
 
-import haxe.io.Bytes;
 import funkin.backend.utils.zip.BitInput;
-import haxe.io.UInt8Array;
+import haxe.io.Bytes;
 import haxe.io.UInt32Array;
+import haxe.io.UInt8Array;
 
 
 typedef ByteUInt = #if cpp cpp.UInt8 #else UInt #end;
