@@ -128,19 +128,20 @@ class ZipUtil {
 			var destPath:Array<String> = [];
 			if (prefix != "") {
 				prefix = prefix.replace("\\", "/");
-				while(prefix.charCodeAt(0) == "/".code) prefix = prefix.substr(1);
-				while(prefix.charCodeAt(prefix.length-1) == "/".code) prefix = prefix.substr(0, prefix.length-1);
+				// todo: make it count before substr, to avoid allocating a new string
+				while(prefix.length > 0 && prefix.fastCodeAt(0) == "/".code) prefix = prefix.substr(1);
+				while(prefix.length > 0 && prefix.fastCodeAt(prefix.length-1) == "/".code) prefix = prefix.substr(0, prefix.length-1);
 				destPath.push(prefix);
 			}
 
 			var files:Array<StrNameLabel> = [];
 
-			var doFolder:Void->Void = null;
-			(doFolder = function() {
+			function doFolder():Void {
 				var path = curPath.join("/");
 				var zipPath = destPath.join("/");
 				for(e in FileSystem.readDirectory(path)) {
-					if (bannedNames.contains(e.toLowerCase()) && !whitelist.contains(e.toLowerCase())) continue;
+					var lower = e.toLowerCase();
+					if (bannedNames.contains(lower) && !whitelist.contains(lower)) continue;
 					if (FileSystem.isDirectory('$path/$e')) {
 						// is directory, so loop into that function again
 						for(p in [curPath, destPath]) p.push(e);
@@ -149,11 +150,12 @@ class ZipUtil {
 					} else {
 						// is file, put it in the list
 						var zipPath = '$zipPath/$e';
-						while(zipPath.charCodeAt(0) == "/".code) zipPath = zipPath.substr(1);
+						while(zipPath.length > 0 && zipPath.fastCodeAt(0) == "/".code) zipPath = zipPath.substr(1);
 						files.push(new StrNameLabel('$path/$e', zipPath));
 					}
 				}
-			})();
+			}
+			doFolder();
 
 			prog.fileCount = files.length;
 			for(k=>file in files) {
