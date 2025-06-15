@@ -146,7 +146,7 @@ final class Logs {
 		updateDevModeText();
 	}
 
-	@:dox(hide) public static function onClearConsole()Add commentMore actions
+	@:dox(hide) public static function onClearConsole()
 	{
 		logAmounts = [
 			INFO => 0,
