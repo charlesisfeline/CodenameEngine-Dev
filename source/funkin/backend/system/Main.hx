@@ -36,7 +36,7 @@ class Main extends Sprite
 	// good luck /gen <3 @crowplexus
 	public static final releaseCycle:String = "Beta";
 	// add a version number in dis shid rn 
-	public static final releaseVersion:String = "v1.0.0-dev"
+	public static final releaseVersion:String = "v1.0.0-dev";
 
 	public static var modToLoad:String = null;
 	public static var forceGPUOnlyBitmapsOff:Bool = #if desktop false #else true #end;

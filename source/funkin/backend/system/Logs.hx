@@ -170,7 +170,7 @@ final class Logs {
 		if(!hasWarningText && !hasErrorText) return WindowUtils.devModeText = "";
 
 		var buf = new StringBuf();
-		buf.add("(");Add commentMore actions
+		buf.add("(");
 		if(hasWarningText) {
 		    buf.add('$warningCount ${CoolUtil.pluralize(warningCount, "warning")}');
 		    if(hasErrorText) buf.add(" | ");

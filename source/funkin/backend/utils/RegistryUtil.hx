@@ -1,7 +1,5 @@
 package funkin.backend.utils;
 
-package funkin.backend.utils;Add commentMore actions
-
 enum abstract RegistryHive(Int) {
 	var HKEY_CLASSES_ROOT = 0x80000000;
 	var HKEY_CURRENT_USER = 0x80000001;
@@ -115,7 +113,7 @@ class RegistryUtil {
 
 		return result == ERROR_SUCCESS;
 	')
-	#endAdd commentMore actions
+	#end
 	public static function delete(hive:RegistryHive, key:String, string:String):Bool {
 		return false;
 	}
