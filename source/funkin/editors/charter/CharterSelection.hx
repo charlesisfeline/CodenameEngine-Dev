@@ -37,7 +37,6 @@ class CharterSelection extends EditorTreeMenu {
 				list.push(new NewOption("New Difficulty", "Press ACCEPT to create a new difficulty.", function() {
 					FlxG.state.openSubState(new ChartCreationScreen(saveChart));
 				}));
-				#end
 				optionsTree.add(new OptionsScreen(s.name, "Select a difficulty to continue.", list));
 			}, s.parsedColor.getDefault(0xFFFFFFFF))
 		];
