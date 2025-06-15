@@ -42,6 +42,8 @@ class Options
 
 	public static var lastLoadedMod:String = null;
 
+	public static var devMode:Bool = false;
+	
 	/**
 	 * EDITORS SETTINGS
 	 */

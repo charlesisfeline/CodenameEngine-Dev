@@ -141,7 +141,55 @@ class Logs {
 		var text = [logText(text, color)];
 		if(prefix != null) text.insert(0, getPrefix(prefix));
 		traceColored(text, level);
+
+		logAmounts.set(level, (logAmounts.exists(level) ? logAmounts.get(level) : 0) + 1);
+		updateDevModeText();
 	}
+
+	@:dox(hide) public static function onClearConsole()Add commentMore actions
+	{
+		logAmounts = [
+			INFO => 0,
+			WARNING => 0,
+			ERROR => 0,
+			TRACE => 0,
+			VERBOSE => 0,
+		];
+
+		updateDevModeText();
+	}
+
+	@:dox(hide) public static function updateDevModeText()
+	{
+		var warningCount:Int = logAmounts.exists(WARNING) ? logAmounts.get(WARNING) : 0;
+		var errorCount:Int = logAmounts.exists(ERROR) ? logAmounts.get(ERROR) : 0;
+
+		var hasWarningText:Bool = warningCount > 0;
+		var hasErrorText:Bool = errorCount > 0;
+
+		if(!hasWarningText && !hasErrorText) return WindowUtils.devModeText = "";
+
+		var buf = new StringBuf();
+		buf.add("(");Add commentMore actions
+		if(hasWarningText) {
+		    buf.add('$warningCount ${CoolUtil.pluralize(warningCount, "warning")}');
+		    if(hasErrorText) buf.add(" | ");
+		}
+		if(hasErrorText) {
+		    buf.add('$errorCount ${CoolUtil.pluralize(errorCount, "error")}');
+		}
+		buf.add(")");
+
+		return WindowUtils.devModeText = ' ${buf.toString()}';
+	}
+
+	public static var logAmounts:Map<Level, Int> = [
+		INFO => 0,
+		WARNING => 0,
+		ERROR => 0,
+		TRACE => 0,
+		VERBOSE => 0,
+	];
 
 	public inline static function getPrefix(prefix:String)
 		return logText('[${prefix}] ', BLUE);

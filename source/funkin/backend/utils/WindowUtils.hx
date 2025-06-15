@@ -22,6 +22,13 @@ class WindowUtils {
 		return value;
 	}
 
+	public static var devModeText(default, set):String = "";
+	private static function set_devModeText(value:String):String {
+		devModeText = value;
+		updateTitle();
+		return value;
+	}
+
 	public static var preventClosing:Bool = true;
 	public static var onClosing:Void->Void;
 
@@ -61,7 +68,7 @@ class WindowUtils {
 	 * Updates the window title to have the current title and prefix/suffix.
 	**/
 	public static inline function updateTitle()
-		Lib.application.window.title = '$prefix$title$suffix';
+		Lib.application.window.title = '$prefix$title$suffix${Options.devMode ? devModeText : ""}';
 
 	// backwards compat
 	@:noCompletion public static var endfix(get, set):String;

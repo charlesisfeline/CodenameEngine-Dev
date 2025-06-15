@@ -24,8 +24,8 @@ class Checkbox extends TextOption {
 	];
 	private var baseCheckboxOffset:FlxPoint = FlxPoint.get();
 
-	public function new(text:String, desc:String, optionName:String, ?parent:Dynamic) {
-		super(text, desc, null);
+	public function new(text:String, desc:String, optionName:String, ?parent:Dynamic, ?selectCallback:Void->Void = null) {
+		super(text, desc, selectCallback);
 
 		if (parent == null)
 			parent = Options;
@@ -63,6 +63,9 @@ class Checkbox extends TextOption {
 	public override function onSelect() {
 		Reflect.setField(parent, optionName, checked = !checked);
 		checkbox.animation.play("checking", true, !checked);
+
+		if(selectCallback != null)
+			selectCallback();
 	}
 
 	public override function destroy() {

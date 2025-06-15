@@ -30,6 +30,8 @@ class NativeAPI {
 		Windows.allocConsole();
 		Windows.clearScreen();
 		#end
+
+		Logs.onClearConsole();
 	}
 
 	/**
