@@ -30,6 +30,12 @@ class Main extends Sprite
 {
 	public static var instance:Main;
 
+	// FOR COMPAT FOR MODS THAT USE THESE VARS!!!
+	// good luck /gen <3 @crowplexus
+	public static final releaseCycle:String = "Beta";
+	// add a version number in dis shid rn 
+	public static final releaseVersion:String = "v1.0.0-dev"
+
 	public static var modToLoad:String = null;
 	public static var forceGPUOnlyBitmapsOff:Bool = #if windows false #else true #end;
 	public static var noTerminalColor:Bool = false;
