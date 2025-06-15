@@ -44,7 +44,6 @@ class CharterSelection extends EditorTreeMenu {
 		list.insert(0, new NewOption("New Song", "Press ACCEPT to create a new song.", function() {
 			FlxG.state.openSubState(new SongCreationScreen(saveSong));
 		}));
-		#end
 
 		main = new OptionsScreen("Chart Editor", "Select a song to modify the charts from.", list);
 
