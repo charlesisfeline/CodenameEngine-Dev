@@ -14,8 +14,8 @@
 	- [x] Cap zoom in & out
 	- [x] Events (including Camera Movement)
 	- [x] Metadata Editing
-	- [ ] Custom Notetypes
-	- [ ] Reorderable Strumlines
+	- [x] Custom Notetypes
+	- [x] Reorderable Strumlines
 	- [ ] Step based zooming
 	- [ ] Add Undo to more actions
 	- [ ] New Chart Button
@@ -49,13 +49,13 @@
 - [ ] Fix bugs
 
 ## `v1.1.0`
-- [ ] Charter Waveforms (maybe in v1.1.0, don't wanna slow shit down)
-- [ ] Custom classes
+- [x] Charter Waveforms (maybe in v1.1.0, don't wanna slow shit down)
+- [x] Custom classes
 	- [ ] Proper super overrides (FlxText_HSX doesn't allow overrides for update because of this)
 	- [ ] Custom Class extending Custom Classes
 	- [ ] Statics on Custom Classes
 	- [ ] Fix Bugs
-- [ ] Full 3D support via stages files
+- [x] Full 3D support via stages files
 - [ ] Multithread sprites and assets loading (for faster load times) ?
-- [ ] Stage Editor
+- [x] Stage Editor
 - [ ] Optimize flxanimate isOnScreen
