@@ -139,7 +139,9 @@ class MusicBeatState extends FlxState implements IBeatReceiver
 					script.load();
 				}
 			}
+			#if EXPERMENTAL_SCRIPT_RELOADING
 			else stateScripts.reload();
+			#end
 		}
 	}
 
@@ -222,9 +224,11 @@ class MusicBeatState extends FlxState implements IBeatReceiver
 	override function update(elapsed:Float)
 	{
 		// TODO: DEBUG MODE!!
+		#if EXPERMENTAL_SCRIPT_RELOADING
 		if (FlxG.keys.justPressed.F5) {
 			loadScript();
 		}
+		#end
 		call("update", [elapsed]);
 
 		super.update(elapsed);

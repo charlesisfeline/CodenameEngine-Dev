@@ -46,6 +46,7 @@ class GlobalScript {
 		});
 		FlxG.signals.postUpdate.add(function() {
 			call("postUpdate", [FlxG.elapsed]);
+			#if EXPERMENTAL_SCRIPT_RELOADING
 			if (FlxG.keys.justPressed.F5) {
 				if (scripts.scripts.length > 0) {
 					Logs.trace('Reloading global script...', WARNING, YELLOW);
@@ -56,6 +57,7 @@ class GlobalScript {
 					onModSwitch(#if MOD_SUPPORT ModsFolder.currentModFolder #else null #end);
 				}
 			}
+			#end
 			if (FlxG.keys.justPressed.F2)
 				NativeAPI.allocConsole();
 		});

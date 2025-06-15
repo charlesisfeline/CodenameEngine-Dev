@@ -37,6 +37,7 @@ class SplashGroup extends FlxTypedGroup<Splash> {
 
 			// immediately draw once and put image in GPU to prevent freezes
 			// TODO: change to graphics cache
+			@:privateAccess
 			splash.drawComplex(FlxG.camera);
 		} catch(e:Dynamic) {
 			Logs.trace('Couldn\'t parse splash data for "${path}": ${e.toString()}', ERROR);
@@ -44,6 +45,10 @@ class SplashGroup extends FlxTypedGroup<Splash> {
 		}
 		maxSize = Flags.MAX_SPLASHES;
 	}
+
+	var _scale:Float = 1.0;
+	var _alpha:Float = 1.0;
+	var _antialiasing:Bool = true;
 
 	function createSplash(imagePath:String) {
 		var splash = new Splash();
@@ -53,6 +58,9 @@ class SplashGroup extends FlxTypedGroup<Splash> {
 		if (xml.has.scale) splash.scale.scale(Std.parseFloat(xml.att.scale).getDefault(1));
 		if (xml.has.alpha) splash.alpha = Std.parseFloat(xml.att.alpha).getDefault(1);
 		if (xml.has.antialiasing) splash.antialiasing = xml.att.antialiasing == "true";
+		_scale = splash.scale.x;
+		_alpha = splash.alpha;
+		_antialiasing = splash.antialiasing;
 		return splash;
 	}
 
@@ -101,8 +109,9 @@ class SplashGroup extends FlxTypedGroup<Splash> {
 	public function getSplashAnim(id:Int):String {
 		if (animationNames.length <= 0) return null;
 		id %= animationNames.length;
-		if (animationNames[id] == null || animationNames[id].length <= 0) return null;
-		return animationNames[id][FlxG.random.int(0, animationNames[id].length - 1)];
+		var animNames = animationNames[id];
+		if (animNames == null || animNames.length <= 0) return null;
+		return animNames[FlxG.random.int(0, animNames.length - 1)];
 	}
 
 	var __splash:Splash;
@@ -112,6 +121,11 @@ class SplashGroup extends FlxTypedGroup<Splash> {
 
 		__splash.strum = strum;
 		__splash.strumID = strum.ID;
+		
+		@:privateAccess
+		__splash.scale.x = __splash.scale.y = _scale * strum.strumLine.strumScale;
+		__splash.alpha = _alpha;
+		__splash.antialiasing = _antialiasing;
 
 		__splash.cameras = strum.lastDrawCameras;
 		__splash.setPosition(strum.x + ((strum.width - __splash.width) / 2), strum.y + ((strum.height - __splash.height) / 2));

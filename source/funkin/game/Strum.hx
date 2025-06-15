@@ -27,7 +27,7 @@ class Strum extends FlxSprite {
 	/**
 	 * The strum line that this strum belongs to.
 	**/
-	public var strumLine:StrumLine;
+	public var strumLine:StrumLine = null;
 
 	/**
 	 * The scroll speed of the notes.
@@ -68,7 +68,7 @@ class Strum extends FlxSprite {
 	public var getJustReleased:StrumLine->Bool = null;
 
 	@:dox(hide) public inline function __getPressed(strumLine:StrumLine):Bool {
-		return getPressed != null ? getPressed(strumLine) : switch(ID) {
+		return getPressed != null ? getPressed(strumLine) : strumLine.members.length != 4 ? ControlsUtil.getPressed(strumLine.controls, strumLine.members.length+"k"+ID) : switch(ID) {
 			case 0: strumLine.controls.NOTE_LEFT;
 			case 1: strumLine.controls.NOTE_DOWN;
 			case 2: strumLine.controls.NOTE_UP;
@@ -77,7 +77,7 @@ class Strum extends FlxSprite {
 		}
 	}
 	@:dox(hide) public inline function __getJustPressed(strumLine:StrumLine) {
-		return getJustPressed != null ? getJustPressed(strumLine) : switch(ID) {
+		return getJustPressed != null ? getJustPressed(strumLine) : strumLine.members.length != 4 ? ControlsUtil.getJustPressed(strumLine.controls, strumLine.members.length+"k"+ID) : switch(ID) {
 			case 0: strumLine.controls.NOTE_LEFT_P;
 			case 1: strumLine.controls.NOTE_DOWN_P;
 			case 2: strumLine.controls.NOTE_UP_P;
@@ -86,7 +86,7 @@ class Strum extends FlxSprite {
 		}
 	}
 	@:dox(hide) public inline function __getJustReleased(strumLine:StrumLine) {
-		return getJustReleased != null ? getJustReleased(strumLine) : switch(ID) {
+		return getJustReleased != null ? getJustReleased(strumLine) : strumLine.members.length != 4 ? ControlsUtil.getJustReleased(strumLine.controls, strumLine.members.length+"k"+ID) : switch(ID) {
 			case 0: strumLine.controls.NOTE_LEFT_R;
 			case 1: strumLine.controls.NOTE_DOWN_R;
 			case 2: strumLine.controls.NOTE_UP_R;
@@ -132,7 +132,7 @@ class Strum extends FlxSprite {
 		super.draw();
 	}
 
-	@:noCompletion public static final PIX180:Float = 565.4866776461628; // 180 * Math.PI
+	@:noCompletion public static inline final PIX180:Float = 565.4866776461628; // 180 * Math.PI
 	@:noCompletion public static final N_WIDTHDIV2:Float = Note.swagWidth / 2;
 
 	/**
@@ -157,16 +157,27 @@ class Strum extends FlxSprite {
 	}
 
 	private inline function updateNotePos(daNote:Note) {
-		var shouldX = updateNotesPosX && daNote.updateNotesPosX;
-		var shouldY = updateNotesPosY && daNote.updateNotesPosY;
+		if (daNote.strumRelativePos) {
+			daNote.setPosition((this.width - daNote.width) / 2, (daNote.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(getScrollSpeed(daNote), 100)));
+			if (daNote.isSustainNote) daNote.y += N_WIDTHDIV2 * (height / Note.swagWidth);
+		} else {
+			var offset = FlxPoint.get(0, (Conductor.songPosition - daNote.strumTime) * (0.45 * CoolUtil.quantize(getScrollSpeed(daNote), 100)));
+			var realOffset = FlxPoint.get(0, 0);
 
-		if (shouldX || shouldY) {
-			if (daNote.strumRelativePos) {
-				if (shouldX) daNote.x = (this.width - daNote.width) / 2;
-				if (shouldY) {
-					daNote.y = (daNote.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(getScrollSpeed(daNote), 100));
-					if (daNote.isSustainNote) daNote.y += N_WIDTHDIV2;
-				}
+			if (daNote.isSustainNote) offset.y -= N_WIDTHDIV2 * (height / Note.swagWidth);
+
+			if (Std.int(daNote.__noteAngle % 360) != 0) {
+				var noteAngleCos = FlxMath.fastCos(daNote.__noteAngle / PIX180);
+				var noteAngleSin = FlxMath.fastSin(daNote.__noteAngle / PIX180);
+
+				var aOffset:FlxPoint = FlxPoint.get(
+					(daNote.origin.x / daNote.scale.x) - daNote.offset.x,
+					(daNote.origin.y / daNote.scale.y) - daNote.offset.y
+				);
+				realOffset.x = -aOffset.x + (noteAngleCos * (offset.x + aOffset.x)) + (noteAngleSin * (offset.y + aOffset.y));
+				realOffset.y = -aOffset.y + (noteAngleSin * (offset.x + aOffset.x)) + (noteAngleCos * (offset.y + aOffset.y));
+
+				aOffset.put();
 			} else {
 				var offset = FlxPoint.get(0, (Conductor.songPosition - daNote.strumTime) * (0.45 * CoolUtil.quantize(getScrollSpeed(daNote), 100)));
 				var realOffset = FlxPoint.get(0, 0);

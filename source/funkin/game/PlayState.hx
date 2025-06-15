@@ -666,7 +666,7 @@ class PlayState extends MusicBeatState
 					for (event in SONG.events) songEvents.pushOnce(event.name);
 
 					for (file in Paths.getFolderContent('data/events/', true, fromMods ? MODS : BOTH)) {
-						var fileName:String = Path.withoutExtension(Path.withoutDirectory(file));
+						var fileName:String = CoolUtil.getFilename(file);
 						if (EventsData.eventsList.contains(fileName) && songEvents.contains(fileName)) {
 							addScript(file);
 						}
@@ -722,7 +722,9 @@ class PlayState extends MusicBeatState
 
 			var strOffset:Float = strumLine.strumLinePos != null ? strumLine.strumLinePos : (strumLine.type == 1 ? 0.75 : 0.25);
 			var strScale:Float = strumLine.strumScale != null ? strumLine.strumScale : 1;
-			var strXPos:Float = (FlxG.width * strOffset) - (Note.swagWidth * strScale * 2);
+			var strSpacing:Float = strumLine.strumSpacing == null ? 1 : strumLine.strumSpacing;
+			var keyCount:Int = strumLine.keyCount == null ? 4 : strumLine.keyCount;
+			var strXPos:Float = StrumLine.calculateStartingXPos(strOffset, strScale, strSpacing, keyCount);
 			var startingPos:FlxPoint = strumLine.strumPos != null ?
 				FlxPoint.get(strumLine.strumPos[0] == 0 ? strXPos : strumLine.strumPos[0], strumLine.strumPos[1]) :
 				FlxPoint.get(strXPos, this.strumLine.y);
@@ -839,10 +841,7 @@ class PlayState extends MusicBeatState
 			SaveWarning.showWarning = Charter.undos.unsaved;
 			SaveWarning.selectionClass = CharterSelection;
 			SaveWarning.warningFunc = saveWarn;
-			SaveWarning.saveFunc = () ->  {
-				@:privateAccess Chart.save('${Paths.getAssetsRoot()}/songs/${Charter.__song.toLowerCase()}',
-					SONG, Charter.__diff.toLowerCase(), {saveMetaInChart: false, prettyPrint: Options.editorPrettyPrint});
-			}
+			SaveWarning.saveFunc = () -> Charter.saveEverything(false);
 		}
 	}
 
@@ -1102,7 +1101,7 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	private inline function generateStrums(amount:Null<Int> = null):Void {
 		for(p in strumLines) {
-			var kc = amount != null ? amount : Flags.DEFAULT_STRUM_AMOUNT;
+			var kc = amount != null ? amount : p.data.keyCount;
 			p.generateStrums(kc);
 		}
 	}
@@ -1282,7 +1281,7 @@ class PlayState extends MusicBeatState
 		iconP1.x = center - iconOffset;
 		iconP2.x = center - (iconP2.width - iconOffset);
 
-		health = FlxMath.bound(health, 0, maxHealth);
+		health = CoolUtil.bound(health, 0, maxHealth);
 
 		iconP1.health = healthBarPercent / 100;
 		iconP2.health = 1 - (healthBarPercent / 100);
@@ -1325,11 +1324,13 @@ class PlayState extends MusicBeatState
 			if (chartingMode && FlxG.keys.justPressed.SEVEN) {
 				FlxG.switchState(new funkin.editors.charter.Charter(SONG.meta.name, difficulty, false));
 			}
-			/*if (FlxG.keys.justPressed.F5) {
+			#if EXPERMENTAL_SCRIPT_RELOADING
+			if (FlxG.keys.justPressed.F5) {
 				Logs.warn('Reloading scripts...', "PlayState");
 				scripts.reload();
 				Logs.warn('Song scripts successfully reloaded.', GREEN, "PlayState");
-			}*/
+			}
+			#end
 		}
 
 		if (doIconBop)

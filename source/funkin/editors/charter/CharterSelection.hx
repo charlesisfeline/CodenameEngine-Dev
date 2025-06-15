@@ -34,8 +34,7 @@ class CharterSelection extends EditorTreeMenu {
 							FlxG.switchState(new Charter(s.name, d));
 						})
 				];
-				#if sys
-				list.push(new NewOption("New Difficulty", "New Difficulty", function() {
+				list.push(new NewOption("New Difficulty", "Press ACCEPT to create a new difficulty.", function() {
 					FlxG.state.openSubState(new ChartCreationScreen(saveChart));
 				}));
 				#end
@@ -43,8 +42,7 @@ class CharterSelection extends EditorTreeMenu {
 			}, s.parsedColor.getDefault(0xFFFFFFFF))
 		];
 
-		#if sys
-		list.insert(0, new NewOption("New Song", "New Song", function() {
+		list.insert(0, new NewOption("New Song", "Press ACCEPT to create a new song.", function() {
 			FlxG.state.openSubState(new SongCreationScreen(saveSong));
 		}));
 		#end
@@ -97,7 +95,7 @@ class CharterSelection extends EditorTreeMenu {
 		var songAlreadyExists:Bool = [for (s in freeplayList.songs) s.name.toLowerCase()].contains(creation.meta.name.toLowerCase());
 
 		if (songAlreadyExists) {
-			openSubState(new UIWarningSubstate("Creating Song: Error!", "The song you are trying to create Already exists, if you would like to override it delete the song first!", [
+			openSubState(new UIWarningSubstate("Creating Song: Error!", "The song you are trying to create already exists, if you would like to override it delete the song first!", [
 				{label: "Ok", color: 0xFFFF0000, onClick: function(t) {}}
 			]));
 			return;
@@ -133,7 +131,7 @@ class CharterSelection extends EditorTreeMenu {
 						FlxG.switchState(new Charter(creation.meta.name, d));
 					})
 			];
-			list.push(new NewOption("New Difficulty", "New Difficulty", function() {
+			list.push(new NewOption("New Difficulty", "Press ACCEPT to create a new difficulty.", function() {
 				FlxG.state.openSubState(new ChartCreationScreen(saveChart));
 			}));
 			optionsTree.insert(1, new OptionsScreen(creation.meta.name, "Select a difficulty to continue.", list));
