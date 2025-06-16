@@ -30,6 +30,7 @@ import funkin.editors.charter.CharterSelection;
 import funkin.game.SplashHandler;
 import funkin.game.cutscenes.*;
 import funkin.menus.*;
+import funkin.menus.StoryMenuState.WeekData;
 import funkin.savedata.FunkinSave;
 import haxe.io.Path;
 
