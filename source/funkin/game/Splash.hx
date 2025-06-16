@@ -1,7 +1,5 @@
 package funkin.game;
 
-package funkin.game;
-
 class Splash extends FunkinSprite
 {
 	/**
